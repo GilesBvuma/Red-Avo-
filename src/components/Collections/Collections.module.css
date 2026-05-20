@@ -1,0 +1,121 @@
+.section {
+  background: var(--cream);
+  padding: 110px 6vw 100px;
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--blush);
+  color: var(--red);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 20px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  will-change: transform, opacity;
+}
+
+.label::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.heading {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  color: var(--navy);
+  line-height: 1;
+  margin-bottom: 56px;
+  will-change: transform, opacity;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.card {
+  border-radius: 999px 999px 32px 32px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 28px rgba(26, 43, 74, 0.08);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  will-change: transform, opacity;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 24px 60px rgba(26, 43, 74, 0.16);
+}
+
+.cardImage {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 999px 999px 0 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cardBody {
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.cardName {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  color: var(--navy);
+  text-align: center;
+}
+
+.exploreBtn {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  padding: 10px 28px;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.25);
+  transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.exploreBtn:hover {
+  background: #a93226;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(192, 57, 43, 0.35);
+}
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+
+@media (max-width: 540px) {
+  .grid { grid-template-columns: 1fr; }
+}
