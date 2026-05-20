@@ -44,7 +44,7 @@ export default function About() {
       <div className={styles.inner}>
         {/* Left — blob-clipped image */}
         <div className={`${styles.imageWrap} about-img`}>
-          <Placeholder label="/images/about-lifestyle.png" subtitle="Brand lifestyle image" />
+          <Placeholder label="/images/about-lifestyle.PNG" subtitle="Brand lifestyle image" />
         </div>
 
         {/* Right — text */}

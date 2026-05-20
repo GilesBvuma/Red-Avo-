@@ -21,9 +21,9 @@ export const NAV_LINKS = [
 
 // ─── Collection Categories ────────────────────────────────────────
 export const CATEGORIES = [
-  { id: 'leggings',  label: 'LEGGINGS',    placeholder: '/images/category-leggings.JPG', subtitle: 'Leggings' },
-  { id: 'bras',      label: 'SPORTS BRAS', placeholder: '/images/category-bras.JPG', subtitle: 'Sports Bras' },
-  { id: 'jackets',   label: 'JACKETS',     placeholder: '/images/category-jackets.JPG', subtitle: 'Jackets' },
+  { id: 'leggings',  label: 'LEGGINGS',    placeholder: '/images/category-leggings.jpg', subtitle: 'Leggings' },
+  { id: 'bras',      label: 'SPORTS BRAS', placeholder: '/images/category-bras.jpg', subtitle: 'Sports Bras' },
+  { id: 'jackets',   label: 'JACKETS',     placeholder: '/images/category-jackets.jpg', subtitle: 'Jackets' },
   { id: 'sets',      label: 'SETS',        placeholder: '/images/category-sets.PNG', subtitle: 'Sets' },
 ];
 

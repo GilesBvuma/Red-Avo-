@@ -107,7 +107,7 @@ export default function Hero() {
       {/* ── Right column — 3D image ── */}
       <div className={styles.right} aria-hidden="true">
         <div ref={imageRef} className={styles.imageWrap} style={{ perspective: '800px' }}>
-          <Placeholder label="/images/hero-main.JPG" subtitle="Hero outfit flat-lay" />
+          <Placeholder label="/images/hero-main.jpg" subtitle="Hero outfit flat-lay" />
         </div>
       </div>
 
