@@ -32,7 +32,7 @@ export const PRODUCTS = [
   {
     id:          'power-flow-leggings',
     name:        'POWER FLOW LEGGINGS',
-    price:       'R 649.00',
+    price:       '$ 75.00',
     placeholder: '/images/prod-leggings.PNG',
     subtitle:    'Product 1',
     featured:    false,
@@ -40,7 +40,7 @@ export const PRODUCTS = [
   {
     id:          'fearless-set',
     name:        'FEARLESS SET — RED/BLACK',
-    price:       'R 1 099.00',
+    price:       '$ 120.00',
     placeholder: '/images/prod-fearless-set.PNG',
     subtitle:    'Product 2 (Featured)',
     featured:    true,
@@ -48,7 +48,7 @@ export const PRODUCTS = [
   {
     id:          'avo-sports-bra',
     name:        'AVO SPORTS BRA',
-    price:       'R 449.00',
+    price:       '$ 75.00',
     placeholder: '/images/prod-avo-bra.jpeg',
     subtitle:    'Product 3',
     featured:    false,
