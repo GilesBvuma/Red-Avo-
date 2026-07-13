@@ -1,0 +1,15 @@
+{
+  "name": "red-avo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "pos":        "npm run dev --workspace=apps/pos-web",
+    "storefront": "npm run dev --workspace=apps/storefront-web",
+    "dev":        "npm run pos",
+    "lint":       "npm run lint --workspaces --if-present"
+  }
+}

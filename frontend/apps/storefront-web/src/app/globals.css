@@ -1,0 +1,27 @@
+/* ── Red Avo Storefront — Global Styles ──────────────────────────── */
+:root {
+  --bg: #0c0c0c;
+  --surface: #161616;
+  --accent: #c0392b;
+  --accent-light: #e74c3c;
+  --text: #f0f0f0;
+  --muted: #9ca3af;
+  --border: rgba(255, 255, 255, 0.08);
+  --font: 'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+img { max-width: 100%; display: block; }

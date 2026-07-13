@@ -1,0 +1,16 @@
+# Maven
+target/
+*.class
+*.jar
+
+# Environment / credentials — NEVER commit these
+.env
+*.env
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
