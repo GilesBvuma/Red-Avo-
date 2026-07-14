@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as api from '../lib/api';
+import { Red_Rose } from 'next/font/google';
 
 // ─── Constants ──────────────────────────────────────────────────────
 const SIZES_ALL  = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -16,8 +17,27 @@ const COLORS_ALL = [
   { name: 'Caramel',      hex: '#C68642' },
   { name: 'Lavender',     hex: '#A78BFA' },
   { name: 'Teal',         hex: '#0D9488' },
+  { name: 'Burgundy',     hex: '#800020' },
+  { name: 'Mustard',      hex: '#FFDB58' },
+  { name: 'Olive',        hex: '#808000' },
+  { name: 'Charcoal',     hex: '#36454F' },
+  { name: 'Peach',        hex: '#FFE5B4' },
+  { name: 'Mint Green',   hex: '#98FF98' },
+  { name: 'Coral',        hex: '#FF7F50' },
+  { name: 'Lilac',        hex: '#C8A2C8' },
+  { name: 'Slate Blue',   hex: '#6A5ACD' },
+  { name: 'Rose Gold',    hex: '#B76E79' },
+  { name: 'Taupe',        hex: '#483C32' },
+  { name: 'Chocolate',    hex: '#7B3F00' },
+  { name: 'Plum',         hex: '#8E4585' },
+  { name: 'Rust',         hex: '#B7410E' },
+  { name: 'Sand',         hex: '#C2B280' },
+  { name: 'Hot Pink',    hex: '#FF10F0' },
+  { name: 'Neon Green',   hex: '#39FF14' },
+  { name: 'Electric Blue',hex: '#7DF9FF' },
+  { name: 'Red',    hex: '#ff1010ff' },
+  
 ];
-const CATEGORIES = ['Tops', 'Bottoms', 'Outerwear', 'Activewear', 'Accessories', 'Footwear', 'Sets', 'Other'];
 
 // ─── Helpers ────────────────────────────────────────────────────────
 const parseCsv  = (s) => (s ? s.split(',').map(x => x.trim()).filter(Boolean) : []);
@@ -33,7 +53,8 @@ const EMPTY_FORM = {
   stockQuantity: '', lowStockThreshold: '5',
   vatRate: '15', discount: '0',
   colors: [], sizes: [],
-  imageUrl: '', isActive: true,
+  imageUrls: [], isActive: true,
+  variants: []
 };
 
 // ─── Color swatch picker ─────────────────────────────────────────────
@@ -88,47 +109,48 @@ function SizePicker({ selected, onChange }) {
   );
 }
 
-// ─── Image upload drop zone ──────────────────────────────────────────
-function ImageDropZone({ preview, onFile }) {
+// ─── Multiple Image upload drop zone ──────────────────────────────────────────
+function MultipleImageDropZone({ previews, onFiles }) {
   const inputRef = useRef();
   const [dragging, setDragging] = useState(false);
 
-  const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    onFile(file);
+  const handleFiles = (filesList) => {
+    if (!filesList) return;
+    const valid = Array.from(filesList).filter(f => f.type.startsWith('image/'));
+    if (valid.length) onFiles(valid);
   };
 
   return (
-    <div
-      onClick={() => inputRef.current?.click()}
-      onDragOver={e => { e.preventDefault(); setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-      style={{
-        width: '100%', height: 140, borderRadius: 10,
-        border: `2px dashed ${dragging ? '#C0392B' : '#E8E8E8'}`,
-        background: dragging ? 'rgba(192,57,43,0.05)' : '#FAFAFA',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexDirection: 'column', gap: 8, cursor: 'pointer',
-        transition: 'all 0.2s', overflow: 'hidden', position: 'relative',
-      }}
-    >
-      {preview ? (
-        <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-      ) : (
-        <>
-          <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth={1.5}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span style={{ fontSize: 12, color: '#9CA3AF' }}>Click or drag photo here</span>
-          <span style={{ fontSize: 11, color: '#C9CACC' }}>JPG, PNG, WEBP • max 10 MB</span>
-        </>
-      )}
-      <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
+    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, flexWrap: 'wrap' }}>
+      {previews.map((src, i) => (
+        <div key={i} style={{ width: 100, height: 100, borderRadius: 8, overflow: 'hidden', flexShrink: 0, border: '1px solid #E8E8E8' }}>
+          <img src={src} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      ))}
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
+        style={{
+          width: 100, height: 100, borderRadius: 8, flexShrink: 0,
+          border: `2px dashed ${dragging ? '#C0392B' : '#E8E8E8'}`,
+          background: dragging ? 'rgba(192,57,43,0.05)' : '#FAFAFA',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexDirection: 'column', gap: 4, cursor: 'pointer',
+          transition: 'all 0.2s', position: 'relative',
+        }}
+      >
+        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth={1.5}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span style={{ fontSize: 10, color: '#9CA3AF', textAlign: 'center' }}>Click or drop<br/>images</span>
+        <input ref={inputRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
+      </div>
     </div>
   );
 }
 
 // ─── Modal form ──────────────────────────────────────────────────────
-function ProductModal({ product, onClose, onSaved }) {
+function ProductModal({ product, categories, onClose, onSaved }) {
   const isEdit = !!product;
   const [form, setForm] = useState(isEdit ? {
     ...EMPTY_FORM,
@@ -141,17 +163,60 @@ function ProductModal({ product, onClose, onSaved }) {
     discount: product.discount ?? '0',
     colors: parseCsv(product.colors),
     sizes: parseCsv(product.sizes),
-  } : { ...EMPTY_FORM });
-  const [imageFile, setImageFile] = useState(null);
-  const [preview, setPreview]     = useState(isEdit ? product.imageUrl : null);
-  const [saving, setSaving]       = useState(false);
-  const [error, setError]         = useState('');
+    imageUrls: product.imageUrls || (product.imageUrl ? [product.imageUrl] : []),
+  } : { ...EMPTY_FORM, sku: `RA-${Math.floor(1000 + Math.random() * 9000)}` });
+  
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previews, setPreviews]     = useState(form.imageUrls || []);
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState('');
+  
+  // State for tracking variant stock explicitly
+  const [variantStockGrid, setVariantStockGrid] = useState({});
+
+  useEffect(() => {
+    if (isEdit && product.variants) {
+      const initialGrid = {};
+      product.variants.forEach(v => {
+        const key = `${v.color || 'Default'}-${v.size || 'Default'}`;
+        initialGrid[key] = { stockQuantity: v.stockQuantity, sku: v.sku };
+      });
+      setVariantStockGrid(initialGrid);
+    }
+  }, [isEdit, product]);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  const handleFile = (file) => {
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
+  const handleFiles = (files) => {
+    setImageFiles(prev => [...prev, ...files]);
+    const newPreviews = files.map(f => URL.createObjectURL(f));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const getExpectedVariants = () => {
+    const hasColors = form.colors.length > 0;
+    const hasSizes = form.sizes.length > 0;
+    
+    if (!hasColors && !hasSizes) return [];
+    
+    const cs = hasColors ? form.colors : ['Default'];
+    const ss = hasSizes ? form.sizes : ['Default'];
+    
+    const vars = [];
+    cs.forEach(c => {
+      ss.forEach(s => {
+        vars.push({ color: c, size: s, key: `${c}-${s}` });
+      });
+    });
+    return vars;
+  };
+  const expectedVariants = getExpectedVariants();
+
+  const handleVariantChange = (key, field, value) => {
+    setVariantStockGrid(prev => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -160,16 +225,41 @@ function ProductModal({ product, onClose, onSaved }) {
     if (!form.price)        { setError('Price is required'); return; }
     setSaving(true); setError('');
     try {
+      
+      // Build variants payload
+      const variantsPayload = [];
+      let totalStock = 0;
+      
+      if (expectedVariants.length > 0) {
+        expectedVariants.forEach(ev => {
+          const gridData = variantStockGrid[ev.key] || { stockQuantity: 0, sku: '' };
+          const qty = parseInt(gridData.stockQuantity) || 0;
+          totalStock += qty;
+          variantsPayload.push({
+            color: ev.color === 'Default' ? null : ev.color,
+            size: ev.size === 'Default' ? null : ev.size,
+            sku: gridData.sku || `${form.sku || 'PROD'}-${ev.color.substring(0,3).toUpperCase()}-${ev.size}`,
+            stockQuantity: qty,
+            costPrice: 0,
+            sellPrice: parseFloat(form.price) || 0,
+            active: true
+          });
+        });
+      } else {
+        totalStock = parseInt(form.stockQuantity) || 0;
+      }
+
       const payload = {
         ...form,
         price:             parseFloat(form.price) || 0,
         salePrice:         form.salePrice ? parseFloat(form.salePrice) : null,
-        stockQuantity:     parseInt(form.stockQuantity) || 0,
+        stockQuantity:     totalStock,
         lowStockThreshold: parseInt(form.lowStockThreshold) || 5,
         vatRate:           parseFloat(form.vatRate) || 15,
         discount:          parseInt(form.discount) || 0,
         colors:            form.colors.join(','),
         sizes:             form.sizes.join(','),
+        variants:          variantsPayload.length > 0 ? variantsPayload : null
       };
 
       let saved;
@@ -179,9 +269,9 @@ function ProductModal({ product, onClose, onSaved }) {
         saved = await api.createProduct(payload);
       }
 
-      // Upload image if selected
-      if (imageFile && saved.id) {
-        await api.uploadProductImage(saved.id, imageFile);
+      // Upload multiple images if selected
+      if (imageFiles.length > 0 && saved.id) {
+        await api.uploadProductImages(saved.id, imageFiles);
       }
 
       onSaved();
@@ -199,7 +289,7 @@ function ProductModal({ product, onClose, onSaved }) {
       alignItems: 'center', justifyContent: 'center', padding: 24,
     }} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{
-        background: '#fff', borderRadius: 16, width: '100%', maxWidth: 640,
+        background: '#fff', borderRadius: 16, width: '100%', maxWidth: 740,
         maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.2)',
       }}>
         {/* Header */}
@@ -214,9 +304,9 @@ function ProductModal({ product, onClose, onSaved }) {
         </div>
 
         <form onSubmit={handleSubmit} style={{ padding: '20px 28px 28px' }}>
-          {/* Product photo */}
-          <Section label="Product Photo">
-            <ImageDropZone preview={preview} onFile={handleFile} />
+          {/* Product photos */}
+          <Section label="Product Photos (Upload multiple)">
+            <MultipleImageDropZone previews={previews} onFiles={handleFiles} />
           </Section>
 
           {/* Basic info */}
@@ -225,16 +315,16 @@ function ProductModal({ product, onClose, onSaved }) {
               <Field label="Product Name *" fullWidth>
                 <Input placeholder="e.g. Core Training Leggings" value={form.name} onChange={v => set('name', v)} />
               </Field>
-              <Field label="SKU / Code">
+              <Field label="Base SKU">
                 <Input placeholder="e.g. RA-LGG-001" value={form.sku} onChange={v => set('sku', v)} />
               </Field>
               <Field label="Category">
                 <select value={form.category} onChange={e => set('category', e.target.value)} style={selectStyle}>
                   <option value="">Select category...</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
               </Field>
-              <Field label="Description">
+              <Field label="Description" fullWidth>
                 <Input placeholder="Short description..." value={form.description} onChange={v => set('description', v)} />
               </Field>
             </div>
@@ -267,34 +357,62 @@ function ProductModal({ product, onClose, onSaved }) {
             </div>
           </Section>
 
-          {/* Stock */}
-          <Section label="Inventory">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Stock Quantity">
-                <Input type="number" min="0" placeholder="0" value={form.stockQuantity} onChange={v => set('stockQuantity', v)} />
-              </Field>
-              <Field label="Low-Stock Alert Threshold">
-                <Input type="number" min="0" placeholder="5" value={form.lowStockThreshold} onChange={v => set('lowStockThreshold', v)} />
-              </Field>
-            </div>
-          </Section>
-
           {/* Sizes */}
           <Section label="Available Sizes">
             <SizePicker selected={form.sizes} onChange={v => set('sizes', v)} />
-            {form.sizes.length > 0 && (
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 8 }}>
-                Selected: {form.sizes.join(', ')}
-              </div>
-            )}
           </Section>
 
           {/* Colors */}
           <Section label="Available Colors">
             <ColorPicker selected={form.colors} onChange={v => set('colors', v)} />
-            {form.colors.length > 0 && (
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 8 }}>
-                Selected: {form.colors.join(', ')}
+          </Section>
+
+          {/* Stock */}
+          <Section label="Inventory">
+            {expectedVariants.length === 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <Field label="Stock Quantity (Total)">
+                  <Input type="number" min="0" placeholder="0" value={form.stockQuantity} onChange={v => set('stockQuantity', v)} />
+                </Field>
+                <Field label="Low-Stock Alert Threshold">
+                  <Input type="number" min="0" placeholder="5" value={form.lowStockThreshold} onChange={v => set('lowStockThreshold', v)} />
+                </Field>
+              </div>
+            ) : (
+              <div>
+                <p style={{fontSize: 12, color: '#6B7280', marginBottom: 10}}>Specify stock for each variant. Total stock will be automatically calculated.</p>
+                <div style={{ border: '1px solid #E8E8E8', borderRadius: 8, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
+                    <thead style={{ background: '#F9F9F9', borderBottom: '1px solid #E8E8E8' }}>
+                      <tr>
+                        <th style={{ padding: '8px 12px', color: '#6B7280' }}>Color</th>
+                        <th style={{ padding: '8px 12px', color: '#6B7280' }}>Size</th>
+                        <th style={{ padding: '8px 12px', color: '#6B7280' }}>Stock Quantity</th>
+                        <th style={{ padding: '8px 12px', color: '#6B7280' }}>SKU Override</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expectedVariants.map(ev => (
+                        <tr key={ev.key} style={{ borderBottom: '1px solid #F0F0F0' }}>
+                          <td style={{ padding: '8px 12px' }}>{ev.color === 'Default' ? '—' : ev.color}</td>
+                          <td style={{ padding: '8px 12px' }}>{ev.size === 'Default' ? '—' : ev.size}</td>
+                          <td style={{ padding: '8px 12px' }}>
+                            <input type="number" min="0" placeholder="0" 
+                              value={variantStockGrid[ev.key]?.stockQuantity ?? ''} 
+                              onChange={e => handleVariantChange(ev.key, 'stockQuantity', e.target.value)}
+                              style={{ width: '100%', padding: 6, border: '1px solid #E8E8E8', borderRadius: 4 }} />
+                          </td>
+                          <td style={{ padding: '8px 12px' }}>
+                            <input type="text" placeholder="Auto-generated if empty" 
+                              value={variantStockGrid[ev.key]?.sku ?? ''} 
+                              onChange={e => handleVariantChange(ev.key, 'sku', e.target.value)}
+                              style={{ width: '100%', padding: 6, border: '1px solid #E8E8E8', borderRadius: 4 }} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </Section>
@@ -386,27 +504,94 @@ function SizeChips({ sizes }) {
   );
 }
 
+// ─── Category Modal ──────────────────────────────────────────────────
+function CategoryModal({ onClose, onSaved }) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return setError("Name is required");
+    setSaving(true);
+    try {
+      await api.createCategory({ name, description });
+      onSaved();
+    } catch (err) {
+      setError(err.message || 'Failed to create category');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1200,
+      background: 'rgba(0,0,0,0.55)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', padding: 24,
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 12, width: '100%', maxWidth: 400,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.2)', padding: '24px 28px'
+      }}>
+        <h3 style={{ margin: '0 0 16px', fontSize: 18, color: '#1A1A1A' }}>Add Category</h3>
+        {error && <div style={{ color: '#C0392B', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <Field label="Category Name *">
+            <Input value={name} onChange={setName} placeholder="e.g. Activewear" required />
+          </Field>
+          <div style={{ marginTop: 14 }}>
+            <Field label="Description">
+              <Input value={description} onChange={setDescription} placeholder="Optional description..." />
+            </Field>
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
+            <button type="button" onClick={onClose}
+              style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid #E8E8E8', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#6B7280' }}>
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#C0392B', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+              {saving ? 'Saving...' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ───────────────────────────────────────────────────────
 export default function StockManagementPage() {
   const [products, setProducts]   = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState('All');
   const [modal, setModal]         = useState(null); // null | 'new' | product object
+  const [catModalOpen, setCatModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // product id
 
-  const loadProducts = useCallback(async () => {
-    try { setProducts(await api.fetchProducts()); }
+  const loadData = useCallback(async () => {
+    try { 
+      const [prods, cats] = await Promise.all([
+        api.fetchProducts(),
+        api.fetchCategories()
+      ]);
+      setProducts(prods); 
+      setCategories(cats);
+    }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { loadProducts(); }, [loadProducts]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleDelete = async (id) => {
     await api.deleteProduct(id);
     setConfirmDelete(null);
-    loadProducts();
+    loadData();
   };
 
   const filteredProducts = products.filter(p => {
@@ -415,8 +600,6 @@ export default function StockManagementPage() {
     const matchCat = catFilter === 'All' || p.category === catFilter;
     return matchSearch && matchCat;
   });
-
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
 
   // Summary stats
   const totalItems  = products.length;
@@ -432,22 +615,35 @@ export default function StockManagementPage() {
           <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: '#1A1A1A' }}>Stock Management</h2>
           <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0' }}>Manage your product listings, sizes, colours and inventory</p>
         </div>
-        <button
-          id="stock-add-listing-btn"
-          onClick={() => setModal('new')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: '#C0392B', color: '#fff', border: 'none',
-            borderRadius: 10, padding: '10px 20px', fontSize: 13,
-            fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 12px rgba(192,57,43,0.3)',
-            transition: 'all 0.18s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = '#8B0000'}
-          onMouseLeave={e => e.currentTarget.style.background = '#C0392B'}
-        >
-          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Listing
-        </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={() => setCatModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#fff', color: '#1A1A1A', border: '1.5px solid #E8E8E8',
+              borderRadius: 10, padding: '10px 20px', fontSize: 13,
+              fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s',
+            }}
+          >
+            + Add Category
+          </button>
+          <button
+            id="stock-add-listing-btn"
+            onClick={() => setModal('new')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#C0392B', color: '#fff', border: 'none',
+              borderRadius: 10, padding: '10px 20px', fontSize: 13,
+              fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 12px rgba(192,57,43,0.3)',
+              transition: 'all 0.18s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#8B0000'}
+            onMouseLeave={e => e.currentTarget.style.background = '#C0392B'}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Listing
+          </button>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -477,8 +673,8 @@ export default function StockManagementPage() {
             style={{ width: '100%', height: 36, padding: '0 12px 0 36px', border: '1.5px solid #E8E8E8', borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {categories.map(cat => (
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+          {['All', ...categories.map(c => c.name)].map(cat => (
             <button key={cat} onClick={() => setCatFilter(cat)}
               style={{
                 padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
@@ -581,8 +777,17 @@ export default function StockManagementPage() {
       {modal && (
         <ProductModal
           product={modal === 'new' ? null : modal}
+          categories={categories}
           onClose={() => setModal(null)}
-          onSaved={() => { setModal(null); loadProducts(); }}
+          onSaved={() => { setModal(null); loadData(); }}
+        />
+      )}
+
+      {/* Category modal */}
+      {catModalOpen && (
+        <CategoryModal
+          onClose={() => setCatModalOpen(false)}
+          onSaved={() => { setCatModalOpen(false); loadData(); }}
         />
       )}
 

@@ -72,11 +72,11 @@ export default function ProductCard({ product, cartQty, onAdd, onIncrease, onDec
         </div>
 
         {/* Add to cart / Qty selector */}
-        {cartQty > 0 ? (
+        {cartQty > 0 && !(product.variants && product.variants.length > 0) ? (
           <div className="pos-qty-selector" role="group" aria-label={`Quantity for ${product.name}`}>
             <button
               className="pos-qty-btn"
-              onClick={() => onDecrease(product)}
+              onClick={() => onDecrease(`p-${product.id}`)}
               aria-label="Decrease quantity"
             >
               −
@@ -84,7 +84,7 @@ export default function ProductCard({ product, cartQty, onAdd, onIncrease, onDec
             <span className="pos-qty-display" aria-live="polite">{cartQty}</span>
             <button
               className="pos-qty-btn"
-              onClick={() => onIncrease(product)}
+              onClick={() => onIncrease(`p-${product.id}`)}
               disabled={isOutOfStock || cartQty >= product.stockQuantity}
               aria-label="Increase quantity"
             >
@@ -99,7 +99,7 @@ export default function ProductCard({ product, cartQty, onAdd, onIncrease, onDec
             disabled={isOutOfStock}
             aria-label={isOutOfStock ? 'Out of stock' : `Add ${product.name} to cart`}
           >
-            {isOutOfStock ? 'Out of Stock' : '+ Add to Cart'}
+            {isOutOfStock ? 'Out of Stock' : (product.variants && product.variants.length > 0 ? 'Select Variant' : (cartQty > 0 ? '+ Add More' : '+ Add to Cart'))}
           </button>
         )}
       </div>

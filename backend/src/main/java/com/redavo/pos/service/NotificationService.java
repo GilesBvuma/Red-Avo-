@@ -103,6 +103,12 @@ public class NotificationService {
         }
     }
 
+    public void sendOtpEmail(String email, String otp) {
+        String subject = "Your Password Reset OTP";
+        String body = "You requested a password reset. Your OTP is: " + otp + "\nThis OTP will expire in 15 minutes.";
+        sendEmail(null, "User", email, body, subject, "AUTH_OTP", null);
+    }
+
     // ═══════════════════════════════════════════════════════════
     //  💬  WHATSAPP — Meta Cloud API (graph.facebook.com)
     // ═══════════════════════════════════════════════════════════

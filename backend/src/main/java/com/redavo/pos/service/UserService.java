@@ -32,39 +32,46 @@ public class UserService implements UserDetailsService {
     // ── Spring Security integration ───────────────────────────────────────────
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found: " + username));
+                        "User not found: " + email));
 
         return new RedAvoUserDetails(
                 user.getId(),
-                user.getUsername(),
+                user.getEmail(),
                 user.getPasswordHash(),
                 user.getRole(),
                 user.getStoreId(),
-                Boolean.TRUE.equals(user.getActive()));
+                Boolean.TRUE.equals(user.getActive()),
+                user.getFullName());
     }
 
     // ── User management (ADMIN only — enforced by controller @PreAuthorize) ──
 
     @Transactional
-    public User createUser(String username, String email,
+    public User createUser(String fullName, String phoneNumber, String email,
                            String rawPassword, Role role, Long storeId) {
-        if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already taken: " + username);
-        }
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already registered: " + email);
         }
         User user = new User();
-        user.setUsername(username);
+        user.setFullName(fullName);
+        user.setPhoneNumber(phoneNumber);
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setRole(role);
         user.setStoreId(role == Role.ADMIN ? null : storeId);
         user.setActive(true);
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void updatePassword(String email, String newRawPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+        user.setPasswordHash(passwordEncoder.encode(newRawPassword));
+        userRepository.save(user);
     }
 
     @Transactional
@@ -88,10 +95,10 @@ public class UserService implements UserDetailsService {
      * going through the full registration flow.
      */
     @Transactional
-    public void ensureAdminExists(String username, String email, String rawPassword) {
-        if (!userRepository.existsByUsername(username)) {
-            createUser(username, email, rawPassword, Role.ADMIN, null);
-            System.out.println("[UserService] Default admin user created: " + username);
+    public void ensureAdminExists(String fullName, String email, String rawPassword) {
+        if (!userRepository.existsByEmail(email)) {
+            createUser(fullName, null, email, rawPassword, Role.ADMIN, null);
+            System.out.println("[UserService] Default admin user created: " + email);
         }
     }
 }

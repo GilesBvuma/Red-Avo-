@@ -45,6 +45,17 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
+        Long storeId = order.getStoreId();
+        if (storeId == null) {
+            storeId = resolveStoreId();
+            order.setStoreId(storeId);
+        }
+        
+        Long currentUserId = resolveUserId();
+        if (currentUserId != null) {
+            order.setUserId(currentUserId);
+        }
+
         // Set back-reference on each order item before saving
         if (order.getItems() != null) {
             for (OrderItem item : order.getItems()) {
@@ -55,12 +66,15 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // ── Deduct stock via the ledger (authoritative path) & Compute COGS ──
+        // For ONLINE orders, stock is deducted later upon fulfilment.
         String actor = resolveActor();
         double totalCogs = 0.0;
-        if (savedOrder.getItems() != null) {
-            for (OrderItem item : savedOrder.getItems()) {
-                Double itemCogs = deductStock(item, savedOrder, actor);
-                if (itemCogs != null) totalCogs += itemCogs;
+        if (!"ONLINE".equalsIgnoreCase(savedOrder.getSource())) {
+            if (savedOrder.getItems() != null) {
+                for (OrderItem item : savedOrder.getItems()) {
+                    Double itemCogs = deductStock(item, savedOrder, actor);
+                    if (itemCogs != null) totalCogs += itemCogs;
+                }
             }
         }
         savedOrder.setCostOfSale(totalCogs);
@@ -147,8 +161,9 @@ public class OrderService {
         // ── Admin Alerts (Email & SMS/Dashboard) ──────────────────────────────
         double cogs = notifyOrder.getCostOfSale() != null ? notifyOrder.getCostOfSale() : 0.0;
         double profit = total - cogs;
+        Long adminStoreId = notifyOrder.getStoreId() != null ? notifyOrder.getStoreId() : DEFAULT_STORE_ID;
         String adminEmailBody = String.format("New Order: %s\nTotal: $%.2f\nCOGS: $%.2f\nGross Profit: $%.2f\nStore ID: %d\nCustomer: %s",
-                orderRef, total, cogs, profit, DEFAULT_STORE_ID, customerName);
+                orderRef, total, cogs, profit, adminStoreId, customerName);
         
         // Email to seed admin
         notificationService.sendEmail(null, "Admin", "admin@redavo.com", adminEmailBody, "New Order Alert — " + orderRef, orderRef, null);
@@ -181,6 +196,16 @@ public class OrderService {
                         LedgerReason.SALE,
                         "ORD-" + order.getId(),
                         actor);
+                        
+                // Update cached stock quantities
+                variant.setStockQuantity(Math.max(0, variant.getStockQuantity() - item.getQuantity()));
+                variantRepository.save(variant);
+                
+                Product product = variant.getProduct();
+                product.setStockQuantity(Math.max(0, product.getStockQuantity() - item.getQuantity()));
+                product.computeStockStatus();
+                productRepository.save(product);
+
             } catch (IllegalArgumentException e) {
                 System.err.println("[OrderService] Stock deduction via ledger failed for variant "
                         + variant.getSku() + ": " + e.getMessage());
@@ -231,6 +256,26 @@ public class OrderService {
         return "system";
     }
 
+    private Long resolveStoreId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.redavo.pos.security.RedAvoUserDetails) {
+            com.redavo.pos.security.RedAvoUserDetails details = (com.redavo.pos.security.RedAvoUserDetails) auth.getPrincipal();
+            if (details.getStoreId() != null) {
+                return details.getStoreId();
+            }
+        }
+        return DEFAULT_STORE_ID;
+    }
+
+    private Long resolveUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof com.redavo.pos.security.RedAvoUserDetails) {
+            com.redavo.pos.security.RedAvoUserDetails details = (com.redavo.pos.security.RedAvoUserDetails) auth.getPrincipal();
+            return details.getUserId();
+        }
+        return null;
+    }
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
@@ -238,5 +283,33 @@ public class OrderService {
     public List<Order> getOrdersToday() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         return orderRepository.findByCreatedAtAfter(startOfDay);
+    }
+
+    @Transactional
+    public Order confirmOrder(Long id) {
+        Order order = orderRepository.findById(id).orElseThrow();
+        order.setStatus("CONFIRMED");
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public Order fulfilOrder(Long id, String action) { // action = DISPATCHED, DELIVERED, COLLECTED
+        Order order = orderRepository.findById(id).orElseThrow();
+        
+        // Deduct stock if transitioning from CONFIRMED
+        if ("CONFIRMED".equalsIgnoreCase(order.getStatus()) && "ONLINE".equalsIgnoreCase(order.getSource())) {
+            String actor = resolveActor();
+            double totalCogs = 0.0;
+            if (order.getItems() != null) {
+                for (OrderItem item : order.getItems()) {
+                    Double itemCogs = deductStock(item, order, actor);
+                    if (itemCogs != null) totalCogs += itemCogs;
+                }
+            }
+            order.setCostOfSale(totalCogs);
+        }
+        
+        order.setStatus(action);
+        return orderRepository.save(order);
     }
 }

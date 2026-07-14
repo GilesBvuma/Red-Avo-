@@ -40,6 +40,9 @@ public class ProductVariant {
     @Column(unique = true, nullable = false)
     private String sku;
 
+    @Column(nullable = false)
+    private Integer stockQuantity = 0;
+
     /**
      * What the business paid for this variant (weighted-average cost, updated
      * on each receipt). Used for COGS and gross-profit calculations.

@@ -22,6 +22,12 @@ public class ProductService {
     }
 
     public Product createProduct(Product product) {
+        if (product.getVariants() != null) {
+            for (com.redavo.pos.model.ProductVariant v : product.getVariants()) {
+                v.setProduct(product);
+            }
+        }
+        product.computeStockStatus();
         return productRepository.save(product);
     }
 
@@ -49,8 +55,25 @@ public class ProductService {
         if (updated.getVatRate()     != null) product.setVatRate(updated.getVatRate());
         if (updated.getDiscount()    != null) product.setDiscount(updated.getDiscount());
         if (updated.getImageUrl()    != null) product.setImageUrl(updated.getImageUrl());
+        if (updated.getImageUrls()   != null) {
+            product.getImageUrls().clear();
+            product.getImageUrls().addAll(updated.getImageUrls());
+        }
         if (updated.getDescription() != null) product.setDescription(updated.getDescription());
         if (updated.getIsActive()    != null) product.setIsActive(updated.getIsActive());
+        
+        if (updated.getVariants() != null) {
+            if (product.getVariants() != null) {
+                product.getVariants().clear();
+            } else {
+                product.setVariants(new java.util.ArrayList<>());
+            }
+            for (com.redavo.pos.model.ProductVariant v : updated.getVariants()) {
+                v.setProduct(product); // Ensure parent reference is set
+                product.getVariants().add(v);
+            }
+        }
+        
         product.computeStockStatus();
         return productRepository.save(product);
     }

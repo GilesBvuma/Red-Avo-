@@ -23,10 +23,20 @@ public class Order {
     @Column(unique = true)
     private String invoiceNumber;
 
+    private Long   storeId;
+    private Long   userId;
+
     private Long   customerId;
     private String customerName;
     private String customerEmail;
     private String customerPhone;
+    private String deliveryAddress;
+
+    @Column(columnDefinition = "VARCHAR(20) DEFAULT 'POS'")
+    private String source = "POS"; // POS or ONLINE
+
+    @Column(columnDefinition = "VARCHAR(20) DEFAULT 'COLLECTION'")
+    private String deliveryMethod = "COLLECTION"; // COLLECTION or DELIVERY
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "order", fetch = FetchType.EAGER)
     private List<OrderItem> items;
@@ -43,11 +53,15 @@ public class Order {
 
 
 
-    // ── Payment ────────────────────────────────────────────────
+    // ── Payment & Online Fields ────────────────────────────────
     private String paymentMethod;
     private Double amountTendered;   // cash given by customer
     private Double changeGiven;      // change returned
 
+    private String paynowReference;
+    private String paynowPollUrl;
+
+    // Statuses: PENDING_PAYMENT, CONFIRMED, DISPATCHED, DELIVERED, COLLECTED, CANCELLED, COMPLETED
     @Column(columnDefinition = "VARCHAR(50) DEFAULT 'COMPLETED'")
     private String status = "COMPLETED";
 

@@ -38,12 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
             Long   userId   = tokenProvider.getUserIdFromToken(token);
-            String username = tokenProvider.getUsernameFromToken(token);
+            String email    = tokenProvider.getEmailFromToken(token);
             Role   role     = tokenProvider.getRoleFromToken(token);
             Long   storeId  = tokenProvider.getStoreIdFromToken(token);
 
             RedAvoUserDetails userDetails =
-                    new RedAvoUserDetails(userId, username, "", role, storeId, true);
+                    new RedAvoUserDetails(userId, email, "", role, storeId, true, null);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(

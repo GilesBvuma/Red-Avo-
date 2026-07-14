@@ -15,6 +15,7 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   const [loadingProducts, setLoading] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [error, setError]             = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Fetch products
   const loadProducts = useCallback(async () => {
@@ -67,8 +68,17 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   }, [products, category, search]);
 
   const getCartQty = (productId) => {
-    const item = cart.find((c) => c.product.id === productId);
-    return item ? item.quantity : 0;
+    return cart
+      .filter((c) => c.product.id === productId)
+      .reduce((sum, item) => sum + item.quantity, 0);
+  };
+
+  const handleProductAddClick = (product) => {
+    if (product.variants && product.variants.length > 0) {
+      setSelectedProduct(product);
+    } else {
+      onAdd(product, null);
+    }
   };
 
   return (
@@ -143,7 +153,7 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
                 key={product.id}
                 product={product}
                 cartQty={getCartQty(product.id)}
-                onAdd={onAdd}
+                onAdd={handleProductAddClick}
                 onIncrease={onIncrease}
                 onDecrease={onDecrease}
               />
@@ -151,6 +161,52 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
           </div>
         )}
       </div>
+
+      {/* Variant Selection Modal */}
+      {selectedProduct && (
+        <div className="pos-modal-overlay">
+          <div className="pos-modal" style={{ width: '400px' }}>
+            <div className="pos-modal-header">
+              <h3>Select Variant: {selectedProduct.name}</h3>
+              <button className="pos-modal-close" onClick={() => setSelectedProduct(null)}>×</button>
+            </div>
+            <div className="pos-modal-body">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                {selectedProduct.variants.map(variant => {
+                  const isOutOfStock = variant.stockQuantity === 0;
+                  return (
+                    <button
+                      key={variant.id}
+                      disabled={isOutOfStock}
+                      onClick={() => {
+                        onAdd(selectedProduct, variant);
+                        setSelectedProduct(null);
+                      }}
+                      style={{
+                        padding: '12px',
+                        border: '1px solid var(--pos-border)',
+                        borderRadius: '8px',
+                        background: isOutOfStock ? '#f5f5f5' : 'white',
+                        cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                        opacity: isOutOfStock ? 0.6 : 1,
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}
+                    >
+                      <span style={{ fontWeight: 600 }}>{variant.size} - {variant.color}</span>
+                      <span style={{ fontSize: '11px', color: isOutOfStock ? 'red' : 'var(--pos-text-muted)' }}>
+                        {isOutOfStock ? 'Out of Stock' : `${variant.stockQuantity} in stock`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

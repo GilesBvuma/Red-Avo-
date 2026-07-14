@@ -65,17 +65,38 @@ async function apiFetch(endpoint, options = {}) {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-/**
- * Log in and return an AuthToken object.
- * Call setAuthToken(result.token) after this to attach the JWT.
- * @param {string} username
- * @param {string} password
- * @returns {Promise<import('@red-avo/types').AuthToken>}
- */
-export async function login(username, password) {
+export async function login(email, password) {
   return apiFetch('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function registerAdmin(payload) {
+  return apiFetch('/auth/register/admin', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function registerEmployee(payload) {
+  return apiFetch('/auth/register/employee', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function forgotPassword(email) {
+  return apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(email, otp, newPassword) {
+  return apiFetch('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp, newPassword }),
   });
 }
 

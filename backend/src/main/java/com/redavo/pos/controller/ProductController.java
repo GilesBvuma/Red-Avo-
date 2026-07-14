@@ -67,29 +67,41 @@ public class ProductController {
     @org.springframework.beans.factory.annotation.Value("${app.upload.dir:../frontend/apps/pos-web/public/uploads}")
     private String uploadDir;
 
-    @PostMapping("/{id}/image")
-    public ResponseEntity<Map<String, String>> uploadImage(
+    @PostMapping("/{id}/images")
+    public ResponseEntity<Map<String, List<String>>> uploadImages(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("files") MultipartFile[] files) throws IOException {
 
-        String originalName = file.getOriginalFilename();
-        String extension    = (originalName != null && originalName.contains("."))
-                ? originalName.substring(originalName.lastIndexOf('.'))
-                : ".jpg";
-        String filename = UUID.randomUUID() + extension;
-
-        // Save into pos-web/public/uploads (configurable via app.upload.dir)
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
-        Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+        
+        List<String> uploadedUrls = new java.util.ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) continue;
+            
+            String originalName = file.getOriginalFilename();
+            String extension    = (originalName != null && originalName.contains("."))
+                    ? originalName.substring(originalName.lastIndexOf('.'))
+                    : ".jpg";
+            String filename = UUID.randomUUID() + extension;
+            
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            String imageUrl = "/uploads/" + filename;
+            uploadedUrls.add(imageUrl);
+        }
 
-        String imageUrl = "/uploads/" + filename;
+        // Fetch product and append urls
+        Product product = productService.getAllProducts().stream().filter(p -> p.getId().equals(id)).findFirst().orElseThrow();
+        if (product.getImageUrls() == null) product.setImageUrls(new java.util.ArrayList<>());
+        product.getImageUrls().addAll(uploadedUrls);
+        
+        // If no primary image is set, set it to the first one
+        if (product.getImageUrl() == null && !uploadedUrls.isEmpty()) {
+            product.setImageUrl(uploadedUrls.get(0));
+        }
+        
+        productService.updateProduct(id, product);
 
-        // Persist the URL on the product
-        Product updated = new Product();
-        updated.setImageUrl(imageUrl);
-        productService.updateProduct(id, updated);
-
-        return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+        return ResponseEntity.ok(Map.of("imageUrls", uploadedUrls));
     }
 }

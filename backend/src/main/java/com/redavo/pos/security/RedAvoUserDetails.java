@@ -18,26 +18,33 @@ import java.util.List;
 public class RedAvoUserDetails implements UserDetails {
 
     private final Long userId;
-    private final String username;
+    private final String email;
     private final String password;
     private final Role role;
     /** Null for ADMIN users (cross-store access). */
     private final Long storeId;
     private final boolean active;
+    private final String fullName;
 
-    public RedAvoUserDetails(Long userId, String username, String password,
-                             Role role, Long storeId, boolean active) {
+    public RedAvoUserDetails(Long userId, String email, String password,
+                             Role role, Long storeId, boolean active, String fullName) {
         this.userId   = userId;
-        this.username = username;
+        this.email    = email;
         this.password = password;
         this.role     = role;
         this.storeId  = storeId;
         this.active   = active;
+        this.fullName = fullName;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 
     @Override public boolean isAccountNonExpired()    { return true; }

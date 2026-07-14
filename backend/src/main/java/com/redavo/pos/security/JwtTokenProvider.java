@@ -42,9 +42,9 @@ public class JwtTokenProvider {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(Long userId, String username, Role role, Long storeId) {
+    public String generateToken(Long userId, String email, Role role, Long storeId) {
         return Jwts.builder()
-                .subject(username)
+                .subject(email)
                 .claim("userId",  userId)
                 .claim("role",    role.name())
                 .claim("storeId", storeId)
@@ -71,7 +71,7 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getUsernameFromToken(String token) {
+    public String getEmailFromToken(String token) {
         return parseClaims(token).getSubject();
     }
 

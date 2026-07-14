@@ -9,6 +9,9 @@ import ChannelStatusBar from './components/ChannelStatusBar';
 import StockManagementPage from './components/StockManagementPage';
 import CustomersPage from './components/CustomersPage';
 import TransfersPage from './components/TransfersPage';
+import BusinessManagementPage from './components/BusinessManagementPage';
+import FinancialsPage from './components/FinancialsPage';
+import OrdersPage from './components/OrdersPage';
 import { NotificationToast } from './components/NotificationToast';
 
 // ── Toast hook (inline to avoid require() in component) ──────────
@@ -28,37 +31,50 @@ function useToasts() {
 }
 
 // ── Cart helpers ─────────────────────────────────────────────────
-function addToCart(cart, product) {
-  const existing = cart.find((i) => i.product.id === product.id);
+function getCartItemKey(product, variant) {
+  return variant ? `v-${variant.id}` : `p-${product.id}`;
+}
+
+function getItemKey(item) {
+  return getCartItemKey(item.product, item.variant);
+}
+
+function addToCart(cart, product, variant = null) {
+  const itemKey = getCartItemKey(product, variant);
+  const existing = cart.find((i) => getItemKey(i) === itemKey);
+  const stockLimit = variant ? variant.stockQuantity : product.stockQuantity;
+
   if (existing) {
     return cart.map((i) =>
-      i.product.id === product.id
-        ? { ...i, quantity: Math.min(i.quantity + 1, product.stockQuantity) }
+      getItemKey(i) === itemKey
+        ? { ...i, quantity: Math.min(i.quantity + 1, stockLimit) }
         : i
     );
   }
-  return [...cart, { product, quantity: 1 }];
+  return [...cart, { product, variant, quantity: 1 }];
 }
 
-function increaseQty(cart, product) {
-  return cart.map((i) =>
-    i.product.id === product.id
-      ? { ...i, quantity: Math.min(i.quantity + 1, product.stockQuantity) }
-      : i
-  );
+function increaseQty(cart, itemKey) {
+  return cart.map((i) => {
+    if (getItemKey(i) === itemKey) {
+      const stockLimit = i.variant ? i.variant.stockQuantity : i.product.stockQuantity;
+      return { ...i, quantity: Math.min(i.quantity + 1, stockLimit) };
+    }
+    return i;
+  });
 }
 
-function decreaseQty(cart, product) {
-  const item = cart.find((i) => i.product.id === product.id);
+function decreaseQty(cart, itemKey) {
+  const item = cart.find((i) => getItemKey(i) === itemKey);
   if (!item) return cart;
-  if (item.quantity <= 1) return cart.filter((i) => i.product.id !== product.id);
+  if (item.quantity <= 1) return cart.filter((i) => getItemKey(i) !== itemKey);
   return cart.map((i) =>
-    i.product.id === product.id ? { ...i, quantity: i.quantity - 1 } : i
+    getItemKey(i) === itemKey ? { ...i, quantity: i.quantity - 1 } : i
   );
 }
 
-function removeFromCart(cart, productId) {
-  return cart.filter((i) => i.product.id !== productId);
+function removeFromCart(cart, itemKey) {
+  return cart.filter((i) => getItemKey(i) !== itemKey);
 }
 
 // ── Main POS Page ────────────────────────────────────────────────
@@ -67,10 +83,10 @@ export default function POSPage() {
   const [cart, setCart]           = useState([]);
   const { toasts, addToast, removeToast } = useToasts();
 
-  const handleAdd      = useCallback((p) => setCart((c) => addToCart(c, p)),    []);
-  const handleIncrease = useCallback((p) => setCart((c) => increaseQty(c, p)),  []);
-  const handleDecrease = useCallback((p) => setCart((c) => decreaseQty(c, p)),  []);
-  const handleRemove   = useCallback((id) => setCart((c) => removeFromCart(c, id)), []);
+  const handleAdd      = useCallback((p, v) => setCart((c) => addToCart(c, p, v)), []);
+  const handleIncrease = useCallback((itemKey) => setCart((c) => increaseQty(c, itemKey)), []);
+  const handleDecrease = useCallback((itemKey) => setCart((c) => decreaseQty(c, itemKey)), []);
+  const handleRemove   = useCallback((itemKey) => setCart((c) => removeFromCart(c, itemKey)), []);
   const handleClear    = useCallback(() => setCart([]), []);
 
   return (
@@ -104,6 +120,9 @@ export default function POSPage() {
         {activeNav === 'stock' && <StockManagementPage />}
         {activeNav === 'customers' && <CustomersPage />}
         {activeNav === 'transfers' && <TransfersPage />}
+        {activeNav === 'settings' && <BusinessManagementPage />}
+        {activeNav === 'financials' && <FinancialsPage />}
+        {activeNav === 'orders' && <OrdersPage />}
       </div>
 
       {/* Right — Order panel */}

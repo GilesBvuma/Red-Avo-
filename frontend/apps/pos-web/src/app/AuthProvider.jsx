@@ -27,22 +27,23 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Route guard
     if (!loading) {
-      if (!user && pathname !== '/login') {
-        router.push('/login');
-      } else if (user && pathname === '/login') {
+      if (!user && !pathname.startsWith('/auth')) {
+        router.push('/auth/role-select');
+      } else if (user && pathname.startsWith('/auth')) {
         router.push('/pos');
       }
     }
   }, [user, loading, pathname, router]);
 
-  const handleLogin = async (username, password) => {
-    const res = await login(username, password);
+  const handleLogin = async (email, password) => {
+    const res = await login(email, password);
     setAuthToken(res.token);
     
     const userData = {
-      username: res.username,
+      email: res.email,
       role: res.role,
-      storeId: res.storeId
+      storeId: res.storeId,
+      username: res.name || res.email
     };
     
     localStorage.setItem('redavo_token', res.token);
@@ -56,7 +57,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('redavo_token');
     localStorage.removeItem('redavo_user');
     setUser(null);
-    router.push('/login');
+    router.push('/auth/role-select');
   };
 
   if (loading) return null; // or a loading spinner

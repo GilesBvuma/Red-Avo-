@@ -25,4 +25,14 @@ public class OrderController {
     public ResponseEntity<Order> createOrder(@RequestBody Order order) {
         return ResponseEntity.ok(orderService.createOrder(order));
     }
+
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<Order> confirmOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.confirmOrder(id));
+    }
+
+    @PostMapping("/{id}/fulfil")
+    public ResponseEntity<Order> fulfilOrder(@PathVariable Long id, @RequestParam String action) {
+        return ResponseEntity.ok(orderService.fulfilOrder(id, action));
+    }
 }

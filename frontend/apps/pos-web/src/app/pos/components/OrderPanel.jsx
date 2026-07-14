@@ -70,7 +70,8 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
         total,
         items: cart.map((item) => ({
           productId:   item.product.id,
-          productName: item.product.name,
+          variantId:   item.variant ? item.variant.id : null,
+          productName: item.variant ? `${item.product.name} (${item.variant.size} - ${item.variant.color})` : item.product.name,
           quantity:    item.quantity,
           unitPrice:   item.product.price,
           lineTotal:   item.product.price * item.quantity,
@@ -207,12 +208,15 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
                   <div className="pos-empty-cart-text">No items yet<br/>Add products from the grid</div>
                 </div>
               ) : (
-                cart.map((item) => (
+                cart.map((item) => {
+                  const itemKey = item.variant ? `v-${item.variant.id}` : `p-${item.product.id}`;
+                  const displayName = item.variant ? `${item.product.name} (${item.variant.size} - ${item.variant.color})` : item.product.name;
+                  return (
                   <div
-                    key={item.product.id}
+                    key={itemKey}
                     className="pos-order-item"
                     role="listitem"
-                    aria-label={`${item.product.name} × ${item.quantity}`}
+                    aria-label={`${displayName} × ${item.quantity}`}
                   >
                     <div
                       className="pos-order-item-thumb"
@@ -224,7 +228,7 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
                       </span>
                     </div>
                     <div className="pos-order-item-info">
-                      <div className="pos-order-item-name">{item.product.name}</div>
+                      <div className="pos-order-item-name" style={{ fontSize: '13px' }}>{displayName}</div>
                       <div className="pos-order-item-qty">
                         {item.quantity} × ${item.product.price.toFixed(2)}
                       </div>
@@ -234,14 +238,14 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
                     </div>
                     <button
                       className="pos-order-item-remove"
-                      onClick={() => onRemoveItem(item.product.id)}
-                      aria-label={`Remove ${item.product.name}`}
+                      onClick={() => onRemoveItem(itemKey)}
+                      aria-label={`Remove ${displayName}`}
                       title="Remove item"
                     >
                       ×
                     </button>
                   </div>
-                ))
+                )})
               )}
             </div>
 

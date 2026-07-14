@@ -48,7 +48,12 @@ public class Product {
 
     // Media
     @Column(columnDefinition = "TEXT")
-    private String imageUrl;
+    private String imageUrl; // Primary image for quick rendering
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
+    private java.util.List<String> imageUrls = new java.util.ArrayList<>();
 
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean isActive = true;

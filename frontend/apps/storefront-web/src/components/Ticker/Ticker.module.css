@@ -1,0 +1,39 @@
+.ticker {
+  overflow: hidden;
+  padding: 22px 0;
+  clip-path: polygon(0 0, 100% 14px, 100% 100%, 0 calc(100% - 14px));
+  will-change: transform, opacity;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: scrollLeft 24s linear infinite;
+}
+
+.track.rtl {
+  animation: scrollRight 24s linear infinite;
+}
+
+@keyframes scrollLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-33.333%); }
+}
+
+@keyframes scrollRight {
+  from { transform: translateX(-33.333%); }
+  to   { transform: translateX(0); }
+}
+
+.text {
+  white-space: nowrap;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.55rem;
+  letter-spacing: 0.1em;
+  padding-right: 0;
+}
+
+.dot {
+  margin: 0 8px;
+  font-size: 1.2rem;
+}
