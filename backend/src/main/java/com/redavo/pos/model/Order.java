@@ -38,17 +38,19 @@ public class Order {
     @Column(columnDefinition = "VARCHAR(20) DEFAULT 'COLLECTION'")
     private String deliveryMethod = "COLLECTION"; // COLLECTION or DELIVERY
 
+    @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
+    private Double deliveryFee = 0.0;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "order", fetch = FetchType.EAGER)
     private List<OrderItem> items;
 
-    // ── Accounting breakdown ────────────────────────────────────
+    // ── Accounting breakdown ─────────────────────────────────────
     @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
     private Double subtotal = 0.0;
 
     @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
     private Double vatAmount = 0.0;   // total VAT collected
-    private Double tax;         // alias kept for backward compat (= vatAmount)
-    private Double total;       // subtotal + vatAmount
+    private Double total;             // subtotal + vatAmount
     private Double costOfSale;
 
 
@@ -71,9 +73,5 @@ public class Order {
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
-        // keep tax in sync with vatAmount for backward compat
-        if (this.tax == null && this.vatAmount != null) {
-            this.tax = this.vatAmount;
-        }
     }
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 // Color palette for product image placeholders
 const PRODUCT_COLORS = {
   'Tops':        ['#8B0000', '#A93226'],
@@ -31,6 +33,21 @@ export default function ProductCard({ product, cartQty, onAdd, onIncrease, onDec
     : 'In Stock';
   const stockClass = isOutOfStock ? 'out-of-stock' : isLowStock ? 'low-stock' : 'in-stock';
 
+  const [imgIndex, setImgIndex] = useState(0);
+
+  const images = [];
+  if (product.imageUrl) images.push(product.imageUrl);
+  if (product.imageUrls) images.push(...product.imageUrls);
+  const uniqueImages = Array.from(new Set(images));
+
+  useEffect(() => {
+    if (uniqueImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setImgIndex(prev => (prev === uniqueImages.length - 1 ? 0 : prev + 1));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [uniqueImages.length]);
+
   return (
     <article
       className={`pos-product-card${isOutOfStock ? ' out-of-stock' : ''}`}
@@ -43,11 +60,11 @@ export default function ProductCard({ product, cartQty, onAdd, onIncrease, onDec
         style={{ background: `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)` }}
         aria-hidden="true"
       >
-        {product.imageUrl && (
+        {uniqueImages.length > 0 && (
           <img 
-            src={product.imageUrl} 
+            src={uniqueImages[imgIndex]} 
             alt={product.name} 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, zIndex: 0 }} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, zIndex: 0, transition: 'opacity 0.3s ease-in-out' }} 
           />
         )}
         {product.discount > 0 && (
@@ -58,7 +75,7 @@ export default function ProductCard({ product, cartQty, onAdd, onIncrease, onDec
         <span className={`pos-stock-badge ${stockClass}`} aria-label={stockLabel}>
           {stockLabel}
         </span>
-        {!product.imageUrl && <span className="pos-img-label">{product.name}</span>}
+        {uniqueImages.length === 0 && <span className="pos-img-label">{product.name}</span>}
       </div>
 
       {/* Info */}

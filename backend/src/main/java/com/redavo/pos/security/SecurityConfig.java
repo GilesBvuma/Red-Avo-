@@ -16,7 +16,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -39,6 +41,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
 
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOriginsRaw;
+
     public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
@@ -50,25 +55,30 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // ── Public endpoints ─────────────────────────────────────────
+                // ── Public endpoints ─────────────────────────────────────────────────────────
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/register/admin").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/stock/products/*/variants").permitAll() // storefront variant reads
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").permitAll() // Storefront checkout
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders/*/confirm").permitAll() // PayNow webhook
                 .requestMatchers("/uploads/**").permitAll() // Public images
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger UI
                 .requestMatchers("/error").permitAll() // Allow Spring Boot error endpoint
 
-                // ── Admin-only endpoints — enforced at HTTP level ───────────
+                // ── Admin-only endpoints — enforced at HTTP level ───────────────────────────────
                 .requestMatchers("/api/auth/register/employee").hasRole("ADMIN")
                 .requestMatchers("/api/audit/**").hasRole("ADMIN")
-                .requestMatchers("/api/stores/**").hasRole("ADMIN")
-                .requestMatchers("/api/employees/**").permitAll()
+                // Employees need to READ stores (for stock/transfers pages); writes stay admin-only
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/stores/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/stores/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/stores/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/stores/**").hasRole("ADMIN")
+                .requestMatchers("/api/employees/**").authenticated()
 
-                // ── Phase 2: Lock down the rest of the API ─────────
-                .anyRequest().permitAll()
+                // ── Phase 2: All remaining endpoints require authentication ───────────────────────
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -78,10 +88,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",  // pos-web
-                "http://localhost:3001"   // storefront-web
-        ));
+        List<String> origins = Arrays.asList(allowedOriginsRaw.split(","));
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

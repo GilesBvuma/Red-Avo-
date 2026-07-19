@@ -67,6 +67,9 @@ export default function AdminLogin() {
           </button>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+            <Link href="/auth/role-select" className={styles.link}>
+              ← Back to role selection
+            </Link>
             <Link href="/auth/forgot-password" className={styles.link}>
               Forgot password?
             </Link>

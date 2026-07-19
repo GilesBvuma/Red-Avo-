@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rateLimit';
 const { Paynow } = require('paynow');
 
 export async function POST(request) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    if (!rateLimit(ip, 10, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await request.json();
-    const { amount, email, customerName, phone, deliveryAddress, deliveryMethod, items } = body;
+    const { amount, email, customerName, phone, deliveryAddress, deliveryMethod, deliveryFee, items } = body;
 
     // We will call the Spring Boot backend to create the Order in PENDING_PAYMENT state
     const orderPayload = {
@@ -15,8 +21,9 @@ export async function POST(request) {
       customerPhone: phone,
       deliveryAddress: deliveryAddress,
       deliveryMethod: deliveryMethod,
+      deliveryFee: deliveryFee || 0.0,
       total: amount,
-      subtotal: amount,
+      subtotal: amount - (deliveryFee || 0.0),
       items: items
     };
 

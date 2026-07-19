@@ -79,7 +79,7 @@ export default function Hero() {
 
       {/* ── Left column ── */}
       <div className={styles.left}>
-        <span className={styles.eyebrow}>New Collection · 2025</span>
+        <span className={styles.eyebrow}>New Collection · 2026</span>
 
         <h1 className={styles.heading} aria-label="Where every move tells a story.">
           {WORDS.map((word, i) => (

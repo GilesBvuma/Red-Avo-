@@ -2,6 +2,7 @@ package com.redavo.pos.controller;
 
 import com.redavo.pos.model.Store;
 import com.redavo.pos.repository.StoreRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +14,15 @@ import java.util.List;
 public class StoreController {
 
     private final StoreRepository storeRepository;
+    private final com.redavo.pos.repository.OrderRepository orderRepository;
+    private final com.redavo.pos.repository.UserRepository userRepository;
 
-    public StoreController(StoreRepository storeRepository) {
+    public StoreController(StoreRepository storeRepository, 
+                           com.redavo.pos.repository.OrderRepository orderRepository,
+                           com.redavo.pos.repository.UserRepository userRepository) {
         this.storeRepository = storeRepository;
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -57,10 +64,7 @@ public class StoreController {
 
     @GetMapping("/{id}/dashboard")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getStoreDashboard(
-            @PathVariable Long id,
-            @Autowired com.redavo.pos.repository.OrderRepository orderRepository,
-            @Autowired com.redavo.pos.repository.UserRepository userRepository) {
+    public ResponseEntity<?> getStoreDashboard(@PathVariable Long id) {
         try {
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
             java.time.LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();

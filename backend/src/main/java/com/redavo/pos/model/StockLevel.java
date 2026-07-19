@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * Materialised stock quantity for one {@link ProductVariant} at one store.
@@ -24,13 +26,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class StockLevel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "variant_id", nullable = false)
     private ProductVariant variant;
 
@@ -39,16 +42,18 @@ public class StockLevel {
 
     /**
      * Current on-hand quantity.
-     * Must only be modified by {@code StockLedgerService}.
+     * Must only be modified by {@code StockLedgerService.applyDelta()} within a
+     * {@code @Transactional} boundary. Do not call {@code setQuantity()} directly
+     * from application code outside of {@code StockLedgerService}.
      */
     @Column(nullable = false)
     private int quantity = 0;
 
-    // ── Package-private setter ────────────────────────────────────────────────
-    // Lombok generates a public setter for all fields with @Data.
-    // We override it here to restrict direct access from outside the service layer.
-    // The AOP StockLedgerService uses setQuantityInternal() instead.
-    void setQuantityInternal(int quantity) {
-        this.quantity = quantity;
-    }
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
 }

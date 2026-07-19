@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import BulkNotifyPanel from './BulkNotifyPanel';
 import { createOrder, fetchNotificationHistory } from '../lib/api';
 
 const PAYMENT_METHODS = [
@@ -10,7 +9,7 @@ const PAYMENT_METHODS = [
   { id: 'QR',   label: 'QR Code', icon: '📱' },
 ];
 
-const TABS = ['Walk-in', 'Online', 'Bulk Notify'];
+const TABS = ['Walk-in', 'Online'];
 
 // Product placeholder colors (matches ProductCard)
 const PRODUCT_COLORS = {
@@ -181,11 +180,7 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
         </div>
       </div>
 
-      {/* ── BULK NOTIFY tab ── */}
-      {activeTab === 'Bulk Notify' ? (
-        <BulkNotifyPanel onToast={onToast} />
-      ) : (
-        <>
+      {/* ── Order Body ── */}
           {/* Scrollable body — items + totals + customer + payment */}
           <div className="pos-order-body">
             {/* Order items header */}
@@ -378,8 +373,6 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
               )}
             </button>
           </div>
-        </>
-      )}
     </aside>
   );
 }

@@ -8,10 +8,88 @@
 
 .main {
   flex: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 120px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 100vh;
+}
+
+.videoBackground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.leftBackground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.bgVideo {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.contentCard {
+  position: relative;
+  z-index: 1;
+  width: 92%;
+  max-width: 600px;
+  margin: 120px auto 60px;
+  background: rgba(24, 24, 27, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 32px 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+@media (min-width: 900px) {
+  .main {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .contentCard {
+    width: 50%;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    padding: 140px 6vw 80px;
+    background: #0c0c0c;
+    backdrop-filter: none;
+    box-shadow: none;
+    overflow-y: auto;
+  }
+
+  .videoBackground {
+    position: relative;
+    width: 50%;
+    flex: 1;
+  }
+
+  .leftBackground {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    left: 0;
+    top: 0;
+  }
 }
 
 .main h1 {
@@ -49,16 +127,9 @@
 }
 
 .layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 48px;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .cartList {
@@ -151,8 +222,6 @@
   background: #18181b;
   padding: 32px;
   border-radius: 12px;
-  position: sticky;
-  top: 100px;
 }
 
 .summary h2 {

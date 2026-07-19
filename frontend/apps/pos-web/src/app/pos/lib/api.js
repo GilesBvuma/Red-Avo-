@@ -4,6 +4,10 @@
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
+// Tracks whether a session-expired redirect is already in flight so we
+// don't fire multiple simultaneous redirects from parallel API calls.
+let _redirectingToLogin = false;
+
 async function apiFetch(endpoint, options = {}) {
   try {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
@@ -11,6 +15,10 @@ async function apiFetch(endpoint, options = {}) {
       const token = localStorage.getItem('redavo_token');
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        // No token yet — AuthProvider will handle the redirect once it
+        // finishes its own initialisation. Don't alert or redirect here.
+        throw new Error('No authentication token found');
       }
     }
     const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -18,10 +26,29 @@ async function apiFetch(endpoint, options = {}) {
       headers,
     });
     if (!res.ok) {
+      // 401 = token invalid / expired → clear session and go to login
+      // 403 = authenticated but not authorised → let the page handle it
+      if (res.status === 401 && typeof window !== 'undefined') {
+        if (!_redirectingToLogin) {
+          _redirectingToLogin = true;
+          localStorage.removeItem('redavo_token');
+          localStorage.removeItem('redavo_user');
+          window.location.href = '/auth/role-select?reason=session-expired';
+        }
+      }
       const error = await res.text();
       throw new Error(error || `HTTP ${res.status}`);
     }
-    return await res.json();
+    
+    // 204 No Content has no body, so don't try to parse it
+    if (res.status === 204) {
+      return null;
+    }
+    
+    // For some endpoints that might return empty text but status 200
+    const text = await res.text();
+    if (!text) return null;
+    return JSON.parse(text);
   } catch (err) {
     console.error(`[API] ${endpoint}:`, err.message);
     throw err;
@@ -75,6 +102,25 @@ export async function uploadProductImages(id, files) {
     body: formData,
   });
   if (!res.ok) throw new Error('Image upload failed');
+  return res.json();
+}
+
+export async function uploadProductInvoices(id, files) {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('files', file);
+  }
+  const headers = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('redavo_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${API_BASE}/products/${id}/invoices`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Invoice upload failed');
   return res.json();
 }
 
@@ -159,7 +205,12 @@ export async function fetchNotificationHistory() {
   return apiFetch('/notify/history');
 }
 
-// ── Transfers & Stores ────────────────────────────────────────────
+// ── Transfers & Stores & Stock ────────────────────────────────────────────
+export async function fetchStockLevels(storeId) {
+  const query = storeId ? `?storeId=${storeId}` : '';
+  return apiFetch(`/stock/levels${query}`);
+}
+
 export async function fetchTransfers() {
   return apiFetch('/stock/transfers');
 }
@@ -169,15 +220,24 @@ export async function requestTransfer(payload) {
 }
 
 export async function dispatchTransfer(id, dispatchedQuantity) {
-  return apiFetch(`/stock/transfers/${id}/dispatch?dispatchedQuantity=${dispatchedQuantity}`, { method: 'POST' });
+  return apiFetch(`/stock/transfers/${id}/dispatch`, {
+    method: 'POST',
+    body: JSON.stringify({ dispatchQuantity: dispatchedQuantity }),
+  });
 }
 
 export async function receiveTransfer(id, receivedQuantity) {
-  return apiFetch(`/stock/transfers/${id}/receive?receivedQuantity=${receivedQuantity}`, { method: 'POST' });
+  return apiFetch(`/stock/transfers/${id}/receive`, {
+    method: 'POST',
+    body: JSON.stringify({ receiveQuantity: receivedQuantity }),
+  });
 }
 
 export async function resolveTransferVariance(id, resolution) {
-  return apiFetch(`/stock/transfers/${id}/resolve?resolution=${resolution}`, { method: 'POST' });
+  return apiFetch(`/stock/transfers/${id}/resolve`, {
+    method: 'POST',
+    body: JSON.stringify({ resolution }),
+  });
 }
 export async function createStore(payload) {
   return apiFetch('/stores', { method: 'POST', body: JSON.stringify(payload) });
@@ -213,6 +273,10 @@ export async function changeEmployeePassword(id, newPassword) {
 
 export async function fetchEmployeeStats(id) {
   return apiFetch(`/employees/${id}/stats`);
+}
+
+export async function fetchEmployeeTransfers(id) {
+  return apiFetch(`/employees/${id}/transfers`);
 }
 
 export async function fetchEmployeeRecentSales(id) {

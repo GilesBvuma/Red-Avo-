@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "products")
@@ -40,8 +42,8 @@ public class Product {
     private String sizes;     // e.g. "XS,S,M,L,XL,XXL"
 
     // Financials
-    @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 15.0")
-    private Double vatRate = 15.0;  // Zimbabwe standard VAT rate
+    @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
+    private Double vatRate = 0.0;  // Default to 0.0% as per client request
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")
     private Integer discount = 0;   // percentage discount on original price
@@ -55,10 +57,24 @@ public class Product {
     @Column(name = "image_url")
     private java.util.List<String> imageUrls = new java.util.ArrayList<>();
 
+    // Audit Proofs
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "product_supplier_invoices", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "invoice_url")
+    private java.util.List<String> supplierInvoices = new java.util.ArrayList<>();
+
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean isActive = true;
 
     private String description;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private java.time.LocalDateTime updatedAt;
 
     // ── Stock status is auto-computed on every save ──────────────────
     @PrePersist
@@ -89,7 +105,7 @@ public class Product {
     // ── VAT amount on the effective price ────────────────────────────
     @Transient
     public Double getVatAmount() {
-        double rate = (vatRate != null) ? vatRate : 15.0;
+        double rate = (vatRate != null) ? vatRate : 0.0;
         return getEffectivePrice() * (rate / 100.0);
     }
 

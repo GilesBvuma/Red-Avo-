@@ -12,6 +12,7 @@ import TransfersPage from './components/TransfersPage';
 import BusinessManagementPage from './components/BusinessManagementPage';
 import FinancialsPage from './components/FinancialsPage';
 import OrdersPage from './components/OrdersPage';
+import MarketingPage from './components/MarketingPage';
 import { NotificationToast } from './components/NotificationToast';
 
 // ── Toast hook (inline to avoid require() in component) ──────────
@@ -123,6 +124,7 @@ export default function POSPage() {
         {activeNav === 'settings' && <BusinessManagementPage />}
         {activeNav === 'financials' && <FinancialsPage />}
         {activeNav === 'orders' && <OrdersPage />}
+        {activeNav === 'marketing' && <MarketingPage />}
       </div>
 
       {/* Right — Order panel */}

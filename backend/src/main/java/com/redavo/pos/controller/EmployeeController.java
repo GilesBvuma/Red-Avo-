@@ -14,10 +14,14 @@ public class EmployeeController {
 
     private final UserService userService;
     private final com.redavo.pos.repository.OrderRepository orderRepository;
+    private final com.redavo.pos.repository.StockTransferRepository transferRepository;
 
-    public EmployeeController(UserService userService, com.redavo.pos.repository.OrderRepository orderRepository) {
+    public EmployeeController(UserService userService, 
+                              com.redavo.pos.repository.OrderRepository orderRepository,
+                              com.redavo.pos.repository.StockTransferRepository transferRepository) {
         this.userService = userService;
         this.orderRepository = orderRepository;
+        this.transferRepository = transferRepository;
     }
 
     @GetMapping
@@ -78,6 +82,19 @@ public class EmployeeController {
         try {
             List<com.redavo.pos.model.Order> recentOrders = orderRepository.findTop10ByUserIdOrderByCreatedAtDesc(id);
             return ResponseEntity.ok(recentOrders);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage() + " - " + e.getClass().getName());
+        }
+    }
+
+    @GetMapping("/{id}/transfers")
+    public ResponseEntity<?> getEmployeeTransfers(@PathVariable Long id) {
+        try {
+            return userService.findById(id).map(user -> {
+                List<com.redavo.pos.model.StockTransfer> transfers = transferRepository.findByRequestedByOrderByRequestedAtDesc(user.getEmail());
+                return ResponseEntity.ok(transfers);
+            }).orElseGet(() -> ResponseEntity.notFound().build());
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error: " + e.getMessage() + " - " + e.getClass().getName());

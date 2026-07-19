@@ -58,6 +58,13 @@ export default function BusinessManagementPage() {
   const [recentSales, setRecentSales] = useState([]);
   const [loadingPerformance, setLoadingPerformance] = useState(false);
 
+  // User Details Modal
+  const [selectedUserDetail, setSelectedUserDetail] = useState(null);
+  const [userTransfers, setUserTransfers] = useState([]);
+  const [loadingTransfers, setLoadingTransfers] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirm: '' });
+  const [passwordStatus, setPasswordStatus] = useState('');
+
   const loadStores = useCallback(async () => {
     try {
       const s = await api.fetchStores();
@@ -157,6 +164,42 @@ export default function BusinessManagementPage() {
   const closePerformanceModal = () => {
       setSelectedEmployee(null);
       setRecentSales([]);
+  };
+
+  const openUserDetails = async (emp, e) => {
+      e.stopPropagation();
+      setSelectedUserDetail(emp);
+      setLoadingTransfers(true);
+      setPasswordStatus('');
+      setPasswordForm({ newPassword: '', confirm: '' });
+      try {
+          const transfers = await api.fetchEmployeeTransfers(emp.id);
+          setUserTransfers(transfers);
+      } catch(err) {
+          console.error(err);
+      } finally {
+          setLoadingTransfers(false);
+      }
+  };
+
+  const closeUserDetails = () => {
+      setSelectedUserDetail(null);
+      setUserTransfers([]);
+  };
+
+  const handleChangePassword = async (e) => {
+      e.preventDefault();
+      if (passwordForm.newPassword !== passwordForm.confirm) {
+          setPasswordStatus('Passwords do not match');
+          return;
+      }
+      try {
+          await api.changeEmployeePassword(selectedUserDetail.id, passwordForm.newPassword);
+          setPasswordStatus('Password changed successfully');
+          setPasswordForm({ newPassword: '', confirm: '' });
+      } catch (err) {
+          setPasswordStatus('Failed to change password');
+      }
   };
 
   if (user?.role !== 'ADMIN') {
@@ -262,7 +305,7 @@ export default function BusinessManagementPage() {
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, minWidth: '250px' }}>
                       <strong style={{ fontSize: '1.25rem', color: '#111827' }}>{emp.fullName} {emp.id === user?.id && '(You)'}</strong>
-                      <span style={{ color: '#6B7280' }}>Role: {emp.role} {emp.storeId && `• Store ${emp.storeId}`}</span>
+                      <span style={{ color: '#6B7280' }}>Role: {emp.role} {emp.storeId && `• ${stores.find(s => s.id === emp.storeId)?.name || 'Store ' + emp.storeId}`}</span>
                       <div>
                         <span style={{ display: 'inline-block', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', background: emp.active ? '#ECFDF5' : '#FEF2F2', color: emp.active ? '#059669' : '#DC2626' }}>
                           {emp.active ? 'ACTIVE' : 'INACTIVE'}
@@ -279,8 +322,9 @@ export default function BusinessManagementPage() {
                         <div style={kpiHeaderStyle}><h4 style={kpiTitleStyle}>Today's Sales</h4></div>
                         <div style={{...kpiValueStyle, fontSize: '24px', color: '#10B981'}}>${(stats.salesToday || 0).toFixed(2)}</div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <button style={{ ...actionBtnStyle('#F3F4F6'), color: '#374151', padding: '0.75rem 1rem' }}>View KPI &rarr;</button>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                          <button style={{ ...actionBtnStyle('#F3F4F6'), color: '#374151', padding: '0.75rem 1rem', width: '100%' }}>View KPI &rarr;</button>
+                          <button onClick={(e) => openUserDetails(emp, e)} style={{ ...actionBtnStyle('#E0E7FF'), color: '#3730A3', padding: '0.5rem 1rem', width: '100%', fontSize: '12px' }}>User Details &rarr;</button>
                       </div>
                     </div>
 
@@ -360,6 +404,72 @@ export default function BusinessManagementPage() {
                     </table>
                 </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* USER DETAILS MODAL */}
+      {selectedUserDetail && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalStyle, maxWidth: '600px', width: '90%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>User Details</h3>
+              <button onClick={closeUserDetails} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ ...kpiCardStyle, padding: '1.25rem', border: '1px solid #E5E7EB', boxShadow: 'none' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div><strong>Name:</strong> {selectedUserDetail.fullName}</div>
+                        <div><strong>Email:</strong> {selectedUserDetail.email}</div>
+                        <div><strong>Store:</strong> {selectedUserDetail.storeId ? (stores.find(s => s.id === selectedUserDetail.storeId)?.name || `Store ${selectedUserDetail.storeId}`) : 'None'}</div>
+                    </div>
+                </div>
+
+                <div style={{ ...kpiCardStyle, padding: '1.25rem', border: '1px solid #E5E7EB', boxShadow: 'none' }}>
+                    <h4 style={{ margin: '0 0 1rem 0' }}>Change Password</h4>
+                    {passwordStatus && <div style={{ marginBottom: '1rem', color: passwordStatus.includes('success') ? '#10B981' : '#EF4444', fontSize: '13px', fontWeight: 600 }}>{passwordStatus}</div>}
+                    <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <input type="password" placeholder="New Password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})} style={inputStyle} required />
+                        <input type="password" placeholder="Confirm Password" value={passwordForm.confirm} onChange={(e) => setPasswordForm({...passwordForm, confirm: e.target.value})} style={inputStyle} required />
+                        <button type="submit" style={{ ...primaryBtnStyle, marginTop: 0, alignSelf: 'flex-start', padding: '0.5rem 1.5rem' }}>Update Password</button>
+                    </form>
+                </div>
+
+                <div style={{ ...kpiCardStyle, padding: '1.25rem', border: '1px solid #E5E7EB', boxShadow: 'none' }}>
+                    <h4 style={{ margin: '0 0 1rem 0' }}>Transfer History</h4>
+                    {loadingTransfers ? (
+                        <div style={{ color: '#6B7280', fontSize: '14px' }}>Loading transfers...</div>
+                    ) : userTransfers.length === 0 ? (
+                        <div style={{ color: '#6B7280', fontSize: '14px' }}>No transfers requested by this user.</div>
+                    ) : (
+                        <div style={{ overflowX: 'auto', maxHeight: '250px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                <thead>
+                                    <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', textAlign: 'left' }}>
+                                        <th style={{ padding: '8px' }}>Date</th>
+                                        <th style={{ padding: '8px' }}>Product Variant</th>
+                                        <th style={{ padding: '8px' }}>Qty</th>
+                                        <th style={{ padding: '8px' }}>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {userTransfers.map(tr => (
+                                        <tr key={tr.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                                            <td style={{ padding: '8px', color: '#6B7280' }}>{new Date(tr.requestedAt).toLocaleDateString()}</td>
+                                            <td style={{ padding: '8px' }}>{tr.variant?.sku}</td>
+                                            <td style={{ padding: '8px', fontWeight: 600 }}>{tr.requestedQuantity}</td>
+                                            <td style={{ padding: '8px' }}>
+                                                <span style={{ background: '#F3F4F6', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>{tr.status}</span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
           </div>
         </div>
       )}

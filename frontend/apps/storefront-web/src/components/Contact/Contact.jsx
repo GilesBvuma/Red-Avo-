@@ -30,20 +30,47 @@ export default function Contact() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.name || !form.email) return;
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-    // GSAP button feedback
-    gsap.fromTo('#contact-submit-btn',
-      { scale: 0.95 },
-      { scale: 1, duration: 0.3, ease: 'back.out(2)' }
-    );
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setForm({ name: '', email: '', message: '' });
-    }, 3000);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) {
+      setErrorMsg('Please fill in all fields.');
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      // GSAP button feedback
+      gsap.fromTo('#contact-submit-btn',
+        { scale: 0.95 },
+        { scale: 1, duration: 0.3, ease: 'back.out(2)' }
+      );
+      setSubmitted(true);
+      
+      setTimeout(() => {
+        setSubmitted(false);
+        setForm({ name: '', email: '', message: '' });
+      }, 3000);
+      
+    } catch (err) {
+      setErrorMsg('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -83,12 +110,14 @@ export default function Contact() {
             value={form.message}
             onChange={handleChange}
           />
+          {errorMsg && <p style={{ color: '#ff6b6b', fontSize: '0.9rem', margin: '0' }}>{errorMsg}</p>}
           <button
             id="contact-submit-btn"
             type="submit"
+            disabled={submitting}
             className={`${styles.submitBtn} ${submitted ? styles.submitted : ''}`}
           >
-            {submitted ? '✓ MESSAGE SENT' : 'SUBMIT'}
+            {submitting ? 'SENDING...' : submitted ? '✓ MESSAGE SENT' : 'SUBMIT'}
           </button>
         </form>
       </div>

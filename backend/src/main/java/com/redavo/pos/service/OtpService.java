@@ -48,18 +48,14 @@ public class OtpService {
 
     @Transactional
     public boolean validateOtp(String email, String otp) {
-        // Since we hashed the OTP, we must find tokens by email and verify the hash.
-        // Wait, finding by email alone might return multiple if we didn't delete, but we delete before.
-        var tokens = tokenRepository.findAll();
-        for (PasswordResetToken t : tokens) {
-            if (t.getEmail().equalsIgnoreCase(email) && passwordEncoder.matches(otp, t.getOtpHash())) {
-                if (t.getExpiresAt().isBefore(LocalDateTime.now())) {
-                    return false;
-                }
-                tokenRepository.delete(t);
-                return true;
-            }
-        }
-        return false;
+        // Find by email — at most one token exists per email since we delete before generating.
+        return tokenRepository.findByEmail(email)
+                .filter(t -> !t.getExpiresAt().isBefore(java.time.LocalDateTime.now()))
+                .filter(t -> passwordEncoder.matches(otp, t.getOtpHash()))
+                .map(t -> {
+                    tokenRepository.delete(t);
+                    return true;
+                })
+                .orElse(false);
     }
 }

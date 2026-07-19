@@ -2,6 +2,7 @@ package com.redavo.pos.service;
 
 import com.redavo.pos.model.*;
 import com.redavo.pos.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,14 @@ public class OrderService {
     // Corresponds to the "Main Store" row inserted by V3 migration.
     private static final Long DEFAULT_STORE_ID = 1L;
 
+    /** Admin alert email — set ADMIN_NOTIFY_EMAIL env var to enable. Blank = disabled. */
+    @Value("${app.admin.notify-email:}")
+    private String adminNotifyEmail;
+
+    /** Admin alert SMS/WhatsApp number — set ADMIN_NOTIFY_PHONE env var to enable. Blank = disabled. */
+    @Value("${app.admin.notify-phone:}")
+    private String adminNotifyPhone;
+
     public OrderService(ProductRepository productRepository,
                         CustomerRepository customerRepository,
                         OrderRepository orderRepository,
@@ -45,12 +54,17 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
+        // Gap #1 — Guard: reject orders with no items to prevent ghost records
+        if (order.getItems() == null || order.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one item");
+        }
+
         Long storeId = order.getStoreId();
         if (storeId == null) {
             storeId = resolveStoreId();
             order.setStoreId(storeId);
         }
-        
+
         Long currentUserId = resolveUserId();
         if (currentUserId != null) {
             order.setUserId(currentUserId);
@@ -62,6 +76,29 @@ public class OrderService {
                 item.setOrder(order);
             }
         }
+
+        // Bug #4 — Recompute totals server-side from item prices and vatRate.
+        // Never trust subtotal/tax/total sent by the client.
+        double recomputedSubtotal = 0.0;
+        double recomputedVat      = 0.0;
+        for (OrderItem item : order.getItems()) {
+            double unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
+            int    qty       = item.getQuantity()  != null ? item.getQuantity()  : 1;
+            double lineTotal = unitPrice * qty;
+            recomputedSubtotal += lineTotal;
+
+            // Resolve vatRate from the product if available; fall back to 15%
+            double vatRate = 15.0;
+            if (item.getProductId() != null) {
+                vatRate = productRepository.findById(item.getProductId())
+                        .map(p -> p.getVatRate() != null ? p.getVatRate() : 15.0)
+                        .orElse(15.0);
+            }
+            recomputedVat += lineTotal * (vatRate / 100.0);
+        }
+        order.setSubtotal(recomputedSubtotal);
+        order.setVatAmount(recomputedVat);
+        order.setTotal(recomputedSubtotal + recomputedVat);
 
         Order savedOrder = orderRepository.save(order);
 
@@ -78,6 +115,7 @@ public class OrderService {
             }
         }
         savedOrder.setCostOfSale(totalCogs);
+
 
         // ── Auto-upsert customer from order details ───────────────────────────
         Order notifyOrder = savedOrder;
@@ -158,18 +196,25 @@ public class OrderService {
                     orderRef);
         }
 
-        // ── Admin Alerts (Email & SMS/Dashboard) ──────────────────────────────
+        // ── Admin Alerts — only sent if configured in application.properties ────────────────────────
+        // Set ADMIN_NOTIFY_EMAIL / ADMIN_NOTIFY_PHONE env vars to enable.
+        // Bug #3 FIX: removed hardcoded dummy admin@redavo.com / +263700000000.
         double cogs = notifyOrder.getCostOfSale() != null ? notifyOrder.getCostOfSale() : 0.0;
         double profit = total - cogs;
         Long adminStoreId = notifyOrder.getStoreId() != null ? notifyOrder.getStoreId() : DEFAULT_STORE_ID;
-        String adminEmailBody = String.format("New Order: %s\nTotal: $%.2f\nCOGS: $%.2f\nGross Profit: $%.2f\nStore ID: %d\nCustomer: %s",
+        String adminEmailBody = String.format(
+                "New Order: %s\nTotal: $%.2f\nCOGS: $%.2f\nGross Profit: $%.2f\nStore ID: %d\nCustomer: %s",
                 orderRef, total, cogs, profit, adminStoreId, customerName);
-        
-        // Email to seed admin
-        notificationService.sendEmail(null, "Admin", "admin@redavo.com", adminEmailBody, "New Order Alert — " + orderRef, orderRef, null);
-        
-        // SMS to seed admin (using a dummy admin number for now)
-        notificationService.sendSms(null, "Admin", "+263700000000", adminEmailBody, orderRef);
+
+        if (adminNotifyEmail != null && !adminNotifyEmail.isBlank()) {
+            notificationService.sendEmail(
+                    null, "Admin", adminNotifyEmail,
+                    adminEmailBody, "New Order Alert — " + orderRef, orderRef, null);
+        }
+        if (adminNotifyPhone != null && !adminNotifyPhone.isBlank()) {
+            notificationService.sendSms(
+                    null, "Admin", adminNotifyPhone, adminEmailBody, orderRef);
+        }
 
         return notifyOrder;
     }
@@ -191,25 +236,18 @@ public class OrderService {
             try {
                 stockLedgerService.applyDelta(
                         variant.getId(),
-                        DEFAULT_STORE_ID,
+                        order.getStoreId() != null ? order.getStoreId() : DEFAULT_STORE_ID,
                         -item.getQuantity(),
                         LedgerReason.SALE,
                         "ORD-" + order.getId(),
                         actor);
-                        
-                // Update cached stock quantities
-                variant.setStockQuantity(Math.max(0, variant.getStockQuantity() - item.getQuantity()));
-                variantRepository.save(variant);
-                
-                Product product = variant.getProduct();
-                product.setStockQuantity(Math.max(0, product.getStockQuantity() - item.getQuantity()));
-                product.computeStockStatus();
-                productRepository.save(product);
-
             } catch (IllegalArgumentException e) {
                 System.err.println("[OrderService] Stock deduction via ledger failed for variant "
                         + variant.getSku() + ": " + e.getMessage());
             }
+            // Bug #3 FIX: do NOT call variant.setStockQuantity() or product.setStockQuantity() here.
+            // The ledger is the single authoritative write path. The cached stockQuantity fields
+            // on product_variants and products are reconciled separately, never during checkout.
             java.math.BigDecimal cost = variant.getCostPrice();
             return (cost != null ? cost.doubleValue() : 0.0) * (item.getQuantity() != null ? item.getQuantity() : 1);
         }
@@ -223,7 +261,8 @@ public class OrderService {
             try {
                 stockLedgerService.applyDelta(
                         variant.getId(),
-                        DEFAULT_STORE_ID,
+                        // Bug #1 FIX: use the order's actual store, not the hardcoded DEFAULT_STORE_ID.
+                        order.getStoreId() != null ? order.getStoreId() : DEFAULT_STORE_ID,
                         -item.getQuantity(),
                         LedgerReason.SALE,
                         "ORD-" + order.getId(),
@@ -293,11 +332,29 @@ public class OrderService {
     }
 
     @Transactional
-    public Order fulfilOrder(Long id, String action) { // action = DISPATCHED, DELIVERED, COLLECTED
+    public Order fulfilOrder(Long id, String action) {
+        // Gap #2 — Validate the action string before applying it
+        java.util.Set<String> allowed = java.util.Set.of("DISPATCHED", "DELIVERED", "COLLECTED");
+        if (!allowed.contains(action.toUpperCase())) {
+            throw new IllegalArgumentException(
+                    "Invalid fulfilment action '" + action + "'. Allowed: " + allowed);
+        }
+
         Order order = orderRepository.findById(id).orElseThrow();
-        
-        // Deduct stock if transitioning from CONFIRMED
-        if ("CONFIRMED".equalsIgnoreCase(order.getStatus()) && "ONLINE".equalsIgnoreCase(order.getSource())) {
+
+        // Gap #2 — Guard against invalid state transitions
+        String current = order.getStatus();
+        boolean validTransition =
+                ("CONFIRMED".equalsIgnoreCase(current) && "DISPATCHED".equalsIgnoreCase(action)) ||
+                ("DISPATCHED".equalsIgnoreCase(current) && ("DELIVERED".equalsIgnoreCase(action) || "COLLECTED".equalsIgnoreCase(action)));
+
+        if (!validTransition) {
+            throw new IllegalStateException(
+                    "Cannot transition order " + id + " from '" + current + "' to '" + action + "'");
+        }
+
+        // Deduct stock when ONLINE order transitions from CONFIRMED → DISPATCHED
+        if ("CONFIRMED".equalsIgnoreCase(current) && "ONLINE".equalsIgnoreCase(order.getSource())) {
             String actor = resolveActor();
             double totalCogs = 0.0;
             if (order.getItems() != null) {
@@ -308,8 +365,8 @@ public class OrderService {
             }
             order.setCostOfSale(totalCogs);
         }
-        
-        order.setStatus(action);
+
+        order.setStatus(action.toUpperCase());
         return orderRepository.save(order);
     }
 }

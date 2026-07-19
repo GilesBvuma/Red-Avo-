@@ -12,6 +12,17 @@
   margin: 0 auto;
   padding: 120px 24px 60px;
   width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.floatingBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
 }
 
 .main h1 {

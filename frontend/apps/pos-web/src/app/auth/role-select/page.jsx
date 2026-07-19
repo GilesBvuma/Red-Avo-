@@ -1,14 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from '../auth.module.css';
 
 export default function RoleSelect() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showSuperPassword, setShowSuperPassword] = useState(false);
   const [superPassword, setSuperPassword] = useState('');
   const [error, setError] = useState('');
+  const [sessionBanner, setSessionBanner] = useState('');
+
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'session-expired') {
+      setSessionBanner('Your session has expired. Please log in again.');
+    }
+  }, [searchParams]);
 
   const handleAdminClick = () => {
     setShowSuperPassword(true);
@@ -32,6 +41,11 @@ export default function RoleSelect() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
+        {sessionBanner && (
+          <div className={styles.sessionBanner}>
+            <span>⚠️</span> {sessionBanner}
+          </div>
+        )}
         <div className={styles.header}>
           <h1 className={styles.title}>Welcome to Red Avo</h1>
           <p className={styles.subtitle}>Please select your role to continue</p>

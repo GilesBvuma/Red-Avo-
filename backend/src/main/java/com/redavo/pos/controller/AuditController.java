@@ -16,8 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/audit")
 @PreAuthorize("hasRole('ADMIN')")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"},
-             allowCredentials = "true")
 public class AuditController {
 
     private final AuditLogRepository auditLogRepo;

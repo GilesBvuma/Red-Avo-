@@ -13,9 +13,11 @@ export default function TransfersPage() {
   
   const [modal, setModal] = useState(null); // 'new', 'receive', 'resolve'
   const [selectedTransfer, setSelectedTransfer] = useState(null);
+  const [stockLevels, setStockLevels] = useState([]);
 
   // New transfer form state
   const [variantId, setVariantId] = useState('');
+  const [fromStoreId, setFromStoreId] = useState('');
   const [toStoreId, setToStoreId] = useState('');
   const [quantity, setQuantity] = useState('');
 
@@ -25,20 +27,27 @@ export default function TransfersPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [tRes, sRes, pRes] = await Promise.all([
+      const [tRes, sRes, pRes, slRes] = await Promise.all([
         api.fetchTransfers(),
         api.fetchStores(),
-        api.fetchProducts()
+        api.fetchProducts(),
+        api.fetchStockLevels()
       ]);
       setTransfers(tRes);
       setStores(sRes);
       setProducts(pRes);
+      setStockLevels(slRes);
+
+      // Auto-set source store from the logged-in user's assigned store
+      if (user?.storeId) {
+        setFromStoreId(String(user.storeId));
+      }
     } catch (e) {
       console.error('Failed to load transfer data', e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.storeId]);
 
   useEffect(() => {
     loadData();
@@ -46,15 +55,20 @@ export default function TransfersPage() {
 
   const handleRequestTransfer = async (e) => {
     e.preventDefault();
-    if (!variantId || !toStoreId || !quantity) return;
+    // For employees, fromStoreId is fixed to their store;
+    // for admins it is whatever they selected.
+    const resolvedFromStoreId = user?.role !== 'ADMIN' ? String(user?.storeId) : fromStoreId;
+    if (!variantId || !resolvedFromStoreId || !toStoreId || !quantity) return;
     try {
       await api.requestTransfer({
         variantId: parseInt(variantId),
-        fromStoreId: user.storeId || stores[0]?.id, // Default logic for admin
+        fromStoreId: parseInt(resolvedFromStoreId),
         toStoreId: parseInt(toStoreId),
         quantity: parseInt(quantity)
       });
       setModal(null);
+      setVariantId('');
+      setQuantity('');
       loadData();
     } catch (err) {
       alert(err.message);
@@ -134,36 +148,36 @@ export default function TransfersPage() {
               </thead>
               <tbody>
                 {transfers.map(t => (
-                  <tr key={t.id} style={{ borderBottom: '1px solid #F0F0F0' }}>
-                    <td style={{ padding: '12px' }}>TX-{t.id}</td>
-                    <td style={{ padding: '12px' }}>{t.variant.sku}</td>
-                    <td style={{ padding: '12px' }}>{t.fromStore.name} → {t.toStore.name}</td>
-                    <td style={{ padding: '12px' }}>
-                      Req: {t.requestedQuantity}<br/>
-                      {t.dispatchedQuantity != null && `Sent: ${t.dispatchedQuantity}`}<br/>
-                      {t.receivedQuantity != null && `Recv: ${t.receivedQuantity}`}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <span style={{ 
-                        padding: '4px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600,
-                        background: t.status === 'RESOLVED' || t.status === 'RECEIVED' ? '#DEF7EC' : '#FEF3C7',
-                        color: t.status === 'RESOLVED' || t.status === 'RECEIVED' ? '#03543F' : '#92400E'
-                      }}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {t.status === 'REQUESTED' && (user.role === 'ADMIN' || user.storeId === t.fromStore.id) && (
-                        <button onClick={() => handleDispatch(t.id, t.requestedQuantity)} style={actionBtnStyle}>Dispatch</button>
-                      )}
-                      {t.status === 'DISPATCHED' && (user.role === 'ADMIN' || user.storeId === t.toStore.id) && (
-                        <button onClick={() => { setSelectedTransfer(t); setModal('receive'); }} style={actionBtnStyle}>Receive</button>
-                      )}
-                      {t.status === 'VARIANCE_PENDING' && user.role === 'ADMIN' && (
-                        <button onClick={() => { setSelectedTransfer(t); setModal('resolve'); }} style={actionBtnStyle}>Resolve</button>
-                      )}
-                    </td>
-                  </tr>
+                    <tr key={t.id} style={{ borderBottom: '1px solid #F0F0F0' }}>
+                      <td style={{ padding: '12px' }}>TX-{t.id}</td>
+                      <td style={{ padding: '12px' }}>{t.variant.sku}</td>
+                      <td style={{ padding: '12px' }}>{t.fromStore.name} → {t.toStore.name}</td>
+                      <td style={{ padding: '12px' }}>
+                        Req: {t.requestedQuantity}<br/>
+                        {t.dispatchedQuantity != null && `Sent: ${t.dispatchedQuantity}`}<br/>
+                        {t.receivedQuantity != null && `Recv: ${t.receivedQuantity}`}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ 
+                          padding: '4px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600,
+                          background: t.status === 'RESOLVED' || t.status === 'RECEIVED' ? '#DEF7EC' : '#FEF3C7',
+                          color: t.status === 'RESOLVED' || t.status === 'RECEIVED' ? '#03543F' : '#92400E'
+                        }}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {t.status === 'REQUESTED' && (user?.role === 'ADMIN' || user?.storeId === t.fromStore.id) && (
+                          <button onClick={() => handleDispatch(t.id, t.requestedQuantity)} style={actionBtnStyle}>Dispatch</button>
+                        )}
+                        {t.status === 'DISPATCHED' && (user?.role === 'ADMIN' || user?.storeId === t.toStore.id) && (
+                          <button onClick={() => { setSelectedTransfer(t); setModal('receive'); }} style={actionBtnStyle}>Receive</button>
+                        )}
+                        {t.status === 'VARIANCE_PENDING' && user?.role === 'ADMIN' && (
+                          <button onClick={() => { setSelectedTransfer(t); setModal('resolve'); }} style={actionBtnStyle}>Resolve</button>
+                        )}
+                      </td>
+                    </tr>
                 ))}
               </tbody>
             </table>
@@ -185,18 +199,66 @@ export default function TransfersPage() {
             {modal === 'new' && (
               <form onSubmit={handleRequestTransfer} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={labelStyle}>Variant SKU</label>
-                  <input type="number" placeholder="Variant ID (Temp)" required value={variantId} onChange={e => setVariantId(e.target.value)} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>To Store</label>
-                  <select required value={toStoreId} onChange={e => setToStoreId(e.target.value)} style={inputStyle}>
-                    <option value="">Select Store...</option>
-                    {stores.filter(s => s.id !== user.storeId).map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
+                  <label style={labelStyle}>Product Variant</label>
+                  <select required value={variantId} onChange={e => setVariantId(e.target.value)} style={inputStyle}>
+                    <option value="">Select a variant...</option>
+                    {products.map(p => 
+                      p.variants?.map(v => (
+                        <option key={v.id} value={v.id}>{p.name} - {v.color} {v.size} ({v.sku})</option>
+                      ))
+                    )}
                   </select>
                 </div>
+                
+                {variantId && (
+                  <div style={{ background: '#F9FAFB', padding: 12, borderRadius: 8, fontSize: 12 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 6, color: '#374151' }}>Current Stock Across Stores:</div>
+                    {stores.map(s => {
+                      const qty = stockLevels.find(sl => sl.variant?.id === parseInt(variantId) && sl.storeId === s.id)?.quantity || 0;
+                      return (
+                        <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                          <span style={{ color: '#6B7280' }}>{s.name}</span>
+                          <span style={{ fontWeight: 700, color: qty > 0 ? '#0D9488' : '#9CA3AF' }}>{qty}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Source store — fixed for employees, selectable for admins */}
+                {user?.role === 'ADMIN' ? (
+                  <div>
+                    <label style={labelStyle}>Source Store (Request From)</label>
+                    <select required value={fromStoreId} onChange={e => setFromStoreId(e.target.value)} style={inputStyle}>
+                      <option value="">Select Source Store...</option>
+                      {stores.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label style={labelStyle}>Your Store (Source)</label>
+                    <div style={{ ...inputStyle, background: '#F3F4F6', color: '#374151', display: 'flex', alignItems: 'center' }}>
+                      🏪 {stores.find(s => s.id === user?.storeId)?.name || `Store #${user?.storeId}`}
+                    </div>
+                  </div>
+                )}
+
+                {/* Destination — exclude the employee's own store from the list */}
+                <div>
+                  <label style={labelStyle}>Destination Store (Send To)</label>
+                  <select required value={toStoreId} onChange={e => setToStoreId(e.target.value)} style={inputStyle}>
+                    <option value="">Select Destination Store...</option>
+                    {stores
+                      .filter(s => user?.role === 'ADMIN' || s.id !== user?.storeId)
+                      .map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+
                 <div>
                   <label style={labelStyle}>Quantity</label>
                   <input type="number" min="1" required value={quantity} onChange={e => setQuantity(e.target.value)} style={inputStyle} />

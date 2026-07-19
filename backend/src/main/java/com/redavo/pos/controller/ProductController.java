@@ -15,7 +15,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"}, allowCredentials = "true")
 public class ProductController {
 
     @Autowired
@@ -38,26 +37,36 @@ public class ProductController {
         return ResponseEntity.ok(productService.createProduct(product));
     }
 
-    // ── Full update ───────────────────────────────────────────────
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id,
-                                                  @RequestBody Product product) {
-        return ResponseEntity.ok(productService.updateProduct(id, product));
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        try {
+            return ResponseEntity.ok(productService.updateProduct(id, product));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     // ── Stock quantity only ───────────────────────────────────────
     @PutMapping("/{id}/stock")
-    public ResponseEntity<Product> updateStock(@PathVariable Long id,
-                                               @RequestBody Map<String, Integer> body) {
-        int quantity = body.getOrDefault("quantity", 0);
-        return ResponseEntity.ok(productService.updateStock(id, quantity));
+    public ResponseEntity<?> updateStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        try {
+            int quantity = body.getOrDefault("quantity", 0);
+            return ResponseEntity.ok(productService.updateStock(id, quantity));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     // ── Delete ────────────────────────────────────────────────────
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     // ── Image upload ──────────────────────────────────────────────
@@ -96,12 +105,44 @@ public class ProductController {
         product.getImageUrls().addAll(uploadedUrls);
         
         // If no primary image is set, set it to the first one
-        if (product.getImageUrl() == null && !uploadedUrls.isEmpty()) {
+        if ((product.getImageUrl() == null || product.getImageUrl().isBlank()) && !uploadedUrls.isEmpty()) {
             product.setImageUrl(uploadedUrls.get(0));
         }
         
         productService.updateProduct(id, product);
 
         return ResponseEntity.ok(Map.of("imageUrls", uploadedUrls));
+    }
+
+    @PostMapping("/{id}/invoices")
+    public ResponseEntity<Map<String, List<String>>> uploadInvoices(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) throws IOException {
+
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(uploadPath);
+        
+        List<String> uploadedUrls = new java.util.ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) continue;
+            
+            String originalName = file.getOriginalFilename();
+            String extension    = (originalName != null && originalName.contains("."))
+                    ? originalName.substring(originalName.lastIndexOf('.'))
+                    : ".jpg";
+            String filename = "invoice-" + UUID.randomUUID() + extension;
+            
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            String invoiceUrl = "/uploads/" + filename;
+            uploadedUrls.add(invoiceUrl);
+        }
+
+        Product product = productService.getAllProducts().stream().filter(p -> p.getId().equals(id)).findFirst().orElseThrow();
+        if (product.getSupplierInvoices() == null) product.setSupplierInvoices(new java.util.ArrayList<>());
+        product.getSupplierInvoices().addAll(uploadedUrls);
+        
+        productService.updateProduct(id, product);
+
+        return ResponseEntity.ok(Map.of("supplierInvoices", uploadedUrls));
     }
 }

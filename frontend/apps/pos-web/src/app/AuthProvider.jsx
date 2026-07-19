@@ -6,6 +6,21 @@ import { login, setAuthToken, clearAuthToken } from '@red-avo/api-client';
 
 const AuthContext = createContext();
 
+/**
+ * Decodes the JWT payload (middle segment) and returns true if the token
+ * is still valid (exp is in the future). Returns false if expired or malformed.
+ * Uses atob — no external jwt library needed.
+ */
+function isTokenValid(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    // exp is in seconds; Date.now() is in milliseconds
+    return payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,13 +28,21 @@ export function AuthProvider({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in and token is not expired
     const token = localStorage.getItem('redavo_token');
     const userData = localStorage.getItem('redavo_user');
-    
+
     if (token && userData) {
-      setAuthToken(token);
-      setUser(JSON.parse(userData));
+      if (isTokenValid(token)) {
+        setAuthToken(token);
+        // Parse preserves the stored name/email/role structure set at login
+        setUser(JSON.parse(userData));
+      } else {
+        // Token has expired — clear stale session to avoid 401 loops
+        localStorage.removeItem('redavo_token');
+        localStorage.removeItem('redavo_user');
+        clearAuthToken();
+      }
     }
     setLoading(false);
   }, []);
@@ -38,18 +61,30 @@ export function AuthProvider({ children }) {
   const handleLogin = async (email, password) => {
     const res = await login(email, password);
     setAuthToken(res.token);
-    
+
     const userData = {
-      email: res.email,
-      role: res.role,
+      // Gap #12 FIX: store name and email separately so Sidebar shows full name,
+      // not the email address when fullName is set on the user account.
+      name:    res.name    || null,
+      email:   res.email,
+      role:    res.role,
       storeId: res.storeId,
-      username: res.name || res.email
+      // 'username' kept for backwards compat with any component still using it
+      username: res.name || res.email,
     };
-    
+
     localStorage.setItem('redavo_token', res.token);
     localStorage.setItem('redavo_user', JSON.stringify(userData));
     setUser(userData);
-    router.push('/pos');
+
+    // Route by role — extend this switch when new dashboards are added
+    if (res.role === 'ADMIN') {
+      router.push('/pos');
+    } else if (res.role === 'EMPLOYEE') {
+      router.push('/pos');
+    } else {
+      router.push('/pos');
+    }
   };
 
   const handleLogout = () => {

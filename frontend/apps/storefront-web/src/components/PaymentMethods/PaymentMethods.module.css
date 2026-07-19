@@ -1,0 +1,59 @@
+.container {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.title {
+  font-size: 0.85rem;
+  color: #71717a;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.methodsGrid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.methodCard {
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 50px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.visa {
+  height: 14px;
+  width: auto;
+}
+
+.mastercard {
+  height: 18px;
+  width: auto;
+}
+
+.ecocashBadge {
+  font-family: Arial, sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  font-size: 13px;
+  color: #00AEEF;
+  letter-spacing: -0.5px;
+}
+
+.innbucksBadge {
+  font-family: Arial, sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  color: #8DC63F;
+  letter-spacing: 0.5px;
+}

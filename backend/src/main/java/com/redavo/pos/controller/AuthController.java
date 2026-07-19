@@ -7,6 +7,7 @@ import com.redavo.pos.security.JwtTokenProvider;
 import com.redavo.pos.security.RedAvoUserDetails;
 import com.redavo.pos.service.OtpService;
 import com.redavo.pos.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,15 +21,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"},
-             allowCredentials = "true")
 public class AuthController {
 
     private final AuthenticationManager authManager;
     private final JwtTokenProvider tokenProvider;
     private final UserService userService;
     private final OtpService otpService;
-    private final String superPassword = "12345678"; // Hardcoded per user request, can be moved to properties later.
+
+    /** Injected from application.properties (app.auth.super-password). Override with SUPER_PASSWORD env var in production. */
+    @Value("${app.auth.super-password}")
+    private String superPassword;
 
     public AuthController(AuthenticationManager authManager,
                           JwtTokenProvider tokenProvider,

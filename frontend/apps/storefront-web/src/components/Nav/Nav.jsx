@@ -17,6 +17,8 @@ export default function Nav() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -27,72 +29,102 @@ export default function Nav() {
   };
 
   useGSAP(() => {
-    // Slide nav down from top on page load
-    gsap.fromTo(
-      navRef.current,
-      { yPercent: -100, opacity: 0 },
-      { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', delay: 0.2 }
-    );
-
-    // Shrink nav on scroll using ScrollTrigger
+    // Show nav on scroll, hide when back at top
     ScrollTrigger.create({
-      start: 'top -60px',
-      onEnter: () => navRef.current?.classList.add(styles.scrolled),
-      onLeaveBack: () => navRef.current?.classList.remove(styles.scrolled),
+      start: 'top -50px', // Trigger when user scrolls down 50px
+      onEnter: () => {
+        navRef.current?.classList.add(styles.scrolled);
+      },
+      onLeaveBack: () => {
+        navRef.current?.classList.remove(styles.scrolled);
+      },
     });
   }, { scope: navRef });
 
   return (
-    <nav ref={navRef} className={styles.nav} role="navigation" aria-label="Main navigation">
-      <div className={styles.inner}>
-        {/* Logo */}
-        <div className={styles.logoWrap}>
-          <Placeholder label="/images/logo2.png" subtitle="Red Avo Logo" className={styles.logo} />
-        </div>
+    <>
+      <nav ref={navRef} className={styles.nav} role="navigation" aria-label="Main navigation">
+        <div className={styles.inner}>
+          {/* Logo */}
+          <div className={styles.logoWrap}>
+            <Link href="/">
+              <Placeholder label="/images/logo2.png" subtitle="Red Avo Logo" className={styles.logo} />
+            </Link>
+          </div>
 
-        {/* Centre links */}
-        <ul className={styles.links} role="menubar">
-          {NAV_LINKS.map((link) => (
-            <li key={link.href} role="none">
-              <a href={link.href} className={styles.link} role="menuitem">
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+          {/* Centre links */}
+          <ul className={styles.links} role="menubar">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href} role="none">
+                <Link href={link.href} className={styles.link} role="menuitem">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
-        {/* Icons */}
-        <div className={styles.icons}>
-          {showSearch ? (
-            <form onSubmit={handleSearchSubmit} className={styles.searchForm}>
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                autoFocus
-                className={styles.searchInput}
-              />
-              <button type="button" className={styles.closeSearch} onClick={() => setShowSearch(false)}>✕</button>
-            </form>
-          ) : (
-            <button className={styles.iconBtn} aria-label="Search" id="nav-search" onClick={() => setShowSearch(true)}>
-              <SearchIcon />
+          {/* Icons */}
+          <div className={styles.icons}>
+            {showSearch ? (
+              <form onSubmit={handleSearchSubmit} className={styles.searchForm}>
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className={styles.searchInput}
+                />
+                <button type="button" className={styles.closeSearch} onClick={() => setShowSearch(false)}>✕</button>
+              </form>
+            ) : (
+              <button className={styles.iconBtn} aria-label="Search" id="nav-search" onClick={() => setShowSearch(true)}>
+                <SearchIcon />
+              </button>
+            )}
+            <Link href="/cart" className={styles.iconBtn} aria-label="Cart" id="nav-cart">
+              <CartIcon />
+              {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+            </Link>
+            <button className={styles.iconBtn} aria-label="Account" id="nav-account">
+              <UserIcon />
             </button>
-          )}
-          <Link href="/cart" className={styles.iconBtn} aria-label="Cart" id="nav-cart">
-            <CartIcon />
-            {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
-          </Link>
-          <button className={styles.iconBtn} aria-label="Account" id="nav-account">
-            <UserIcon />
-          </button>
-          <button className={styles.hamburger} aria-label="Open menu" id="nav-menu">
-            <span /><span /><span />
-          </button>
+            <button 
+              className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerOpen : ''}`} 
+              aria-label="Open menu" 
+              id="nav-menu"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <span /><span /><span />
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className={styles.mobileMenuOverlay} onClick={() => setIsMobileMenuOpen(false)}>
+          <div className={styles.mobileMenuContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.mobileMenuHeader}>
+              <button className={styles.closeMobileMenu} onClick={() => setIsMobileMenuOpen(false)}>✕</button>
+            </div>
+            <ul className={styles.mobileLinks}>
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link 
+                    href={link.href} 
+                    className={styles.mobileLink} 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

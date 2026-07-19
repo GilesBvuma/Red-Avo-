@@ -63,7 +63,10 @@ export default function EmployeeLogin() {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
           
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+            <Link href="/auth/role-select" className={styles.link}>
+              ← Back to role selection
+            </Link>
             <Link href="/auth/forgot-password" className={styles.link}>
               Forgot password?
             </Link>

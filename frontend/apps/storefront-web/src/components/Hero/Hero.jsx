@@ -37,15 +37,15 @@ export default function Hero() {
     .fromTo('#hero-cta',   { yPercent: 30, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5  }, '-=0.25')
     // Scroll indicator
     .fromTo('#hero-scroll', { opacity: 0 },               { opacity: 1, duration: 0.5  }, '-=0.1')
-    // 3D image flies in
+    // Background image fades in softly
     .fromTo(
       imageRef.current,
-      { opacity: 0, rotateY: -20, rotateX: 8, scale: 0.88 },
-      { opacity: 1, rotateY: -8,  rotateX: 4, scale: 1, duration: 0.9, ease: 'power2.out' },
-      0.2
+      { opacity: 0, scale: 1.05 },
+      { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out' },
+      0
     );
 
-    // 3D image flattens on scroll
+    // Subtle parallax effect on scroll
     ScrollTrigger.create({
       trigger: sectionRef.current,
       start:   'top top',
@@ -55,8 +55,7 @@ export default function Hero() {
         const p = self.progress;
         if (imageRef.current) {
           gsap.set(imageRef.current, {
-            rotateY: -8 + 8 * p,
-            rotateX:  4 - 4 * p,
+            y: p * 50,
           });
         }
       },
@@ -80,7 +79,7 @@ export default function Hero() {
 
       {/* ── Left column ── */}
       <div className={styles.left}>
-        <span className={styles.eyebrow}>New Collection · 2025</span>
+        <span className={styles.eyebrow}>New Collection · 2026</span>
 
         <h1 className={styles.heading} aria-label="Where every move tells a story.">
           {WORDS.map((word, i) => (
@@ -108,7 +107,10 @@ export default function Hero() {
       {/* ── Right column — 3D image ── */}
       <div className={styles.right} aria-hidden="true">
         <div ref={imageRef} className={styles.imageWrap} style={{ perspective: '800px' }}>
-          <Placeholder label="/images/hero-main.jpg" subtitle="Hero outfit flat-lay" />
+          <picture>
+            <source media="(max-width: 900px)" srcSet="/images/Home-hero-mobile.jpeg" />
+            <img src="/images/Home-hero.jpeg" alt="Red Avo Activewear" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </picture>
         </div>
       </div>
 

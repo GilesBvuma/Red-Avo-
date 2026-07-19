@@ -6,6 +6,9 @@ import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import { useCart } from '@/context/CartContext';
 import { initiatePaynowCheckout } from '@/lib/api';
+import { DELIVERY_ZONES } from '@/lib/deliveryZones';
+import PaymentMethods from '@/components/PaymentMethods/PaymentMethods';
+import FloatingLines from '@/components/FloatingLines/FloatingLines';
 import styles from './checkout.module.css';
 
 export default function CheckoutPage() {
@@ -17,14 +20,16 @@ export default function CheckoutPage() {
     email: '',
     phone: '',
     deliveryMethod: 'DELIVERY', // or 'COLLECTION'
+    deliveryZone: DELIVERY_ZONES[0].id,
     address: ''
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const tax = cartTotal * 0.15;
-  const total = cartTotal + tax;
+  const selectedZone = DELIVERY_ZONES.find(z => z.id === formData.deliveryZone) || DELIVERY_ZONES[0];
+  const deliveryFee = formData.deliveryMethod === 'DELIVERY' ? selectedZone.fee : 0;
+  const total = cartTotal + deliveryFee;
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -49,7 +54,8 @@ export default function CheckoutPage() {
         customerName: formData.name,
         phone: formData.phone,
         deliveryMethod: formData.deliveryMethod,
-        deliveryAddress: formData.deliveryMethod === 'DELIVERY' ? formData.address : null,
+        deliveryAddress: formData.deliveryMethod === 'DELIVERY' ? `[Zone: ${selectedZone.name}] ${formData.address}` : null,
+        deliveryFee: deliveryFee,
         items: orderItems
       };
 
@@ -89,6 +95,19 @@ export default function CheckoutPage() {
   return (
     <div className={styles.page}>
       <Nav />
+      <div className={styles.floatingBg} aria-hidden="true">
+        <FloatingLines 
+          enabledWaves={["middle","top"]}
+          lineCount={8}
+          lineDistance={8}
+          bendRadius={8}
+          bendStrength={-2}
+          interactive={true}
+          parallax={true}
+          animationSpeed={2.4}
+          linesGradient={["#EC4899", "#b97575", "#6a6a6a"]}
+        />
+      </div>
       <main className={styles.main}>
         <h1>Checkout</h1>
         
@@ -138,21 +157,39 @@ export default function CheckoutPage() {
             </div>
 
             {formData.deliveryMethod === 'DELIVERY' && (
-              <div className={styles.inputGroup}>
-                <label>Delivery Address</label>
-                <textarea 
-                  name="address" 
-                  required 
-                  value={formData.address} 
-                  onChange={handleChange} 
-                  rows={3}
-                />
-              </div>
+              <>
+                <div className={styles.inputGroup}>
+                  <label>City / Suburb (Delivery Zone)</label>
+                  <select 
+                    name="deliveryZone" 
+                    value={formData.deliveryZone} 
+                    onChange={handleChange}
+                    required
+                  >
+                    {DELIVERY_ZONES.map(zone => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.name} (${zone.fee.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Delivery Address</label>
+                  <textarea 
+                    name="address" 
+                    required 
+                    value={formData.address} 
+                    onChange={handleChange} 
+                    rows={3}
+                  />
+                </div>
+              </>
             )}
 
             <button type="submit" className={styles.submitBtn} disabled={loading}>
               {loading ? 'Processing...' : 'Pay with PayNow'}
             </button>
+            <PaymentMethods />
           </form>
           
           <div className={styles.summary}>
@@ -168,14 +205,16 @@ export default function CheckoutPage() {
                  );
                })}
              </div>
-             <div className={styles.summaryRow}>
+              <div className={styles.summaryRow}>
                 <span>Subtotal</span>
                 <span>${cartTotal.toFixed(2)}</span>
               </div>
-              <div className={styles.summaryRow}>
-                <span>VAT (15%)</span>
-                <span>${tax.toFixed(2)}</span>
-              </div>
+              {formData.deliveryMethod === 'DELIVERY' && (
+                <div className={styles.summaryRow}>
+                  <span>Delivery Fee</span>
+                  <span>${deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
               <div className={`${styles.summaryRow} ${styles.total}`}>
                 <span>Total</span>
                 <span>${total.toFixed(2)}</span>

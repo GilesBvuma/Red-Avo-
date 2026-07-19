@@ -15,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * AOP aspect that automatically writes an {@link AuditLog} row for every
@@ -86,13 +88,37 @@ public class AuditAspect {
         writeAudit(AuditAction.CREATE, result, null, toJson(result));
     }
 
-    // ── STOCK DELTA: StockLedgerService.applyDelta ───────────────────────────
+    // ── STOCK DELTA: StockLedgerService.applyDelta ───────────────────────────────────────────
+    // Improvement J: uses @Around so both the args (delta, reason, referenceId) and
+    // the returned StockLevel are captured in the audit entry.
 
-    @AfterReturning(
-        pointcut = "execution(* com.redavo.pos.service.StockLedgerService.applyDelta(..))",
-        returning = "result")
-    public void afterStockDelta(JoinPoint jp, Object result) {
-        writeAudit(AuditAction.UPDATE, result, null, toJson(result));
+    @Around("execution(* com.redavo.pos.service.StockLedgerService.applyDelta(..))")
+    public Object aroundStockDelta(ProceedingJoinPoint pjp) throws Throwable {
+        Object[] args   = pjp.getArgs();
+        // applyDelta(variantId, storeId, delta, reason, referenceId, actor)
+        Object variantId    = args.length > 0 ? args[0] : null;
+        Object storeId      = args.length > 1 ? args[1] : null;
+        Object delta        = args.length > 2 ? args[2] : null;
+        Object reason       = args.length > 3 ? args[3] : null;
+        Object referenceId  = args.length > 4 ? args[4] : null;
+
+        Map<String, Object> beforeContext = new LinkedHashMap<>();
+        beforeContext.put("variantId",   variantId);
+        beforeContext.put("storeId",     storeId);
+        beforeContext.put("delta",       delta);
+        beforeContext.put("reason",      reason != null ? reason.toString() : null);
+        beforeContext.put("referenceId", referenceId);
+
+        Object result = pjp.proceed();
+
+        writeAuditWithId(
+                AuditAction.UPDATE,
+                "StockLevel",
+                variantId != null ? String.valueOf(variantId) : "unknown",
+                toJson(beforeContext),
+                toJson(result)
+        );
+        return result;
     }
 
     // ── PRIVATE HELPERS ───────────────────────────────────────────────────────

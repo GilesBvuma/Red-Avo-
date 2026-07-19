@@ -14,9 +14,9 @@ export const COLORS = {
 export const NAV_LINKS = [
   { label: 'Home',        href: '/' },
   { label: 'Shop',        href: '/shop' },
-  { label: 'About',       href: '#about' },
-  { label: 'Collections', href: '#popular' },
-  { label: 'Contact',     href: '#contact' },
+  { label: 'About',       href: '/#about' },
+  { label: 'Collections', href: '/collections' },
+  { label: 'Contact',     href: '/#contact' },
 ];
 
 // ─── Collection Categories ────────────────────────────────────────

@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 const { Paynow } = require('paynow');
+
+function verifyPaynowHash(data, integrationKey) {
+  const { hash, ...fields } = data;
+  const hashString = [
+    fields.reference, fields.paynowreference, fields.amount, 
+    fields.status, fields.pollurl, integrationKey
+  ].join('').toUpperCase();
+  const computed = crypto.createHash('sha512').update(hashString).digest('hex').toUpperCase();
+  return computed === (hash || '').toUpperCase();
+}
 
 export async function POST(request) {
   try {
@@ -7,7 +18,12 @@ export async function POST(request) {
     const formData = await request.formData();
     const data = Object.fromEntries(formData);
     
-    // In production, you would verify the Paynow hash here to ensure authenticity.
+    const integrationKey = process.env.PAYNOW_INTEGRATION_KEY || 'test-key-123';
+    
+    if (!verifyPaynowHash(data, integrationKey)) {
+      console.error('Invalid PayNow webhook hash', data);
+      return NextResponse.json({ error: 'Invalid hash' }, { status: 400 });
+    }
     
     // The reference Paynow sends back is what we sent (e.g., ORD-15)
     const reference = data.reference;

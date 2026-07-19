@@ -132,9 +132,19 @@ public class StockTransferService {
         int missing = transfer.getDispatchedQuantity() - (transfer.getReceivedQuantity() != null ? transfer.getReceivedQuantity() : 0);
         
         if ("WRITE_OFF".equalsIgnoreCase(resolution)) {
-            // The missing stock is gone. It was already deducted from source during dispatch.
-            // We just log a WRITE_OFF ledger entry on the destination store for zero quantity to record the event?
-            // Actually, a write-off means it's lost in transit.
+            // The missing stock was already deducted from the source during dispatch.
+            // Record an explicit WRITE_OFF ledger entry on the destination store
+            // so the audit trail reflects the loss (e.g. lost in transit).
+            if (missing > 0) {
+                stockLedgerService.applyDelta(
+                        transfer.getVariant().getId(),
+                        transfer.getToStore().getId(),
+                        -missing,
+                        LedgerReason.ADJUSTMENT, // closest existing reason; rename to WRITE_OFF when enum is extended
+                        "TX-WRITEOFF-" + transfer.getId(),
+                        actor
+                );
+            }
             transfer.setVarianceReason("Written off missing quantity: " + missing);
         } else if ("RETURN".equalsIgnoreCase(resolution)) {
             // Return missing stock to source store (maybe they never sent it)

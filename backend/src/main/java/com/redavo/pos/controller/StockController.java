@@ -25,8 +25,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/stock")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"},
-             allowCredentials = "true")
 public class StockController {
 
     private final StockLedgerService       stockService;
@@ -95,16 +93,27 @@ public class StockController {
 
     // ── Stock levels ──────────────────────────────────────────────────────────
 
-    /** All stock levels for a store. */
+    /** All stock levels. If storeId is provided, filters by store. */
     @GetMapping("/levels")
-    public ResponseEntity<List<StockLevel>> getLevels(
-            @RequestParam Long storeId,
+    public ResponseEntity<?> getLevels(
+            @RequestParam(required = false) Long storeId,
             @AuthenticationPrincipal RedAvoUserDetails actor) {
-        // ADMIN or same-store employee
-        if (actor != null && !actor.canAccessStore(storeId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        
+        try {
+            if (storeId != null) {
+                // ADMIN or same-store employee
+                if (actor != null && !actor.canAccessStore(storeId)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+                return ResponseEntity.ok(stockService.getStockLevels(storeId));
+            } else {
+                // Allow all authenticated users to see all stock levels so they can request transfers
+                return ResponseEntity.ok(stockService.getAllStockLevels());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage() + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "none"));
         }
-        return ResponseEntity.ok(stockService.getStockLevels(storeId));
     }
 
     // ── Stock ledger ──────────────────────────────────────────────────────────

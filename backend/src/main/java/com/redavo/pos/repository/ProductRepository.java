@@ -9,7 +9,9 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    List<Product> findByCategory(String category);
+    List<Product> findByIsActiveTrue();
 
-    List<Product> findByStockQuantityLessThanEqual(int qty);
+    List<Product> findByCategoryAndIsActiveTrue(String category);
+
+    List<Product> findByStockQuantityLessThanEqualAndIsActiveTrue(int qty);
 }

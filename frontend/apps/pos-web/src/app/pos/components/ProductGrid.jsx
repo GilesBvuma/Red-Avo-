@@ -4,11 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import CategoryTabs from './CategoryTabs';
 import ProductCard from './ProductCard';
 import StatsBar from './StatsBar';
-import { fetchProducts, fetchDashboardStats } from '../lib/api';
+import { fetchProducts, fetchDashboardStats, fetchStockLevels, fetchCategories } from '../lib/api';
+import { useAuth } from '../../AuthProvider';
 
 export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
+  const { user } = useAuth();
   const [products, setProducts]       = useState([]);
   const [filtered, setFiltered]       = useState([]);
+  const [categories, setCategories]   = useState([]);
   const [category, setCategory]       = useState('All');
   const [search, setSearch]           = useState('');
   const [stats, setStats]             = useState(null);
@@ -17,20 +20,59 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   const [error, setError]             = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  const parseDate = (d) => {
+    if (!d) return 0;
+    if (Array.isArray(d)) {
+      // [year, month, day, hour, minute, second, nanosecond]
+      return new Date(d[0], d[1] - 1, d[2], d[3] || 0, d[4] || 0, d[5] || 0).getTime();
+    }
+    return new Date(d).getTime();
+  };
+
   // Fetch products
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchProducts();
+      
+      let [data, stockData, cats] = await Promise.all([
+        fetchProducts(),
+        user?.role !== 'ADMIN' && user?.storeId ? fetchStockLevels(user.storeId) : Promise.resolve(null),
+        fetchCategories()
+      ]);
+
+      if (stockData) {
+        const stockMap = {};
+        stockData.forEach(sl => {
+            if (sl.variant && sl.variant.id) {
+                stockMap[sl.variant.id] = sl.quantity;
+            }
+        });
+        
+        data = data.map(p => {
+           if (!p.variants || p.variants.length === 0) return p;
+           const updatedVariants = p.variants.map(v => ({
+               ...v,
+               stockQuantity: stockMap[v.id] || 0
+           }));
+           const totalLocalStock = updatedVariants.reduce((sum, v) => sum + v.stockQuantity, 0);
+           return {
+               ...p,
+               variants: updatedVariants,
+               stockQuantity: totalLocalStock
+           };
+        }).filter(p => p.stockQuantity > 0);
+      }
+
       setProducts(data);
       setFiltered(data);
+      if (cats) setCategories(cats);
     } catch (e) {
       setError('Could not load products. Is the backend running?');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.role, user?.storeId]);
 
   // Fetch stats
   const loadStats = useCallback(async () => {
@@ -56,7 +98,7 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   useEffect(() => {
     let result = products;
     if (category !== 'All') {
-      result = result.filter((p) => p.category === category);
+      result = result.filter((p) => p.category && p.category.toLowerCase() === category.toLowerCase());
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -64,6 +106,7 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
         (p) => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
       );
     }
+    result.sort((a, b) => parseDate(b.updatedAt || b.createdAt) - parseDate(a.updatedAt || a.createdAt));
     setFiltered(result);
   }, [products, category, search]);
 
@@ -116,8 +159,9 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
             </svg>
           </button>
         </div>
-
-        <CategoryTabs activeCategory={category} onCategoryChange={setCategory} />
+          <div style={{ marginBottom: 16 }}>
+        <CategoryTabs categories={categories} activeCategory={category} onCategoryChange={setCategory} />
+      </div>
       </div>
 
       {/* Product grid */}

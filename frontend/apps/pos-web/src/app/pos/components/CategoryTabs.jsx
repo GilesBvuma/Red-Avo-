@@ -10,10 +10,12 @@ const CATEGORIES = [
   'Accessories',
 ];
 
-export default function CategoryTabs({ activeCategory, onCategoryChange }) {
+export default function CategoryTabs({ categories = [], activeCategory, onCategoryChange }) {
+  const displayCats = ['All', ...categories.map(c => typeof c === 'object' ? c.name : c)];
+  
   return (
     <div className="pos-categories" role="tablist" aria-label="Product categories">
-      {CATEGORIES.map((cat) => (
+      {displayCats.map((cat) => (
         <button
           key={cat}
           id={`pos-cat-${cat.toLowerCase().replace(/\s+/g, '-')}`}

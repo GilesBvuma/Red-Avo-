@@ -11,4 +11,5 @@ public interface StockTransferRepository extends JpaRepository<StockTransfer, Lo
     List<StockTransfer> findByFromStoreIdOrToStoreIdOrderByRequestedAtDesc(Long fromStoreId, Long toStoreId);
     List<StockTransfer> findByFromStoreIdOrderByRequestedAtDesc(Long fromStoreId);
     List<StockTransfer> findByToStoreIdOrderByRequestedAtDesc(Long toStoreId);
+    List<StockTransfer> findByRequestedByOrderByRequestedAtDesc(String requestedBy);
 }

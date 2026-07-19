@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as api from '../lib/api';
 import { Red_Rose } from 'next/font/google';
+import { useAuth } from '../../AuthProvider';
 
 // ─── Constants ──────────────────────────────────────────────────────
 const SIZES_ALL  = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -51,7 +52,7 @@ const EMPTY_FORM = {
   name: '', category: '', sku: '', description: '',
   price: '', salePrice: '', onSale: false,
   stockQuantity: '', lowStockThreshold: '5',
-  vatRate: '15', discount: '0',
+  vatRate: '0', discount: '0',
   colors: [], sizes: [],
   imageUrls: [], isActive: true,
   variants: []
@@ -110,7 +111,7 @@ function SizePicker({ selected, onChange }) {
 }
 
 // ─── Multiple Image upload drop zone ──────────────────────────────────────────
-function MultipleImageDropZone({ previews, onFiles }) {
+function MultipleImageDropZone({ previews, onFiles, onRemove }) {
   const inputRef = useRef();
   const [dragging, setDragging] = useState(false);
 
@@ -123,8 +124,20 @@ function MultipleImageDropZone({ previews, onFiles }) {
   return (
     <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, flexWrap: 'wrap' }}>
       {previews.map((src, i) => (
-        <div key={i} style={{ width: 100, height: 100, borderRadius: 8, overflow: 'hidden', flexShrink: 0, border: '1px solid #E8E8E8' }}>
+        <div key={i} style={{ width: 100, height: 100, borderRadius: 8, overflow: 'hidden', flexShrink: 0, border: '1px solid #E8E8E8', position: 'relative' }}>
           <img src={src} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <button 
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRemove(i); }}
+            style={{
+              position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.5)', 
+              color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, 
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12
+            }}
+          >
+            ×
+          </button>
         </div>
       ))}
       <div
@@ -159,15 +172,18 @@ function ProductModal({ product, categories, onClose, onSaved }) {
     salePrice: product.salePrice ?? '',
     stockQuantity: product.stockQuantity ?? '',
     lowStockThreshold: product.lowStockThreshold ?? '5',
-    vatRate: product.vatRate ?? '15',
+    vatRate: product.vatRate ?? '0',
     discount: product.discount ?? '0',
     colors: parseCsv(product.colors),
     sizes: parseCsv(product.sizes),
-    imageUrls: product.imageUrls || (product.imageUrl ? [product.imageUrl] : []),
+    imageUrls: (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
+    supplierInvoices: product.supplierInvoices || [],
   } : { ...EMPTY_FORM, sku: `RA-${Math.floor(1000 + Math.random() * 9000)}` });
   
   const [imageFiles, setImageFiles] = useState([]);
   const [previews, setPreviews]     = useState(form.imageUrls || []);
+  const [invoiceFiles, setInvoiceFiles] = useState([]);
+  const [invoicePreviews, setInvoicePreviews] = useState(form.supplierInvoices || []);
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState('');
   
@@ -179,7 +195,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       const initialGrid = {};
       product.variants.forEach(v => {
         const key = `${v.color || 'Default'}-${v.size || 'Default'}`;
-        initialGrid[key] = { stockQuantity: v.stockQuantity, sku: v.sku };
+        initialGrid[key] = { id: v.id, stockQuantity: v.stockQuantity, sku: v.sku };
       });
       setVariantStockGrid(initialGrid);
     }
@@ -193,21 +209,75 @@ function ProductModal({ product, categories, onClose, onSaved }) {
     setPreviews(prev => [...prev, ...newPreviews]);
   };
 
+  const handleRemoveImage = (index) => {
+    const url = previews[index];
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+    
+    if (form.imageUrls.includes(url)) {
+      setForm(prev => ({ ...prev, imageUrls: prev.imageUrls.filter(u => u !== url) }));
+    } else {
+      const existingCount = previews.filter(p => form.imageUrls.includes(p)).length;
+      const fileIndex = index - existingCount;
+      if (fileIndex >= 0) {
+        setImageFiles(prev => prev.filter((_, i) => i !== fileIndex));
+      }
+    }
+  };
+
+  const handleInvoiceFiles = (files) => {
+    setInvoiceFiles(prev => [...prev, ...Array.from(files)]);
+    const newPreviews = Array.from(files).map(f => URL.createObjectURL(f));
+    setInvoicePreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const handleRemoveInvoice = (index) => {
+    const url = invoicePreviews[index];
+    setInvoicePreviews(prev => prev.filter((_, i) => i !== index));
+    
+    if (form.supplierInvoices.includes(url)) {
+      setForm(prev => ({ ...prev, supplierInvoices: prev.supplierInvoices.filter(u => u !== url) }));
+    } else {
+      const existingCount = invoicePreviews.filter(p => form.supplierInvoices.includes(p)).length;
+      const fileIndex = index - existingCount;
+      if (fileIndex >= 0) {
+        setInvoiceFiles(prev => prev.filter((_, i) => i !== fileIndex));
+      }
+    }
+  };
+
   const getExpectedVariants = () => {
     const hasColors = form.colors.length > 0;
     const hasSizes = form.sizes.length > 0;
     
-    if (!hasColors && !hasSizes) return [];
+    if (!hasColors && !hasSizes && (!isEdit || !product.variants)) return [];
     
     const cs = hasColors ? form.colors : ['Default'];
     const ss = hasSizes ? form.sizes : ['Default'];
     
     const vars = [];
+    const keysSeen = new Set();
+    
     cs.forEach(c => {
       ss.forEach(s => {
-        vars.push({ color: c, size: s, key: `${c}-${s}` });
+        const key = `${c}-${s}`;
+        vars.push({ color: c, size: s, key });
+        keysSeen.add(key);
       });
     });
+
+    // Recover orphaned variants that still hold stock so they aren't permanently hidden
+    if (isEdit && product.variants) {
+      product.variants.forEach(v => {
+        const c = v.color || 'Default';
+        const s = v.size || 'Default';
+        const key = `${c}-${s}`;
+        if (!keysSeen.has(key) && v.stockQuantity > 0) {
+          vars.push({ color: c, size: s, key, orphaned: true });
+          keysSeen.add(key);
+        }
+      });
+    }
+
     return vars;
   };
   const expectedVariants = getExpectedVariants();
@@ -236,6 +306,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
           const qty = parseInt(gridData.stockQuantity) || 0;
           totalStock += qty;
           variantsPayload.push({
+            id: gridData.id,
             color: ev.color === 'Default' ? null : ev.color,
             size: ev.size === 'Default' ? null : ev.size,
             sku: gridData.sku || `${form.sku || 'PROD'}-${ev.color.substring(0,3).toUpperCase()}-${ev.size}`,
@@ -249,13 +320,18 @@ function ProductModal({ product, categories, onClose, onSaved }) {
         totalStock = parseInt(form.stockQuantity) || 0;
       }
 
+      const primaryImageUrl = form.imageUrls.length > 0 ? form.imageUrls[0] : "";
+
       const payload = {
         ...form,
+        imageUrl:          primaryImageUrl,
+        imageUrls:         form.imageUrls,
+        supplierInvoices:  form.supplierInvoices,
         price:             parseFloat(form.price) || 0,
         salePrice:         form.salePrice ? parseFloat(form.salePrice) : null,
         stockQuantity:     totalStock,
         lowStockThreshold: parseInt(form.lowStockThreshold) || 5,
-        vatRate:           parseFloat(form.vatRate) || 15,
+        vatRate:           !isNaN(parseFloat(form.vatRate)) ? parseFloat(form.vatRate) : 0,
         discount:          parseInt(form.discount) || 0,
         colors:            form.colors.join(','),
         sizes:             form.sizes.join(','),
@@ -272,6 +348,11 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       // Upload multiple images if selected
       if (imageFiles.length > 0 && saved.id) {
         await api.uploadProductImages(saved.id, imageFiles);
+      }
+      
+      // Upload multiple supplier invoices if selected
+      if (invoiceFiles.length > 0 && saved.id) {
+        await api.uploadProductInvoices(saved.id, invoiceFiles);
       }
 
       onSaved();
@@ -306,14 +387,30 @@ function ProductModal({ product, categories, onClose, onSaved }) {
         <form onSubmit={handleSubmit} style={{ padding: '20px 28px 28px' }}>
           {/* Product photos */}
           <Section label="Product Photos (Upload multiple)">
-            <MultipleImageDropZone previews={previews} onFiles={handleFiles} />
+            <div>
+              <label>Images</label>
+              <MultipleImageDropZone previews={previews} onFiles={handleFiles} onRemove={handleRemoveImage} />
+            </div>
+          </Section>
+
+          {/* Supplier Invoices */}
+          <Section label="Audit Proofs (Optional)">
+            <div>
+              <label style={{ fontSize: 12, color: '#6B7280', display: 'block', marginBottom: 6 }}>Supplier Invoices</label>
+              <MultipleImageDropZone previews={invoicePreviews} onFiles={handleInvoiceFiles} onRemove={handleRemoveInvoice} />
+            </div>
           </Section>
 
           {/* Basic info */}
           <Section label="Basic Info">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <Field label="Product Name *" fullWidth>
-                <Input placeholder="e.g. Core Training Leggings" value={form.name} onChange={v => set('name', v)} />
+                <Input 
+                  placeholder="e.g. Core Training Leggings" 
+                  value={form.name} 
+                  onChange={v => set('name', v)}
+                  style={error && !form.name.trim() ? { borderColor: '#EF4444' } : {}}
+                />
               </Field>
               <Field label="Base SKU">
                 <Input placeholder="e.g. RA-LGG-001" value={form.sku} onChange={v => set('sku', v)} />
@@ -393,8 +490,11 @@ function ProductModal({ product, categories, onClose, onSaved }) {
                     </thead>
                     <tbody>
                       {expectedVariants.map(ev => (
-                        <tr key={ev.key} style={{ borderBottom: '1px solid #F0F0F0' }}>
-                          <td style={{ padding: '8px 12px' }}>{ev.color === 'Default' ? '—' : ev.color}</td>
+                        <tr key={ev.key} style={{ borderBottom: '1px solid #F0F0F0', opacity: ev.orphaned ? 0.8 : 1, background: ev.orphaned ? '#FEF2F2' : 'transparent' }}>
+                          <td style={{ padding: '8px 12px' }}>
+                            {ev.color === 'Default' ? '—' : ev.color}
+                            {ev.orphaned && <span style={{ marginLeft: 8, fontSize: 10, background: '#FEE2E2', color: '#B91C1C', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Orphaned</span>}
+                          </td>
                           <td style={{ padding: '8px 12px' }}>{ev.size === 'Default' ? '—' : ev.size}</td>
                           <td style={{ padding: '8px 12px' }}>
                             <input type="number" min="0" placeholder="0" 
@@ -564,8 +664,11 @@ function CategoryModal({ onClose, onSaved }) {
 
 // ─── Main page ───────────────────────────────────────────────────────
 export default function StockManagementPage() {
+  const { user } = useAuth();
   const [products, setProducts]   = useState([]);
   const [categories, setCategories] = useState([]);
+  const [stores, setStores]       = useState([]);
+  const [stockLevels, setStockLevels] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState('All');
@@ -573,18 +676,31 @@ export default function StockManagementPage() {
   const [catModalOpen, setCatModalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // product id
 
+  const parseDate = (d) => {
+    if (!d) return 0;
+    if (Array.isArray(d)) {
+      // [year, month, day, hour, minute, second]
+      return new Date(d[0], d[1] - 1, d[2], d[3] || 0, d[4] || 0, d[5] || 0).getTime();
+    }
+    return new Date(d).getTime();
+  };
+
   const loadData = useCallback(async () => {
     try { 
-      const [prods, cats] = await Promise.all([
+      const [prods, cats, stors, levels] = await Promise.all([
         api.fetchProducts(),
-        api.fetchCategories()
+        api.fetchCategories(),
+        api.fetchStores(),
+        api.fetchStockLevels(user?.role === 'ADMIN' ? undefined : user?.storeId)
       ]);
       setProducts(prods); 
       setCategories(cats);
+      setStores(stors);
+      setStockLevels(levels);
     }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
-  }, []);
+  }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -599,6 +715,23 @@ export default function StockManagementPage() {
                         p.sku?.toLowerCase().includes(search.toLowerCase());
     const matchCat = catFilter === 'All' || p.category === catFilter;
     return matchSearch && matchCat;
+  }).sort((a, b) => parseDate(b.updatedAt || b.createdAt) - parseDate(a.updatedAt || a.createdAt));
+
+  // Calculate stock by location per product
+  const variantToProduct = {};
+  products.forEach(p => {
+    p.variants?.forEach(v => {
+      variantToProduct[v.id] = p.id;
+    });
+  });
+
+  const productStockByStore = {}; // productId -> { storeId: quantity }
+  stockLevels.forEach(sl => {
+    const pid = variantToProduct[sl.variant?.id];
+    if (pid) {
+      if (!productStockByStore[pid]) productStockByStore[pid] = {};
+      productStockByStore[pid][sl.storeId] = (productStockByStore[pid][sl.storeId] || 0) + sl.quantity;
+    }
   });
 
   // Summary stats
@@ -703,7 +836,7 @@ export default function StockManagementPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#F9F9F9', borderBottom: '1px solid #E8E8E8' }}>
-                  {['Product', 'SKU', 'Sizes', 'Colors', 'Price', 'VAT%', 'Stock', 'Status', 'Actions'].map(h => (
+                  {['Product', 'SKU', 'Sizes', 'Colors', 'Price', 'VAT%', user?.role === 'ADMIN' ? 'Location Breakdown' : 'Stock (Local)', 'Status', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '11px 14px', fontWeight: 700, fontSize: 11, letterSpacing: '0.06em', color: '#6B7280', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -741,8 +874,31 @@ export default function StockManagementPage() {
                       )}
                     </td>
                     <td style={{ padding: '12px 14px', color: '#6B7280' }}>{p.vatRate ?? 15}%</td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{ fontWeight: 700, color: p.stockQuantity > 0 ? '#1A1A1A' : '#C0392B' }}>{p.stockQuantity ?? 0}</span>
+                    <td style={{ padding: '12px 14px', minWidth: 140 }}>
+                      {user?.role === 'ADMIN' ? (
+                        <>
+                          <div style={{ fontWeight: 700, color: p.stockQuantity > 0 ? '#1A1A1A' : '#C0392B', marginBottom: 6 }}>
+                            {p.stockQuantity ?? 0} (Global Total)
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, borderLeft: '2px solid #E8E8E8', paddingLeft: 8 }}>
+                            {stores.map(store => {
+                              const qty = productStockByStore[p.id]?.[store.id] || 0;
+                              return (
+                                <div key={store.id} style={{ fontSize: 11, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ color: '#6B7280' }}>{store.name}</span>
+                                  <span style={{ fontWeight: 600, color: qty > 0 ? '#0D9488' : '#9CA3AF', background: qty > 0 ? '#F0FDFA' : '#F9FAFB', padding: '1px 6px', borderRadius: 4 }}>
+                                    {qty}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontWeight: 700, color: (productStockByStore[p.id]?.[user?.storeId] || 0) > 0 ? '#1A1A1A' : '#C0392B' }}>
+                          {productStockByStore[p.id]?.[user?.storeId] || 0}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '12px 14px' }}>
                       <span className={`pos-stock-badge ${toBadgeClass(p.stockStatus)}`} style={{ position: 'static', fontSize: 10 }}>
