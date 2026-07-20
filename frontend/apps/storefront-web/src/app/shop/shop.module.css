@@ -37,6 +37,23 @@
   z-index: 0;
 }
 
+.shopHeroImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 1s ease-in-out;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (min-width: 1024px) {
+  .shopHeroImage {
+    object-position: 50% 25%;
+  }
+}
+
 .shopHeroBlob {
   position: absolute;
   width: 520px;

@@ -5,7 +5,7 @@ import Sidebar from './components/Sidebar';
 import ProductGrid from './components/ProductGrid';
 import OrderPanel from './components/OrderPanel';
 import ActiveOrdersBar from './components/ActiveOrdersBar';
-import ChannelStatusBar from './components/ChannelStatusBar';
+// Removed ChannelStatusBar
 import StockManagementPage from './components/StockManagementPage';
 import CustomersPage from './components/CustomersPage';
 import TransfersPage from './components/TransfersPage';
@@ -100,8 +100,7 @@ export default function POSPage() {
 
       {/* Main content — center + right */}
       <div className="pos-main">
-        {/* Channel status ribbon */}
-        <ChannelStatusBar />
+        {/* Removed channel status ribbon */}
 
         {/* Center — Main area */}
         {activeNav === 'menu' && (
@@ -127,8 +126,8 @@ export default function POSPage() {
         {activeNav === 'marketing' && <MarketingPage />}
       </div>
 
-      {/* Right — Order panel */}
-      {activeNav === 'menu' && (
+      {/* Right — Order panel (only visible when cart has items) */}
+      {activeNav === 'menu' && cart.length > 0 && (
         <OrderPanel
           cart={cart}
           onRemoveItem={handleRemove}

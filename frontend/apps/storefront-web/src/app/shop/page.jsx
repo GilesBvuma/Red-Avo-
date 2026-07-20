@@ -298,16 +298,10 @@ function ShopContent() {
               key={src}
               src={src}
               alt={`Red Avo activewear ${index + 1}`}
+              className={styles.shopHeroImage}
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
                 opacity: heroImgIndex === index ? 1 : 0,
                 zIndex: heroImgIndex === index ? 1 : 0,
-                transition: 'opacity 1s ease-in-out',
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
               }}
             />
           ))}

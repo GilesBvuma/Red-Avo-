@@ -6,7 +6,6 @@ import { createOrder, fetchNotificationHistory } from '../lib/api';
 const PAYMENT_METHODS = [
   { id: 'CASH', label: 'Cash', icon: '💵' },
   { id: 'CARD', label: 'Card', icon: '💳' },
-  { id: 'QR',   label: 'QR Code', icon: '📱' },
 ];
 
 const TABS = ['Walk-in', 'Online'];
@@ -33,9 +32,19 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
   const [showHistory,  setShowHistory]  = useState(false);
   const [panelWidth,   setPanelWidth]   = useState(340);
 
-  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const tax      = subtotal * 0.15;
-  const total    = subtotal + tax;
+  // VAT is inclusive — the listing price already includes VAT.
+  // vatAmount = price × vatRate / (100 + vatRate)   (extract the embedded VAT)
+  // netRevenue = listingPrice − vatAmount
+  // Customer always pays the listing price (no markup added).
+  const subtotal   = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const vatAmount  = cart.reduce((sum, item) => {
+    const rate = (item.product.vatRate != null && item.product.vatRate > 0) ? item.product.vatRate : 0;
+    if (rate === 0) return sum;
+    const lineTax = (item.product.price * item.quantity) * rate / (100 + rate);
+    return sum + lineTax;
+  }, 0);
+  const netRevenue = subtotal - vatAmount;   // what the store keeps after VAT
+  const total      = subtotal;               // customer pays the listing price
 
   const loadHistory = useCallback(async () => {
     try {
@@ -65,7 +74,7 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
         customerPhone: customer.phone || null,
         paymentMethod: payMethod,
         subtotal,
-        tax,
+        tax: vatAmount,
         total,
         items: cart.map((item) => ({
           productId:   item.product.id,
@@ -246,18 +255,22 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
 
             {/* Totals */}
             <div className="pos-order-totals">
-              <div className="pos-total-row">
-                <span className="pos-total-label">Subtotal</span>
-                <span className="pos-total-value">${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="pos-total-row">
-                <span className="pos-total-label">Tax (15%)</span>
-                <span className="pos-total-value">${tax.toFixed(2)}</span>
-              </div>
               <div className="pos-total-row main">
-                <span className="pos-total-label" style={{ fontWeight: 700, color: 'var(--pos-text)' }}>Total</span>
+                <span className="pos-total-label" style={{ fontWeight: 700, color: 'var(--pos-text)' }}>Total (inc. VAT)</span>
                 <span className="pos-total-value" id="pos-order-total">${total.toFixed(2)}</span>
               </div>
+              {vatAmount > 0 && (
+                <>
+                  <div className="pos-total-row" style={{ fontSize: '11.5px', opacity: 0.8 }}>
+                    <span className="pos-total-label">VAT included</span>
+                    <span className="pos-total-value" style={{ color: 'var(--pos-text-muted)' }}>−${vatAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="pos-total-row" style={{ fontSize: '11.5px', opacity: 0.8 }}>
+                    <span className="pos-total-label">Net to store</span>
+                    <span className="pos-total-value" style={{ color: 'var(--pos-text-muted)' }}>${netRevenue.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Customer info */}

@@ -7,6 +7,27 @@ import StatsBar from './StatsBar';
 import { fetchProducts, fetchDashboardStats, fetchStockLevels, fetchCategories } from '../lib/api';
 import { useAuth } from '../../AuthProvider';
 
+/* ── Shared colour palette for variant swatches ── */
+const COLOR_MAP = {
+  'Crimson Red':  '#C0392B', 'Matte Black':  '#1A1A1A', 'Soft White':    '#FAFAF5',
+  'Blush Pink':   '#F4A0A0', 'Forest Green': '#2D6A4F', 'Navy Blue':     '#1B3A6B',
+  'Teal':         '#0D9488', 'Burgundy':     '#800020', 'Mustard':       '#FFDB58',
+  'Olive':        '#808000', 'Charcoal':     '#36454F', 'Peach':         '#FFE5B4',
+  'Mint Green':   '#98FF98', 'Coral':        '#FF7F50', 'Lilac':         '#C8A2C8',
+  'Slate Blue':   '#6A5ACD', 'Rose Gold':    '#B76E79', 'Taupe':         '#483C32',
+  'Chocolate':    '#7B3F00', 'Plum':         '#8E4585', 'Rust':          '#B7410E',
+  'Sand':         '#C2B280', 'Hot Pink':     '#FF10F0', 'Neon Green':    '#39FF14',
+  'Electric Blue':'#7DF9FF', 'Red':          '#ff1010', 'Black':         '#1A1A1A',
+  'White':        '#F5F5F5', 'Pink':         '#FFC0CB', 'Blue':          '#2196F3',
+  'Green':        '#4CAF50', 'Grey':         '#9E9E9E', 'Purple':        '#9C27B0',
+};
+
+const getColorHex = (name) => {
+  if (!name) return '#9ca3af';
+  // Try exact match first, then case-insensitive
+  return COLOR_MAP[name] || COLOR_MAP[Object.keys(COLOR_MAP).find(k => k.toLowerCase() === name.toLowerCase())] || '#9ca3af';
+};
+
 export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   const { user } = useAuth();
   const [products, setProducts]       = useState([]);
@@ -20,10 +41,14 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   const [error, setError]             = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  /* Variant modal state */
+  const [modalQty,        setModalQty]        = useState(1);
+  const [modalSize,       setModalSize]       = useState(null);
+  const [modalColor,      setModalColor]      = useState(null);
+
   const parseDate = (d) => {
     if (!d) return 0;
     if (Array.isArray(d)) {
-      // [year, month, day, hour, minute, second, nanosecond]
       return new Date(d[0], d[1] - 1, d[2], d[3] || 0, d[4] || 0, d[5] || 0).getTime();
     }
     return new Date(d).getTime();
@@ -90,7 +115,7 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
   useEffect(() => {
     loadProducts();
     loadStats();
-    const interval = setInterval(loadStats, 30000); // refresh stats every 30s
+    const interval = setInterval(loadStats, 30000);
     return () => clearInterval(interval);
   }, [loadProducts, loadStats]);
 
@@ -116,12 +141,40 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
       .reduce((sum, item) => sum + item.quantity, 0);
   };
 
+  const openVariantModal = (product) => {
+    setSelectedProduct(product);
+    setModalQty(1);
+    setModalSize(null);
+    setModalColor(null);
+  };
+
   const handleProductAddClick = (product) => {
     if (product.variants && product.variants.length > 0) {
-      setSelectedProduct(product);
+      openVariantModal(product);
     } else {
       onAdd(product, null);
     }
+  };
+
+  /* Derived variant data for the modal */
+  const modalVariants   = selectedProduct?.variants || [];
+  const availableSizes  = [...new Set(modalVariants.map(v => v.size).filter(Boolean))];
+  const availableColors = modalSize
+    ? [...new Set(modalVariants.filter(v => v.size === modalSize && v.stockQuantity > 0).map(v => v.color).filter(Boolean))]
+    : [...new Set(modalVariants.map(v => v.color).filter(Boolean))];
+  const selectedVariant = modalSize && modalColor
+    ? modalVariants.find(v => v.size === modalSize && v.color === modalColor)
+    : null;
+  const stockLimit = selectedVariant ? selectedVariant.stockQuantity : 999;
+
+  const handleConfirmVariant = () => {
+    if (!selectedVariant) return;
+    // Add once (quantity 1) then increase for the rest
+    onAdd(selectedProduct, selectedVariant);
+    for (let i = 1; i < modalQty; i++) {
+      onIncrease(`v-${selectedVariant.id}`);
+    }
+    setSelectedProduct(null);
   };
 
   return (
@@ -206,51 +259,150 @@ export default function ProductGrid({ cart, onAdd, onIncrease, onDecrease }) {
         )}
       </div>
 
-      {/* Variant Selection Modal */}
+      {/* ── Variant Selection Modal ── */}
       {selectedProduct && (
-        <div className="pos-modal-overlay">
-          <div className="pos-modal" style={{ width: '400px' }}>
-            <div className="pos-modal-header">
-              <h3>Select Variant: {selectedProduct.name}</h3>
-              <button className="pos-modal-close" onClick={() => setSelectedProduct(null)}>×</button>
-            </div>
-            <div className="pos-modal-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                {selectedProduct.variants.map(variant => {
-                  const isOutOfStock = variant.stockQuantity === 0;
-                  return (
-                    <button
-                      key={variant.id}
-                      disabled={isOutOfStock}
-                      onClick={() => {
-                        onAdd(selectedProduct, variant);
-                        setSelectedProduct(null);
-                      }}
-                      style={{
-                        padding: '12px',
-                        border: '1px solid var(--pos-border)',
-                        borderRadius: '8px',
-                        background: isOutOfStock ? '#f5f5f5' : 'white',
-                        cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-                        opacity: isOutOfStock ? 0.6 : 1,
-                        textAlign: 'center',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '4px'
-                      }}
-                    >
-                      <span style={{ fontWeight: 600 }}>{variant.size} - {variant.color}</span>
-                      <span style={{ fontSize: '11px', color: isOutOfStock ? 'red' : 'var(--pos-text-muted)' }}>
-                        {isOutOfStock ? 'Out of Stock' : `${variant.stockQuantity} in stock`}
-                      </span>
-                    </button>
-                  );
-                })}
+        <div className="pos-variant-overlay" onClick={() => setSelectedProduct(null)}>
+          <div
+            className="pos-variant-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Select variant for ${selectedProduct.name}`}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="pos-variant-modal-header">
+              <div>
+                <p className="pos-variant-modal-title">{selectedProduct.name}</p>
+                <p className="pos-variant-modal-sub">Select size, colour &amp; quantity</p>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span className="pos-variant-modal-price">${selectedProduct.price.toFixed(2)}</span>
+                <button
+                  className="pos-variant-modal-close"
+                  onClick={() => setSelectedProduct(null)}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="pos-variant-divider" style={{ marginTop: '16px' }} />
+
+            <div className="pos-variant-modal-body">
+
+              {/* Size selection */}
+              {availableSizes.length > 0 && (
+                <div>
+                  <div className="pos-variant-section-label">Size</div>
+                  <div className="pos-size-grid">
+                    {availableSizes.map(size => {
+                      const hasStock = modalVariants.some(v => v.size === size && v.stockQuantity > 0);
+                      return (
+                        <button
+                          key={size}
+                          disabled={!hasStock}
+                          className={`pos-size-pill${modalSize === size ? ' selected' : ''}`}
+                          onClick={() => { setModalSize(size); setModalColor(null); setModalQty(1); }}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Colour selection */}
+              {availableColors.length > 0 && (
+                <div>
+                  <div className="pos-variant-section-label">
+                    Colour{modalColor && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>— {modalColor}</span>}
+                  </div>
+                  <div className="pos-colour-grid">
+                    {availableColors.map(color => {
+                      const hex = getColorHex(color);
+                      const isLight = ['#FAFAF5','#FFE5B4','#98FF98','#FFDB58','#F5F5F5','#FFC0CB'].includes(hex);
+                      return (
+                        <button
+                          key={color}
+                          title={color}
+                          aria-label={color}
+                          className={`pos-colour-swatch${modalColor === color ? ' selected' : ''}`}
+                          onClick={() => { setModalColor(color); setModalQty(1); }}
+                          style={{
+                            background: hex,
+                            border: isLight ? '1.5px solid #ccc' : '1.5px solid transparent',
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Stock info for selected variant */}
+              {selectedVariant && (
+                <div className={`pos-stock-chip${selectedVariant.stockQuantity === 0 ? ' out' : selectedVariant.stockQuantity <= 5 ? ' low' : ''}`}>
+                  {selectedVariant.stockQuantity === 0
+                    ? '⚠️ Out of stock'
+                    : selectedVariant.stockQuantity <= 5
+                      ? `⚠️ Only ${selectedVariant.stockQuantity} left in stock`
+                      : `✓ ${selectedVariant.stockQuantity} in stock`}
+                </div>
+              )}
+
+              <div className="pos-variant-divider" />
+
+              {/* Quantity selector */}
+              <div>
+                <div className="pos-variant-section-label">Quantity</div>
+                <div className="pos-modal-qty-row">
+                  <button
+                    className="pos-modal-qty-btn"
+                    onClick={() => setModalQty(q => Math.max(1, q - 1))}
+                    disabled={modalQty <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="pos-modal-qty-value" aria-live="polite">{modalQty}</span>
+                  <button
+                    className="pos-modal-qty-btn"
+                    onClick={() => setModalQty(q => Math.min(q + 1, stockLimit))}
+                    disabled={modalQty >= stockLimit}
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                  {selectedVariant && (
+                    <span className="pos-modal-qty-total">
+                      = ${(selectedProduct.price * modalQty).toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Confirm */}
+              <button
+                className="pos-variant-confirm-btn"
+                disabled={!selectedVariant || selectedVariant.stockQuantity === 0}
+                onClick={handleConfirmVariant}
+              >
+                {!modalSize
+                  ? 'Select a size first'
+                  : !modalColor
+                    ? 'Select a colour'
+                    : selectedVariant?.stockQuantity === 0
+                      ? 'Out of Stock'
+                      : `Add ${modalQty} to Order — $${(selectedProduct.price * modalQty).toFixed(2)}`}
+              </button>
+
             </div>
           </div>
         </div>
       )}
+
     </>
   );
 }

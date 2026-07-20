@@ -41,6 +41,19 @@ public class NotificationService {
     @Value("${spring.mail.username}")
     private String fromAddress;
 
+    // ─── Twilio SMS API ───
+    @Value("${twilio.account.sid:}")
+    private String twilioAccountSid;
+
+    @Value("${twilio.auth.token:}")
+    private String twilioAuthToken;
+
+    @Value("${twilio.phone.number:}")
+    private String twilioPhoneNumber;
+
+    @Value("${twilio.enabled:false}")
+    private boolean twilioEnabled;
+
     // ═══════════════════════════════════════════════════════════
     //  📧  EMAIL — Gmail SMTP
     // ═══════════════════════════════════════════════════════════
@@ -192,15 +205,44 @@ public class NotificationService {
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  📱  SMS — Demo mode
-    //      (wire to Africa's Talking / Twilio SMS when ready)
+    //  📱  SMS — Twilio Integration
     // ═══════════════════════════════════════════════════════════
 
     public void sendSms(Long customerId, String customerName,
                         String phone, String message, String orderRef) {
-        // SMS stays demo for now — add Africa's Talking or Twilio here later
-        printDemo("SMS", phone, null, message);
-        saveLog(customerId, customerName, phone, "SMS", message, "DEMO", orderRef);
+        if (demoMode || !twilioEnabled || twilioAccountSid == null || twilioAccountSid.isBlank()) {
+            printDemo("SMS", phone, null, message);
+            saveLog(customerId, customerName, phone, "SMS", message, "DEMO", orderRef);
+            return;
+        }
+
+        try {
+            String url = "https://api.twilio.com/2010-04-01/Accounts/" + twilioAccountSid + "/Messages.json";
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            headers.setBasicAuth(twilioAccountSid, twilioAuthToken);
+            
+            org.springframework.util.MultiValueMap<String, String> map = new org.springframework.util.LinkedMultiValueMap<>();
+            map.add("To", phone);
+            map.add("From", twilioPhoneNumber);
+            map.add("Body", message);
+            
+            HttpEntity<org.springframework.util.MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+            
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("[SMS ✅ Twilio] Sent → " + phone);
+                saveLog(customerId, customerName, phone, "SMS", message, "SENT", orderRef);
+            } else {
+                System.err.println("[SMS ❌ Twilio error] " + response.getBody());
+                saveLog(customerId, customerName, phone, "SMS", message, "FAILED", orderRef);
+            }
+        } catch (Exception e) {
+            System.err.println("[SMS ❌ Twilio Exception] " + e.getMessage());
+            saveLog(customerId, customerName, phone, "SMS", message, "FAILED", orderRef);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -211,7 +253,7 @@ public class NotificationService {
         Map<String, String> status = new LinkedHashMap<>();
         status.put("email",    demoMode                  ? "DEMO" : "LIVE");
         status.put("whatsapp", metaConfig.isConfigured() ? "LIVE" : "DEMO");
-        status.put("sms",      "DEMO");   // update when SMS provider is wired
+        status.put("sms",      twilioEnabled             ? "LIVE" : "DEMO");
         return status;
     }
 

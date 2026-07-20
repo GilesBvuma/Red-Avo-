@@ -334,7 +334,7 @@ public class OrderService {
     @Transactional
     public Order fulfilOrder(Long id, String action) {
         // Gap #2 — Validate the action string before applying it
-        java.util.Set<String> allowed = java.util.Set.of("DISPATCHED", "DELIVERED", "COLLECTED");
+        java.util.Set<String> allowed = java.util.Set.of("PROCESSING", "DISPATCHED", "READY_FOR_COLLECTION", "DELIVERED", "COLLECTED", "COMPLETED");
         if (!allowed.contains(action.toUpperCase())) {
             throw new IllegalArgumentException(
                     "Invalid fulfilment action '" + action + "'. Allowed: " + allowed);
@@ -344,17 +344,30 @@ public class OrderService {
 
         // Gap #2 — Guard against invalid state transitions
         String current = order.getStatus();
-        boolean validTransition =
-                ("CONFIRMED".equalsIgnoreCase(current) && "DISPATCHED".equalsIgnoreCase(action)) ||
-                ("DISPATCHED".equalsIgnoreCase(current) && ("DELIVERED".equalsIgnoreCase(action) || "COLLECTED".equalsIgnoreCase(action)));
+        boolean validTransition = false;
+        String requestedAction = action.toUpperCase();
+
+        if ("CONFIRMED".equalsIgnoreCase(current) && "PROCESSING".equals(requestedAction)) {
+            validTransition = true;
+        } else if ("PROCESSING".equalsIgnoreCase(current) && ("DISPATCHED".equals(requestedAction) || "READY_FOR_COLLECTION".equals(requestedAction))) {
+            validTransition = true;
+        } else if ("DISPATCHED".equalsIgnoreCase(current) && ("DELIVERED".equals(requestedAction) || "COMPLETED".equals(requestedAction))) {
+            validTransition = true;
+        } else if ("READY_FOR_COLLECTION".equalsIgnoreCase(current) && ("COLLECTED".equals(requestedAction) || "COMPLETED".equals(requestedAction))) {
+            validTransition = true;
+        } else if ("CONFIRMED".equalsIgnoreCase(current) && "DISPATCHED".equals(requestedAction)) { // Fallback for old flow
+            validTransition = true;
+        } else if ("PROCESSING".equalsIgnoreCase(current) && "COMPLETED".equals(requestedAction)) { // Optional fast track
+            validTransition = true;
+        }
 
         if (!validTransition) {
             throw new IllegalStateException(
-                    "Cannot transition order " + id + " from '" + current + "' to '" + action + "'");
+                    "Cannot transition order " + id + " from '" + current + "' to '" + requestedAction + "'");
         }
 
-        // Deduct stock when ONLINE order transitions from CONFIRMED → DISPATCHED
-        if ("CONFIRMED".equalsIgnoreCase(current) && "ONLINE".equalsIgnoreCase(order.getSource())) {
+        // Deduct stock when ONLINE order transitions from CONFIRMED -> PROCESSING
+        if ("CONFIRMED".equalsIgnoreCase(current) && "PROCESSING".equals(requestedAction) && "ONLINE".equalsIgnoreCase(order.getSource())) {
             String actor = resolveActor();
             double totalCogs = 0.0;
             if (order.getItems() != null) {
@@ -366,7 +379,34 @@ public class OrderService {
             order.setCostOfSale(totalCogs);
         }
 
-        order.setStatus(action.toUpperCase());
-        return orderRepository.save(order);
+        order.setStatus(requestedAction);
+        Order savedOrder = orderRepository.save(order);
+        
+        // --- Trigger Notifications for dispatch / collection ---
+        String orderRef = "ORD-" + savedOrder.getId();
+        String customerName = savedOrder.getCustomerName() != null ? savedOrder.getCustomerName() : "Valued Customer";
+        String firstName = customerName.contains(" ") ? customerName.split(" ")[0] : customerName;
+        
+        if ("DISPATCHED".equals(requestedAction)) {
+            String msg = "Hi " + firstName + "! 🥑❤️ Your Red Avo order " + orderRef + " has been dispatched and is on its way to you! Expect delivery soon.";
+            if (savedOrder.getCustomerEmail() != null && !savedOrder.getCustomerEmail().isBlank()) {
+                notificationService.sendEmail(savedOrder.getCustomerId(), customerName, savedOrder.getCustomerEmail(), msg, "Your Order is on its way! — " + orderRef, orderRef, null);
+            }
+            if (savedOrder.getCustomerPhone() != null && !savedOrder.getCustomerPhone().isBlank()) {
+                notificationService.sendSms(savedOrder.getCustomerId(), customerName, savedOrder.getCustomerPhone(), msg, orderRef);
+            }
+        } else if ("READY_FOR_COLLECTION".equals(requestedAction)) {
+            // Using a hardcoded fallback phone number, you could inject this from properties or Store entity
+            String storePhone = "+263700000000"; 
+            String msg = "Hi " + firstName + "! 🥑❤️ Your Red Avo order " + orderRef + " is ready for collection! Please visit our store to pick it up. Call " + storePhone + " if you need assistance.";
+            if (savedOrder.getCustomerEmail() != null && !savedOrder.getCustomerEmail().isBlank()) {
+                notificationService.sendEmail(savedOrder.getCustomerId(), customerName, savedOrder.getCustomerEmail(), msg, "Your Order is Ready for Collection! — " + orderRef, orderRef, null);
+            }
+            if (savedOrder.getCustomerPhone() != null && !savedOrder.getCustomerPhone().isBlank()) {
+                notificationService.sendSms(savedOrder.getCustomerId(), customerName, savedOrder.getCustomerPhone(), msg, orderRef);
+            }
+        }
+
+        return savedOrder;
     }
 }

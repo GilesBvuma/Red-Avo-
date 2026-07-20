@@ -111,11 +111,17 @@ export default function OrdersPage() {
                     <td style={tdStyle}>{o.customerName || (o.customer ? o.customer.name : 'Walk-in')}</td>
                     <td style={tdStyle}>
                       <span style={{ 
-                        background: o.status === 'CONFIRMED' || o.status === 'COMPLETED' ? '#D1FAE5' : '#FEE2E2',
-                        color: o.status === 'CONFIRMED' || o.status === 'COMPLETED' ? '#065F46' : '#991B1B',
+                        background: o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'COLLECTED' ? '#D1FAE5' : 
+                                    o.status === 'CONFIRMED' ? '#FEF3C7' :
+                                    o.status === 'PROCESSING' ? '#DBEAFE' :
+                                    o.status === 'DISPATCHED' || o.status === 'READY_FOR_COLLECTION' ? '#E0E7FF' : '#FEE2E2',
+                        color: o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'COLLECTED' ? '#065F46' : 
+                               o.status === 'CONFIRMED' ? '#92400E' :
+                               o.status === 'PROCESSING' ? '#1E40AF' :
+                               o.status === 'DISPATCHED' || o.status === 'READY_FOR_COLLECTION' ? '#3730A3' : '#991B1B',
                         padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 
                       }}>
-                        {o.status}
+                        {o.status.replace(/_/g, ' ')}
                       </span>
                     </td>
                     {activeTab === 'ONLINE' && (
@@ -129,7 +135,7 @@ export default function OrdersPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {o.items?.map(i => (
                           <span key={i.id} style={{ fontSize: '11px', color: '#4B5563' }}>
-                            {i.quantity}x {i.productName}
+                            {i.quantity}x {i.productName} (${(i.unitPrice || 0).toFixed(2)})
                           </span>
                         ))}
                       </div>
@@ -138,13 +144,35 @@ export default function OrdersPage() {
                       <td style={tdStyle}>
                         {o.status === 'CONFIRMED' && (
                           <button 
-                            onClick={() => handleFulfil(o.id, o.deliveryMethod === 'DELIVERY' ? 'DISPATCHED' : 'COLLECTED')}
+                            onClick={() => handleFulfil(o.id, 'PROCESSING')}
+                            style={{ 
+                              background: '#F59E0B', color: '#fff', border: 'none', 
+                              padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' 
+                            }}
+                          >
+                            Start Packing
+                          </button>
+                        )}
+                        {o.status === 'PROCESSING' && (
+                          <button 
+                            onClick={() => handleFulfil(o.id, o.deliveryMethod === 'DELIVERY' ? 'DISPATCHED' : 'READY_FOR_COLLECTION')}
                             style={{ 
                               background: '#3B82F6', color: '#fff', border: 'none', 
                               padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' 
                             }}
                           >
-                            {o.deliveryMethod === 'DELIVERY' ? 'Dispatch' : 'Collect'}
+                            {o.deliveryMethod === 'DELIVERY' ? 'Dispatch' : 'Ready for Collection'}
+                          </button>
+                        )}
+                        {(o.status === 'DISPATCHED' || o.status === 'READY_FOR_COLLECTION') && (
+                          <button 
+                            onClick={() => handleFulfil(o.id, 'COMPLETED')}
+                            style={{ 
+                              background: '#10B981', color: '#fff', border: 'none', 
+                              padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' 
+                            }}
+                          >
+                            {o.deliveryMethod === 'DELIVERY' ? 'Mark Delivered' : 'Mark Collected'}
                           </button>
                         )}
                       </td>
