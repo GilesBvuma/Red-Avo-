@@ -314,18 +314,10 @@ export default function CustomersPage() {
       <div style={{ background:'#fff', borderBottom:'1px solid #E8E8E8', padding:'18px 28px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
         <div>
           <h2 style={{ fontSize:20, fontWeight:800, margin:0, color:'#1A1A1A' }}>Customers</h2>
-          <p style={{ fontSize:12, color:'#9CA3AF', margin:'3px 0 0' }}>Manage your customer database and send bulk emails</p>
+          <p style={{ fontSize:12, color:'#9CA3AF', margin:'3px 0 0' }}>Manage your customer database</p>
         </div>
         <div style={{ display:'flex', gap:10 }}>
-          <button
-            onClick={() => setBulkModal(true)}
-            style={{ display:'flex', alignItems:'center', gap:8, background:'#1A1A1A', color:'#fff', border:'none', borderRadius:10, padding:'10px 18px', fontSize:13, fontWeight:700, cursor:'pointer' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#374151'}
-            onMouseLeave={e => e.currentTarget.style.background = '#1A1A1A'}
-          >
-            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            Bulk Email
-          </button>
+
           <button
             onClick={() => setModal('new')}
             style={{ display:'flex', alignItems:'center', gap:8, background:'#C0392B', color:'#fff', border:'none', borderRadius:10, padding:'10px 18px', fontSize:13, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 12px rgba(192,57,43,0.3)' }}
