@@ -1,0 +1,97 @@
+# Red Avo — production stack for a single VPS (no reverse proxy).
+#
+#   cp .env.example .env   # fill in secrets + VPS address
+#   docker compose up -d --build
+#
+# Exposed ports:  5000 pos-web · 5001 storefront-web · 8080 backend API
+# Postgres stays on the internal network; data lives in the `pgdata` volume.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: Red_Avo
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d Red_Avo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      # Product images; shared with pos-web, which serves them at /uploads.
+      - uploads:/uploads
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/Red_Avo
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_DIR: /uploads
+      APP_PROFILE: ${APP_PROFILE:-production}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      SUPER_PASSWORD: ${SUPER_PASSWORD:?set SUPER_PASSWORD in .env}
+      SEED_ENABLED: ${SEED_ENABLED:-false}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      ADMIN_NOTIFY_EMAIL: ${ADMIN_NOTIFY_EMAIL:-}
+      ADMIN_NOTIFY_PHONE: ${ADMIN_NOTIFY_PHONE:-}
+      TWILIO_ENABLED: ${TWILIO_ENABLED:-false}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      META_PHONE_NUMBER_ID: ${META_PHONE_NUMBER_ID:-}
+      META_ACCESS_TOKEN: ${META_ACCESS_TOKEN:-}
+
+  pos-web:
+    build:
+      context: ./frontend
+      args:
+        APP: pos-web
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_MEDIA_URL: ${NEXT_PUBLIC_MEDIA_URL}
+    restart: unless-stopped
+    # Starts after backend so the uploads volume is initialized with the
+    # backend image's ownership (backend writes, pos-web only reads).
+    depends_on:
+      - backend
+    ports:
+      # 5000 is taken by AirPlay Receiver on macOS — override with POS_WEB_PORT.
+      - "${POS_WEB_PORT:-5000}:3000"
+    volumes:
+      - uploads:/app/apps/pos-web/public/uploads:ro
+
+  storefront-web:
+    build:
+      context: ./frontend
+      args:
+        APP: storefront-web
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_MEDIA_URL: ${NEXT_PUBLIC_MEDIA_URL}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+    restart: unless-stopped
+    ports:
+      - "${STOREFRONT_PORT:-5001}:3000"
+    environment:
+      # Server-side only (API routes): contact form + Paynow.
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      PAYNOW_INTEGRATION_ID: ${PAYNOW_INTEGRATION_ID:-}
+      PAYNOW_INTEGRATION_KEY: ${PAYNOW_INTEGRATION_KEY:-}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+
+volumes:
+  pgdata:
+  uploads:
