@@ -16,7 +16,7 @@ export default function Placeholder({ label, subtitle, className = '' }) {
     return (
       <img
         src={label}
-        alt={subtitle || 'Red Avo activewear asset'}
+        alt={subtitle || 'RedAvo Activewear activewear asset'}
         className={`${styles.image} ${className}`}
         loading="lazy"
       />

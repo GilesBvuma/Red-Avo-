@@ -1,17 +1,60 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
-import { CATEGORIES } from '@/constants/brand';
-import Placeholder from '@/components/Placeholder/Placeholder';
 import Link from 'next/link';
 import styles from './Collections.module.css';
 
 export default function Collections() {
   const sectionRef = useRef(null);
+  const [topCategories, setTopCategories] = useState([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [catsRes, prodsRes] = await Promise.all([
+          fetch(process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/categories` : 'http://localhost:8080/api/categories'),
+          fetch(process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/products` : 'http://localhost:8080/api/products')
+        ]);
+        const cats = await catsRes.json();
+        const prods = await prodsRes.json();
+        
+        const validCats = cats.filter(c => c && c.name && c.name.trim() !== '');
+        const counts = {};
+        prods.forEach(p => {
+          if (p.category) {
+            const key = p.category.trim().toLowerCase();
+            counts[key] = (counts[key] || 0) + 1;
+          }
+        });
+        
+        const top = [...validCats].sort((a, b) => {
+          const nameA = a.name.trim().toLowerCase();
+          const nameB = b.name.trim().toLowerCase();
+          
+          const aStartsL = nameA.startsWith('l');
+          const bStartsL = nameB.startsWith('l');
+          
+          if (aStartsL && !bStartsL) return -1;
+          if (!aStartsL && bStartsL) return 1;
+
+          const countA = counts[nameA] || 0;
+          const countB = counts[nameB] || 0;
+          return countB - countA;
+        }).slice(0, 4);
+        
+        setTopCategories(top);
+      } catch (err) {
+        console.error('Failed to load collections', err);
+      }
+    }
+    loadData();
+  }, []);
 
   useGSAP(() => {
+    if (topCategories.length === 0) return; // Wait until loaded
+
     // Section heading fades up
     gsap.fromTo(
       ['.collections-label', '.collections-heading'],
@@ -45,7 +88,7 @@ export default function Collections() {
         },
       }
     );
-  }, { scope: sectionRef });
+  }, { scope: sectionRef, dependencies: [topCategories] });
 
   return (
     <section id="collections" ref={sectionRef} className={styles.section} aria-labelledby="collections-heading">
@@ -56,14 +99,18 @@ export default function Collections() {
         </h2>
 
         <div className={`${styles.grid} coll-grid`}>
-          {CATEGORIES.map((cat) => (
-            <article key={cat.id} className={`${styles.card} coll-card`}>
+          {topCategories.map((cat) => (
+            <article key={cat.id || cat.name} className={`${styles.card} coll-card`}>
               <div className={styles.cardImage}>
-                <Placeholder label={cat.placeholder} subtitle={cat.subtitle} />
+                <img 
+                  src={cat.imageUrl || '/images/shop4.jpg'} 
+                  alt={cat.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
               </div>
               <div className={styles.cardBody}>
-                <h3 className={styles.cardName}>{cat.label}</h3>
-                <Link href="/shop" className={styles.exploreBtn} id={`explore-${cat.id}`}>
+                <h3 className={styles.cardName}>{cat.name}</h3>
+                <Link href={`/shop?q=${encodeURIComponent(cat.name)}`} className={styles.exploreBtn} id={`explore-${cat.id || cat.name.replace(/\s+/g, '-')}`}>
                   EXPLORE
                 </Link>
               </div>

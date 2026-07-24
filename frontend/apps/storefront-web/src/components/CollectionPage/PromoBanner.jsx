@@ -39,7 +39,7 @@ export default function PromoBanner() {
       <div className={`promo-img ${styles.promoImg}`}>
         <Image
           src="/images/collection3.png"
-          alt="Red Avo lifestyle – woman in activewear"
+          alt="RedAvo Activewear lifestyle – woman in activewear"
           fill
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center 20%' }}
@@ -50,7 +50,7 @@ export default function PromoBanner() {
 
       {/* Content */}
       <div className={`promo-text-wrap ${styles.promoContent}`}>
-        <span className={styles.promoEyebrow}>The Red Avo Way</span>
+        <span className={styles.promoEyebrow}>The RedAvo Activewear Way</span>
         <h2 className={styles.promoHeading}>
           MOVE FREELY.<br />
           <span className={styles.promoHeadingAccent}>LOOK CONFIDENT.</span>

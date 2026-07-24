@@ -1,8 +1,14 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export async function fetchProducts() {
   const res = await fetch(`${API_URL}/products`);
   if (!res.ok) throw new Error('Failed to fetch products');
+  return res.json();
+}
+
+export async function fetchProduct(id) {
+  const res = await fetch(`${API_URL}/products/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch product');
   return res.json();
 }
 

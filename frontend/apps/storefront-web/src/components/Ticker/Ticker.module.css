@@ -27,7 +27,8 @@
 
 .text {
   white-space: nowrap;
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: 1.55rem;
   letter-spacing: 0.1em;
   padding-right: 0;

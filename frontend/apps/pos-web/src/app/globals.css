@@ -61,7 +61,8 @@ body {
 
 /* ── Global font shorthands (used by CSS modules) ── */
 .font-display {
-  font-family: var(--font-bebas), 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
 }
 
 .font-accent {

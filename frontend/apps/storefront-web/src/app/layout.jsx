@@ -1,20 +1,13 @@
-import { Bebas_Neue, Inter, Playfair_Display } from 'next/font/google';
+import { Montserrat, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 
 /* ── Fonts ── */
-const inter = Inter({
+const montserrat = Montserrat({
   subsets:  ['latin'],
-  variable: '--font-inter',
+  variable: '--font-montserrat',
   display:  'swap',
-  weight:   ['300', '400', '500', '600', '700', '800', '900'],
-});
-
-const bebasNeue = Bebas_Neue({
-  subsets:  ['latin'],
-  variable: '--font-bebas',
-  display:  'swap',
-  weight:   ['400'],
+  weight:   ['300', '400', '500', '600', '700'],
 });
 
 const playfair = Playfair_Display({
@@ -27,11 +20,11 @@ const playfair = Playfair_Display({
 
 /* ── Metadata ── */
 export const metadata = {
-  title:       'Red Avo — Authentic · Fearless | Premium Women\'s Activewear',
-  description: 'Red Avo is premium women\'s activewear. Authentic in design. Fearless in motion. Shop leggings, sports bras, jackets and matching sets.',
-  keywords:    'womens activewear, sportswear, leggings, sports bras, Red Avo, authentic, fearless',
+  title:       'RedAvo Activewear — Authentic. Fearless | Premium Women\'s Activewear',
+  description: 'RedAvo Activewear is premium women\'s activewear. Authentic in design. Fearless in motion. Shop leggings, sports bras, jackets and matching sets.',
+  keywords:    'womens activewear, sportswear, leggings, sports bras, RedAvo Activewear, authentic, fearless',
   openGraph: {
-    title:       'Red Avo — Authentic · Fearless',
+    title:       'RedAvo Activewear — Authentic. Fearless',
     description: 'Premium women\'s activewear. Built for her motion.',
     type:        'website',
     locale:      'en_ZA',
@@ -42,7 +35,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${bebasNeue.variable} ${playfair.variable}`}
+      className={`${montserrat.variable} ${playfair.variable}`}
     >
       <body suppressHydrationWarning={true}>
         <CartProvider>

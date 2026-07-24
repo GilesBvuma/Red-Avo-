@@ -137,6 +137,32 @@ export async function deleteCategory(id) {
   return apiFetch(`/categories/${id}`, { method: 'DELETE' });
 }
 
+export async function updateCategory(id, data) {
+  return apiFetch(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+}
+
+export async function uploadCategoryImage(id, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const headers = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('redavo_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const res = await fetch(`${API_BASE}/categories/${id}/image`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(errText || 'Image upload failed');
+  }
+  return res.json();
+}
+
 // ── Customers ─────────────────────────────────────────────────────
 export async function fetchCustomers() {
   return apiFetch('/customers');
@@ -156,6 +182,19 @@ export async function deleteCustomer(id) {
 
 export async function sendBulkEmail(payload) {
   return apiFetch('/customers/bulk-email', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+// ── Admin Reviews ──────────────────────────────────────────────────────
+export async function fetchPendingReviews() {
+  return apiFetch('/admin/reviews?pendingOnly=true');
+}
+
+export async function approveReview(id) {
+  return apiFetch(`/admin/reviews/${id}/approve`, { method: 'PUT' });
+}
+
+export async function deleteReview(id) {
+  return apiFetch(`/admin/reviews/${id}`, { method: 'DELETE' });
 }
 
 // ── Orders ────────────────────────────────────────────────────────

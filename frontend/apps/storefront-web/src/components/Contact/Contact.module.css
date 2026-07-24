@@ -16,7 +16,8 @@
 }
 
 .leftHeading {
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: clamp(2rem, 4vw, 3.5rem);
   color: #fff;
   margin-bottom: 32px;
@@ -111,7 +112,8 @@
 }
 
 .rightBig {
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: clamp(1.6rem, 3.5vw, 3rem);
   color: var(--navy);
   line-height: 1.15;

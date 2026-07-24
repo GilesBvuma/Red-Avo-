@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/register/admin").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/*/reviews").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/stock/products/*/variants").permitAll() // storefront variant reads
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").permitAll() // Storefront checkout
@@ -76,6 +77,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/stores/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/stores/**").hasRole("ADMIN")
                 .requestMatchers("/api/employees/**").authenticated()
+                .requestMatchers("/api/admin/reviews/**").authenticated()
 
                 // ── Phase 2: All remaining endpoints require authentication ───────────────────────
                 .anyRequest().authenticated()

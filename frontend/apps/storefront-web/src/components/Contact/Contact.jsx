@@ -125,7 +125,7 @@ export default function Contact() {
       {/* ── Right — Blush ── */}
       <div className={`${styles.right} contact-right-panel`}>
         <div className={styles.logoWrap}>
-          <Placeholder label="/images/logo2.png" subtitle="Red Avo Logo" className={styles.logo} />
+          <Placeholder label="/images/logo2.png" subtitle="RedAvo Activewear Logo" className={styles.logo} />
         </div>
 
         <p className={styles.rightBig}>

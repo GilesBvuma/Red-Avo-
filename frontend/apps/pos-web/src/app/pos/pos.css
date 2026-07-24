@@ -1576,25 +1576,31 @@
 
 @media (max-width: 900px) {
   :root {
-    --pos-sidebar-w: 60px;
+    --pos-sidebar-w: 68px;
     --pos-order-w: 300px;
   }
 
-  .pos-logo-text,
-  .pos-nav-item span,
-  .pos-staff-info,
-  .pos-logout-btn span,
-  .pos-nav-section {
+  .pos-sidebar .pos-logo-text,
+  .pos-sidebar .pos-nav-label,
+  .pos-sidebar .pos-nav-badge,
+  .pos-sidebar .pos-staff-info,
+  .pos-sidebar .pos-logout-btn span,
+  .pos-sidebar .pos-nav-section {
     display: none;
   }
 
-  .pos-nav-item {
+  .pos-sidebar .pos-nav-item {
     justify-content: center;
     padding: 10px;
+    width: auto;
+  }
+  
+  .pos-sidebar .pos-nav-item .pos-nav-icon {
+    margin: 0;
   }
 
-  .pos-logo { justify-content: center; padding: 16px 0; }
-  .pos-staff-card { justify-content: center; }
+  .pos-sidebar .pos-logo { justify-content: center; padding: 16px 0; }
+  .pos-sidebar .pos-staff-card { justify-content: center; }
 }
 
 /* ================================================================
@@ -1895,3 +1901,481 @@
   flex-shrink: 0;
 }
 
+
+/* ================================================================
+   MOBILE ELEMENTS (hidden on desktop, shown on mobile via media query)
+================================================================ */
+.pos-mobile-header {
+  display: none;
+}
+
+.pos-mobile-bottom-nav {
+  display: none;
+}
+
+/* ── Mobile Drawer Overlay — always styled, React controls visibility ── */
+.pos-mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  animation: pos-fade-in 0.2s ease;
+}
+
+.pos-mobile-drawer {
+  width: min(320px, 85vw);
+  height: 100%;
+  background: linear-gradient(180deg, #1A1A1A 0%, #050505 100%);
+  display: flex;
+  flex-direction: column;
+  animation: pos-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.pos-mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+
+.pos-mobile-drawer-close {
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: rgba(255,255,255,0.6);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.pos-mobile-drawer-close:hover {
+  background: rgba(192,57,43,0.2);
+  color: #fff;
+}
+
+.pos-mobile-drawer-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+@keyframes pos-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pos-slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* ================================================================
+   TABLET BREAKPOINT — ≤ 900px
+================================================================ */
+@media (max-width: 900px) {
+  /* Collapse sidebar automatically at tablet */
+  .pos-sidebar {
+    width: 68px !important;
+  }
+
+  .pos-sidebar .pos-nav-label {
+    display: none;
+  }
+
+  .pos-sidebar .pos-logo {
+    padding: 16px 0;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pos-sidebar .pos-staff-name,
+  .pos-sidebar .pos-staff-role,
+  .pos-sidebar .pos-logout-btn span,
+  .pos-sidebar .pos-nav-section {
+    display: none;
+  }
+
+  .pos-sidebar .pos-staff-avatar {
+    margin: 0 auto;
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .pos-sidebar .pos-sidebar-footer {
+    padding: 12px 8px;
+  }
+
+  /* Product grid: fewer columns */
+  .pos-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  /* Stats bar: scroll horizontally */
+  .pos-stats-bar {
+    overflow-x: auto;
+    padding: 8px 12px;
+  }
+
+  .pos-stat-item {
+    flex-shrink: 0;
+    min-width: 120px;
+    padding: 6px 12px;
+  }
+}
+
+/* ================================================================
+   MOBILE BREAKPOINT — ≤ 640px
+================================================================ */
+@media (max-width: 640px) {
+  /* ── Root: column layout ── */
+  .pos-root {
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── Hide desktop sidebar entirely ── */
+  .pos-sidebar {
+    display: none !important;
+  }
+
+  /* ── Hide order panel on mobile (cart flow handled differently) ── */
+  .pos-order-panel {
+    display: none !important;
+  }
+
+  /* ── Mobile top header ── */
+  .pos-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, #1A1A1A 0%, #050505 100%);
+    padding: 10px 16px;
+    flex-shrink: 0;
+    z-index: 50;
+    height: 56px;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .pos-mobile-menu-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .pos-mobile-menu-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+
+  /* ── Main content area ── */
+  .pos-main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+  }
+
+  /* ── Mobile Bottom Nav Bar ── */
+  .pos-mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: linear-gradient(180deg, #1A1A1A 0%, #050505 100%);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 4px 0 max(4px, env(safe-area-inset-bottom));
+    height: 64px;
+    align-items: stretch;
+  }
+
+  .pos-mobile-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255,255,255,0.45);
+    padding: 4px 2px;
+    border-radius: 0;
+    transition: color 0.2s;
+  }
+
+  .pos-mobile-nav-btn.active {
+    color: #C0392B;
+  }
+
+  .pos-mobile-nav-btn.active .pos-mobile-nav-icon {
+    background: rgba(192,57,43,0.15);
+    border-radius: 8px;
+  }
+
+  .pos-mobile-nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 28px;
+    transition: background 0.2s;
+  }
+
+  .pos-mobile-nav-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 56px;
+  }
+
+  /* ── Mobile Drawer Overlay ── */
+  .pos-mobile-drawer-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    animation: pos-fade-in 0.2s ease;
+  }
+
+  @keyframes pos-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .pos-mobile-drawer {
+    width: min(320px, 85vw);
+    height: 100%;
+    background: linear-gradient(180deg, #1A1A1A 0%, #050505 100%);
+    display: flex;
+    flex-direction: column;
+    animation: pos-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+  }
+
+  @keyframes pos-slide-in {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+
+  .pos-mobile-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+  }
+
+  .pos-mobile-drawer-close {
+    background: rgba(255,255,255,0.06);
+    border: none;
+    color: rgba(255,255,255,0.6);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .pos-mobile-drawer-close:hover {
+    background: rgba(192,57,43,0.2);
+    color: #fff;
+  }
+
+  .pos-mobile-drawer-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+
+  /* ── Product Grid: 2-column on mobile ── */
+  .pos-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .pos-product-area {
+    padding: 0;
+  }
+
+  .pos-product-img {
+    height: 150px;
+  }
+
+  .pos-product-name {
+    font-size: 11.5px;
+  }
+
+  .pos-product-price {
+    font-size: 13px;
+  }
+
+  /* ── Toolbar ── */
+  .pos-toolbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  /* ── Stats bar: horizontal scroll ── */
+  .pos-stats-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 8px 12px;
+    gap: 0;
+  }
+
+  .pos-stat-item {
+    flex-shrink: 0;
+    min-width: 110px;
+    padding: 4px 10px;
+  }
+
+  .pos-stat-value {
+    font-size: 14px;
+  }
+
+  .pos-stat-label {
+    font-size: 10px;
+  }
+
+  /* ── Active orders bar ── */
+  .pos-active-bar {
+    padding: 6px 12px;
+    height: auto;
+    min-height: 52px;
+  }
+
+  /* ── Order Panel: full-screen slide-up sheet ── */
+  .pos-order-panel {
+    position: fixed !important;
+    inset: 0 !important;
+    top: auto !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 90vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    z-index: 150;
+    animation: pos-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow-y: auto;
+    border-left: none !important;
+  }
+
+  @keyframes pos-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* ── Tables: stacked cards on mobile ── */
+  .pos-table-responsive {
+    display: block;
+    width: 100%;
+  }
+
+  /* Data tables inside management pages */
+  table.pos-data-table,
+  .pos-stock-table table {
+    font-size: 11px;
+  }
+
+  table.pos-data-table th,
+  table.pos-data-table td,
+  .pos-stock-table th,
+  .pos-stock-table td {
+    padding: 8px 6px !important;
+  }
+
+  /* Hide less important columns on mobile */
+  .pos-col-hide-mobile {
+    display: none;
+  }
+
+  /* ── Page headers with actions ── */
+  .pos-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* ── Transfers Page ── */
+  .pos-transfers-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Financials charts ── */
+  .pos-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Customers Page ── */
+  .pos-customers-layout {
+    flex-direction: column !important;
+  }
+
+  /* ── Business Management ── */
+  .pos-biz-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Variant selector modal ── */
+  .pos-variant-modal-inner {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 85vh !important;
+    margin: auto 10px !important;
+  }
+
+  /* ── StockManagement product modal ── */
+  .pos-stock-modal {
+    padding: 10px !important;
+  }
+
+  .pos-stock-modal-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 16px !important;
+  }
+}

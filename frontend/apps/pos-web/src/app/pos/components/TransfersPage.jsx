@@ -16,10 +16,13 @@ export default function TransfersPage() {
   const [stockLevels, setStockLevels] = useState([]);
 
   // New transfer form state
-  const [variantId, setVariantId] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
   const [fromStoreId, setFromStoreId] = useState('');
   const [toStoreId, setToStoreId] = useState('');
-  const [quantity, setQuantity] = useState('');
+  
+  // Object mapping variantId -> quantity to transfer
+  const [transferQuantities, setTransferQuantities] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   // Receive/Resolve form state
   const [actionQuantity, setActionQuantity] = useState('');
@@ -55,23 +58,41 @@ export default function TransfersPage() {
 
   const handleRequestTransfer = async (e) => {
     e.preventDefault();
-    // For employees, fromStoreId is fixed to their store;
-    // for admins it is whatever they selected.
     const resolvedFromStoreId = user?.role !== 'ADMIN' ? String(user?.storeId) : fromStoreId;
-    if (!variantId || !resolvedFromStoreId || !toStoreId || !quantity) return;
+    
+    // Get variants that have a quantity > 0 set
+    const variantsToTransfer = Object.entries(transferQuantities)
+      .filter(([vId, qty]) => parseInt(qty) > 0)
+      .map(([vId, qty]) => ({ variantId: parseInt(vId), quantity: parseInt(qty) }));
+      
+    if (variantsToTransfer.length === 0) {
+      alert("Please specify a quantity greater than 0 for at least one variant.");
+      return;
+    }
+    
+    if (!resolvedFromStoreId || !toStoreId) return;
+    
     try {
-      await api.requestTransfer({
-        variantId: parseInt(variantId),
-        fromStoreId: parseInt(resolvedFromStoreId),
-        toStoreId: parseInt(toStoreId),
-        quantity: parseInt(quantity)
-      });
+      setSubmitting(true);
+      
+      // Dispatch multiple requests concurrently
+      await Promise.all(variantsToTransfer.map(t => 
+        api.requestTransfer({
+          variantId: t.variantId,
+          fromStoreId: parseInt(resolvedFromStoreId),
+          toStoreId: parseInt(toStoreId),
+          quantity: t.quantity
+        })
+      ));
+      
       setModal(null);
-      setVariantId('');
-      setQuantity('');
+      setSelectedProductId('');
+      setTransferQuantities({});
       loadData();
     } catch (err) {
-      alert(err.message);
+      alert(err.message || 'Failed to submit one or more transfers.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -118,19 +139,167 @@ export default function TransfersPage() {
           <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: '#1A1A1A' }}>Stock Transfers</h2>
           <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0' }}>Manage stock movement between stores</p>
         </div>
-        <button
-          onClick={() => setModal('new')}
-          style={{
-            background: '#C0392B', color: '#fff', border: 'none',
-            borderRadius: 10, padding: '10px 20px', fontSize: 13,
-            fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 12px rgba(192,57,43,0.3)'
-          }}
-        >
-          Request Transfer
-        </button>
+        {modal !== 'new' && (
+          <button
+            onClick={() => { setModal('new'); setTransferQuantities({}); setSelectedProductId(''); }}
+            style={{
+              background: '#C0392B', color: '#fff', border: 'none',
+              borderRadius: 10, padding: '10px 20px', fontSize: 13,
+              fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 12px rgba(192,57,43,0.3)'
+            }}
+          >
+            Request Transfer
+          </button>
+        )}
       </div>
 
-      <div style={{ padding: '28px' }}>
+      {modal === 'new' ? (
+        <div style={{ padding: '28px', maxWidth: 1000, margin: '0 auto', width: '100%' }}>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E8E8E8', padding: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid #F0F0F0' }}>
+              <h3 style={{ margin: 0, fontSize: 18, color: '#111827' }}>Create Transfer Request</h3>
+              <button onClick={() => setModal(null)} style={{ background: '#F3F4F6', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, color: '#4B5563', fontSize: 13 }}>Cancel</button>
+            </div>
+            <form onSubmit={handleRequestTransfer} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                {/* 1. SOURCE STORE */}
+                {user?.role === 'ADMIN' ? (
+                  <div>
+                    <label style={labelStyle}>Source Store (Request From)</label>
+                    <select required value={fromStoreId} onChange={e => setFromStoreId(e.target.value)} style={inputStyle}>
+                      <option value="">Select Source Store...</option>
+                      {stores.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label style={labelStyle}>Your Store (Source)</label>
+                    <div style={{ ...inputStyle, background: '#F9FAFB', color: '#374151', display: 'flex', alignItems: 'center' }}>
+                      🏪 {stores.find(s => s.id === user?.storeId)?.name || `Store #${user?.storeId}`}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. DESTINATION STORE */}
+                <div>
+                  <label style={labelStyle}>Destination Store (Send To)</label>
+                  <select required value={toStoreId} onChange={e => setToStoreId(e.target.value)} style={inputStyle}>
+                    <option value="">Select Destination Store...</option>
+                    {stores
+                      .filter(s => user?.role === 'ADMIN' || s.id !== user?.storeId)
+                      .map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+              </div>
+
+              {/* 3. PRODUCT SELECTION */}
+              <div>
+                <label style={labelStyle}>Product</label>
+                <select required value={selectedProductId} onChange={e => {
+                  setSelectedProductId(e.target.value);
+                  setTransferQuantities({});
+                }} style={inputStyle}>
+                  <option value="">Select a product...</option>
+                  {products.map(p => 
+                    <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                  )}
+                </select>
+              </div>
+              
+              {/* 4. VARIANTS GRID */}
+              {selectedProductId && (
+                <div>
+                  <label style={labelStyle}>Select Variants to Transfer</label>
+                  <p style={{fontSize: 12, color: '#6B7280', margin: '0 0 12px'}}>Check the variants you want to transfer and enter the quantity. Only variants currently in stock at the source store are available.</p>
+                  <div style={{ border: '1px solid #E8E8E8', borderRadius: 8, overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
+                      <thead style={{ background: '#F9FAFB', borderBottom: '1px solid #E8E8E8' }}>
+                        <tr>
+                          <th style={{ padding: '12px 16px', color: '#4B5563', width: '40px' }}></th>
+                          <th style={{ padding: '12px 16px', color: '#4B5563' }}>Variant</th>
+                          <th style={{ padding: '12px 16px', color: '#4B5563', textAlign: 'center' }}>Available</th>
+                          <th style={{ padding: '12px 16px', color: '#4B5563', width: '120px' }}>Transfer Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {products.find(p => p.id === parseInt(selectedProductId))?.variants?.map(v => {
+                          const resolvedFromStoreId = user?.role !== 'ADMIN' ? String(user?.storeId) : fromStoreId;
+                          const availableStock = stockLevels.find(
+                            sl => sl.variant?.id === v.id && sl.storeId === parseInt(resolvedFromStoreId)
+                          )?.quantity || 0;
+                          
+                          const isChecked = transferQuantities[v.id] !== undefined;
+                          
+                          return (
+                            <tr key={v.id} style={{ borderBottom: '1px solid #F3F4F6', opacity: availableStock > 0 ? 1 : 0.5, background: isChecked ? '#F0FDF4' : 'transparent', transition: 'background 0.2s' }}>
+                              <td style={{ padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle' }}>
+                                <input 
+                                  type="checkbox" 
+                                  disabled={availableStock <= 0}
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setTransferQuantities(prev => ({...prev, [v.id]: 1}));
+                                    } else {
+                                      setTransferQuantities(prev => {
+                                        const next = {...prev};
+                                        delete next[v.id];
+                                        return next;
+                                      });
+                                    }
+                                  }}
+                                  style={{ accentColor: '#C0392B', cursor: availableStock > 0 ? 'pointer' : 'not-allowed', width: 16, height: 16 }}
+                                />
+                              </td>
+                              <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                                <div style={{ fontWeight: 500, color: '#111827' }}>{v.color || 'Default'} - {v.size || 'Default'}</div>
+                                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>SKU: {v.sku}</div>
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 600, color: availableStock > 0 ? '#059669' : '#9CA3AF' }}>
+                                {availableStock}
+                              </td>
+                              <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                                {isChecked && (
+                                  <input 
+                                    type="number" 
+                                    min="1" 
+                                    max={availableStock} 
+                                    value={transferQuantities[v.id] || ''}
+                                    onChange={(e) => {
+                                      const val = e.target.value === '' ? '' : Math.min(parseInt(e.target.value) || 0, availableStock);
+                                      setTransferQuantities(prev => ({...prev, [v.id]: val}));
+                                    }}
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #D1D5DB', borderRadius: 6, boxSizing: 'border-box', outline: 'none' }}
+                                    onFocus={e => e.target.style.borderColor = '#C0392B'}
+                                    onBlur={e => e.target.style.borderColor = '#D1D5DB'}
+                                  />
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                <button type="submit" disabled={submitting} style={{...primaryBtnStyle, opacity: submitting ? 0.7 : 1, padding: '14px 28px', fontSize: 14}}>
+                  {submitting ? 'Submitting...' : 'Submit Transfer Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '28px' }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E8E8E8', overflow: 'hidden' }}>
           {transfers.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>No transfers found.</div>
@@ -184,88 +353,18 @@ export default function TransfersPage() {
           )}
         </div>
       </div>
+      )}
 
-      {/* Modals */}
-      {modal && (
+      {/* Modals for Receive / Resolve */}
+      {(modal === 'receive' || modal === 'resolve') && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, width: 400 }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: 24, width: 400, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
               <h3 style={{ margin: 0 }}>
-                {modal === 'new' ? 'Request Transfer' : modal === 'receive' ? 'Receive Transfer' : 'Resolve Variance'}
+                {modal === 'receive' ? 'Receive Transfer' : 'Resolve Variance'}
               </h3>
               <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
             </div>
-
-            {modal === 'new' && (
-              <form onSubmit={handleRequestTransfer} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={labelStyle}>Product Variant</label>
-                  <select required value={variantId} onChange={e => setVariantId(e.target.value)} style={inputStyle}>
-                    <option value="">Select a variant...</option>
-                    {products.map(p => 
-                      p.variants?.map(v => (
-                        <option key={v.id} value={v.id}>{p.name} - {v.color} {v.size} ({v.sku})</option>
-                      ))
-                    )}
-                  </select>
-                </div>
-                
-                {variantId && (
-                  <div style={{ background: '#F9FAFB', padding: 12, borderRadius: 8, fontSize: 12 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 6, color: '#374151' }}>Current Stock Across Stores:</div>
-                    {stores.map(s => {
-                      const qty = stockLevels.find(sl => sl.variant?.id === parseInt(variantId) && sl.storeId === s.id)?.quantity || 0;
-                      return (
-                        <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                          <span style={{ color: '#6B7280' }}>{s.name}</span>
-                          <span style={{ fontWeight: 700, color: qty > 0 ? '#0D9488' : '#9CA3AF' }}>{qty}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Source store — fixed for employees, selectable for admins */}
-                {user?.role === 'ADMIN' ? (
-                  <div>
-                    <label style={labelStyle}>Source Store (Request From)</label>
-                    <select required value={fromStoreId} onChange={e => setFromStoreId(e.target.value)} style={inputStyle}>
-                      <option value="">Select Source Store...</option>
-                      {stores.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <label style={labelStyle}>Your Store (Source)</label>
-                    <div style={{ ...inputStyle, background: '#F3F4F6', color: '#374151', display: 'flex', alignItems: 'center' }}>
-                      🏪 {stores.find(s => s.id === user?.storeId)?.name || `Store #${user?.storeId}`}
-                    </div>
-                  </div>
-                )}
-
-                {/* Destination — exclude the employee's own store from the list */}
-                <div>
-                  <label style={labelStyle}>Destination Store (Send To)</label>
-                  <select required value={toStoreId} onChange={e => setToStoreId(e.target.value)} style={inputStyle}>
-                    <option value="">Select Destination Store...</option>
-                    {stores
-                      .filter(s => user?.role === 'ADMIN' || s.id !== user?.storeId)
-                      .map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))
-                    }
-                  </select>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Quantity</label>
-                  <input type="number" min="1" required value={quantity} onChange={e => setQuantity(e.target.value)} style={inputStyle} />
-                </div>
-                <button type="submit" style={primaryBtnStyle}>Submit Request</button>
-              </form>
-            )}
 
             {modal === 'receive' && (
               <form onSubmit={handleReceive} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

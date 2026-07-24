@@ -5,8 +5,7 @@ import Image from 'next/image';
 import { useAuth } from '../../AuthProvider';
 import * as api from '../lib/api';
 
-// roles: which roles can see this nav item. Omit to show to all.
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   {
     id: 'menu',
     label: 'Menu / Products',
@@ -97,6 +96,7 @@ const NAV_ITEMS = [
   },
 ];
 
+// Desktop sidebar only — mobile nav is handled in page.jsx
 export default function Sidebar({ activeNav, onNavChange }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
@@ -113,11 +113,9 @@ export default function Sidebar({ activeNav, onNavChange }) {
   }, [user?.storeId]);
 
   const storeLabel  = storeName || (user?.storeId ? `Store #${user.storeId}` : 'All Stores');
-  // Gap #12 FIX: show full name, fall back to email if name is not set
   const displayName = user?.name || user?.email || 'Unknown';
   const avatarLetter = displayName[0].toUpperCase();
 
-  // Improvement I: filter nav items by current user's role
   const visibleNavItems = NAV_ITEMS.filter(item =>
     !item.roles || item.roles.includes(user?.role)
   );
@@ -134,7 +132,6 @@ export default function Sidebar({ activeNav, onNavChange }) {
         gap: isCollapsed ? '16px' : '12px',
         alignItems: 'center'
       }}>
-        {/* Logo */}
         <div className="pos-logo-icon" aria-hidden="true" style={{ display: 'flex', justifyContent: isCollapsed ? 'center' : 'flex-start', flex: isCollapsed ? 'none' : 1 }}>
           <Image 
             src="/images/logo.png" 
@@ -145,13 +142,10 @@ export default function Sidebar({ activeNav, onNavChange }) {
             priority
           />
         </div>
-
-        {/* Toggle button */}
         <button 
           className="pos-sidebar-toggle" 
           onClick={() => setIsCollapsed(!isCollapsed)}
           aria-label="Toggle Sidebar"
-          title={isCollapsed ? "Expand Sidebar" : "Shrink Sidebar"}
         >
           {isCollapsed ? '»' : '«'}
         </button>
@@ -161,24 +155,13 @@ export default function Sidebar({ activeNav, onNavChange }) {
       <nav className="pos-nav" aria-label="Main navigation">
         {!isCollapsed && <div className="pos-nav-section">Main</div>}
         {mainItems.map((item) => (
-          <NavItem
-            key={item.id}
-            item={item}
-            isActive={activeNav === item.id}
-            onClick={() => onNavChange(item.id)}
-          />
+          <NavItem key={item.id} item={item} isActive={activeNav === item.id} onClick={() => onNavChange(item.id)} />
         ))}
-
         {managementItems.length > 0 && (
           <>
             {!isCollapsed && <div className="pos-nav-section">Management</div>}
             {managementItems.map((item) => (
-              <NavItem
-                key={item.id}
-                item={item}
-                isActive={activeNav === item.id}
-                onClick={() => onNavChange(item.id)}
-              />
+              <NavItem key={item.id} item={item} isActive={activeNav === item.id} onClick={() => onNavChange(item.id)} />
             ))}
           </>
         )}
@@ -188,22 +171,20 @@ export default function Sidebar({ activeNav, onNavChange }) {
       <div className="pos-sidebar-footer" style={{ padding: isCollapsed ? '16px 8px' : '24px' }}>
         {!isCollapsed ? (
           <>
-            <div className="pos-staff-card" role="status" aria-label="Logged in user">
-              <div className="pos-staff-avatar" aria-hidden="true">{avatarLetter}</div>
+            <div className="pos-staff-card" role="status">
+              <div className="pos-staff-avatar">{avatarLetter}</div>
               <div className="pos-staff-info">
                 <div className="pos-staff-name">{displayName}</div>
                 <div className="pos-staff-role">{user?.role === 'ADMIN' ? 'Admin' : 'Cashier'} · {storeLabel}</div>
               </div>
             </div>
-            <button className="pos-logout-btn" id="pos-logout-btn" aria-label="Log out" onClick={logout}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
+            <button className="pos-logout-btn" id="pos-logout-btn" onClick={logout}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               <span>Log Out</span>
             </button>
           </>
         ) : (
-          <div className="pos-staff-avatar" aria-hidden="true" style={{ margin: '0 auto', width: 32, height: 32, fontSize: 12 }}>
+          <div className="pos-staff-avatar" style={{ margin: '0 auto', width: 32, height: 32, fontSize: 12 }}>
             {avatarLetter}
           </div>
         )}
@@ -212,7 +193,7 @@ export default function Sidebar({ activeNav, onNavChange }) {
   );
 }
 
-function NavItem({ item, isActive, onClick }) {
+export function NavItem({ item, isActive, onClick }) {
   return (
     <button
       id={`pos-nav-${item.id}`}
@@ -220,13 +201,9 @@ function NavItem({ item, isActive, onClick }) {
       onClick={onClick}
       aria-current={isActive ? 'page' : undefined}
     >
-      <span className="pos-nav-icon" aria-hidden="true" title={item.label}>{item.icon}</span>
+      <span className="pos-nav-icon" aria-hidden="true">{item.icon}</span>
       <span className="pos-nav-label">{item.label}</span>
-      {item.badge && (
-        <span className="pos-nav-badge" aria-label={`${item.badge} alerts`}>
-          {item.badge}
-        </span>
-      )}
+      {item.badge && <span className="pos-nav-badge">{item.badge}</span>}
     </button>
   );
 }

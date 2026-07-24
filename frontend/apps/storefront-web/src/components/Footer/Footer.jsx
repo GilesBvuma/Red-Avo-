@@ -44,9 +44,9 @@ export default function Footer() {
           {/* Column 1 — Logo & tagline */}
           <div className={`${styles.col} footer-col`}>
             <div className={styles.logoWrap}>
-              <Placeholder label="/images/logo.png" subtitle="Red Avo Logo" className={styles.logo} />
+              <Placeholder label="/images/logo.png" subtitle="RedAvo Activewear Logo" className={styles.logo} />
             </div>
-            <p className={styles.tagline}>Authentic · Fearless</p>
+            <p className={styles.tagline}>Authentic. Fearless</p>
             <div className={styles.hearts} aria-hidden="true">
               <span>🥑</span>
               <span style={{ color: 'var(--pink)', opacity: 0.6 }}>♥</span>
@@ -96,7 +96,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className={styles.bar}>
-          <p className={styles.copy}>© 2025 Red Avo Sportswear. All rights reserved.</p>
+          <p className={styles.copy}>© 2025 RedAvo Activewear. All rights reserved.</p>
           <div className={styles.barLinks}>
             <a href="#" className={styles.barLink}>Privacy Policy</a>
             <a href="#" className={styles.barLink}>Terms of Service</a>

@@ -15,35 +15,30 @@ export default function Hero() {
   const imageRef   = useRef(null);
 
   useGSAP(() => {
-    const tl = gsap.timeline({ delay: 0.3 });
+    const tl = gsap.timeline({ delay: 0.2 });
 
-    // Staggered word rise
+    // Background image fades in softly
     tl.fromTo(
+      imageRef.current,
+      { opacity: 0, scale: 1.06 },
+      { opacity: 1, scale: 1, duration: 1.5, ease: 'power3.out' },
+      0
+    )
+    // Collection badge
+    .fromTo('#hero-badge', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=1.1')
+    // Heading (staggered words with fade up)
+    .fromTo(
       wordsRef.current,
-      { yPercent: 110, opacity: 0 },
-      {
-        yPercent: 0,
-        opacity:  1,
-        stagger:  0.1,
-        duration: 0.65,
-        ease:     'power3.out',
-      }
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
+      '-=0.7'
     )
     // Subheading
-    .fromTo('#hero-sub',   { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.55 }, '-=0.3')
+    .fromTo('#hero-sub', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.6')
     // Description
-    .fromTo('#hero-desc',  { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5  }, '-=0.3')
+    .fromTo('#hero-desc', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.6')
     // CTA
-    .fromTo('#hero-cta',   { yPercent: 30, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5  }, '-=0.25')
-    // Scroll indicator
-    .fromTo('#hero-scroll', { opacity: 0 },               { opacity: 1, duration: 0.5  }, '-=0.1')
-    // Background image fades in softly
-    .fromTo(
-      imageRef.current,
-      { opacity: 0, scale: 1.05 },
-      { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out' },
-      0
-    );
+    .fromTo('#hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5');
 
     // Subtle parallax effect on scroll
     ScrollTrigger.create({
@@ -61,15 +56,6 @@ export default function Hero() {
       },
     });
 
-    // Bouncing scroll arrow
-    gsap.to('#scroll-arrow', {
-      y: 10,
-      repeat: -1,
-      yoyo: true,
-      duration: 0.75,
-      ease: 'sine.inOut',
-    });
-
   }, { scope: sectionRef });
 
   return (
@@ -77,15 +63,18 @@ export default function Hero() {
       {/* Animated blob background */}
       <div className={styles.blob} aria-hidden="true" />
 
+      {/* Soft light bloom behind text */}
+      <div className={styles.lightBloom} aria-hidden="true" />
+
       {/* ── Left column ── */}
       <div className={styles.left}>
-        <span className={styles.eyebrow}>New Collection · 2026</span>
+        <span id="hero-badge" className={styles.eyebrow}>New Collection · 2026</span>
 
         <h1 className={styles.heading} aria-label="Where every move tells a story.">
           {WORDS.map((word, i) => (
             <span key={word + i} className={styles.wordWrap}>
               <span
-                className={styles.word}
+                className={`${styles.word} ${word === 'MOVE' ? styles.emphasizedWord : ''}`}
                 ref={(el) => (wordsRef.current[i] = el)}
               >
                 {word}
@@ -95,12 +84,10 @@ export default function Hero() {
         </h1>
 
         <p id="hero-sub"  className={styles.subheading}>WHAT'S YOURS?</p>
-        <p id="hero-desc" className={styles.desc}>
-          Premium women's activewear. Built for her motion.
-        </p>
+        
 
         <Link id="hero-cta" href="/shop" className={styles.cta}>
-          Shop the Collection
+          Shop the Collection <span className={styles.ctaArrow}>&rarr;</span>
         </Link>
       </div>
 
@@ -109,16 +96,11 @@ export default function Hero() {
         <div ref={imageRef} className={styles.imageWrap} style={{ perspective: '800px' }}>
           <picture>
             <source media="(max-width: 900px)" srcSet="/images/Home-hero-mobile.jpeg" />
-            <img src="/images/Home-hero.jpeg" alt="Red Avo Activewear" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/images/Home-hero.jpeg" alt="RedAvo Activewear" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </picture>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div id="hero-scroll" className={styles.scrollIndicator} aria-hidden="true">
-        <span className={styles.scrollLabel}>Scroll</span>
-        <div id="scroll-arrow" className={styles.arrow} />
-      </div>
     </section>
   );
 }

@@ -13,45 +13,69 @@
   margin-bottom: 52px;
 }
 
-.ribbon {
-  display: inline-block;
-  background: var(--red);
-  color: #fff;
-  font-family: 'Bebas Neue', cursive;
-  font-size: 2.4rem;
-  letter-spacing: 0.1em;
-  padding: 10px 36px;
-  transform: skewX(-8deg);
-  border-radius: 6px;
-  will-change: transform, opacity;
+.heading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: clamp(32px, 4vw, 52px);
+  color: var(--navy);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 0;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1.25fr 1fr;
-  gap: 24px;
-  align-items: end;
+.carouselWindow {
+  --side-width: 28cqi;
+  --center-width: 36cqi;
+  --offset: calc(50cqi - (var(--center-width) / 2));
+  
+  container-type: inline-size;
+  width: 100%;
+  overflow: hidden;
+  padding: 20px 0 60px 0;
+}
+
+.track {
+  display: flex;
+  align-items: flex-end;
+  transform: translateX(calc(var(--offset) - (var(--activeIndex) * var(--side-width))));
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  width: max-content;
+}
+
+.cardWrap {
+  flex: 0 0 var(--side-width);
+  box-sizing: border-box;
+  padding: 0 12px;
+  opacity: 0.6;
+  transform: scale(0.9);
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.centerWrap {
+  flex: 0 0 var(--center-width);
+  opacity: 1;
+  transform: scale(1);
 }
 
 .card {
+  position: relative;
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 6px 32px rgba(26, 43, 74, 0.09);
   background: var(--cream);
   cursor: pointer;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background 0.8s ease, transform 0.35s ease, box-shadow 0.35s ease;
   will-change: transform, opacity;
 }
 
-.card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 56px rgba(26, 43, 74, 0.16);
-}
-
-.center {
+.centerWrap .card {
   background: var(--sage);
   border-radius: 28px;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 56px rgba(26, 43, 74, 0.16);
 }
 
 .cardImg {
@@ -65,7 +89,8 @@
 }
 
 .productName {
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: 1.3rem;
   color: var(--navy);
   letter-spacing: 0.06em;
@@ -102,6 +127,37 @@
 }
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: 1fr; }
-  .center { order: -1; }
+  .section { padding: 40px 0vw 60px; }
+  .carouselWindow {
+    --side-width: 65cqi;
+    --center-width: 75cqi;
+  }
+  .cardWrap {
+    padding: 0 8px;
+  }
+  .cardBody {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+    padding: 30px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .productName {
+    font-size: 1.1rem;
+    color: #fff;
+  }
+  .productPrice {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+  .cartBtn {
+    font-size: 0.75rem;
+    padding: 10px 20px;
+  }
 }

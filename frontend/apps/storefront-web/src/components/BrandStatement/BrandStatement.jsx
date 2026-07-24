@@ -88,7 +88,7 @@ export default function BrandStatement() {
         </div>
 
         <p className={`${styles.subText} brand-sub`}>
-          At Red Avo, every stitch is a commitment to her movement.
+          At RedAvo Activewear, every stitch is a commitment to her movement.
           <br />
           Premium fabric. Fearless design.
         </p>

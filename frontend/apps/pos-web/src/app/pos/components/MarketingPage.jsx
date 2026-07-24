@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BulkNotifyPanel from './BulkNotifyPanel'; // Re-use the existing component for now
+import { fetchPendingReviews, approveReview, deleteReview } from '../lib/api';
 
 export default function MarketingPage() {
   const [activeTab, setActiveTab] = useState('campaigns');
@@ -9,8 +10,51 @@ export default function MarketingPage() {
   const tabs = [
     { id: 'campaigns', label: 'Campaigns & Bulk Notify' },
     { id: 'segments', label: 'Customer Segments' },
-    { id: 'automations', label: 'Automations' }
+    { id: 'automations', label: 'Automations' },
+    { id: 'reviews', label: 'Product Reviews' }
   ];
+
+  const [pendingReviews, setPendingReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const loadReviews = async () => {
+    setLoadingReviews(true);
+    try {
+      const data = await fetchPendingReviews();
+      setPendingReviews(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const fetchPendingReviewsWrapper = () => loadReviews();
+
+  useEffect(() => {
+    if (activeTab === 'reviews') {
+      loadReviews();
+    }
+  }, [activeTab]);
+
+  const handleApproveReview = async (id) => {
+    try {
+      await approveReview(id);
+      setPendingReviews(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRejectReview = async (id) => {
+    if (!confirm('Are you sure you want to reject and delete this review?')) return;
+    try {
+      await deleteReview(id);
+      setPendingReviews(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div style={{ padding: '2rem', flex: 1, overflowY: 'auto', background: '#F5F5F5' }}>
@@ -85,6 +129,55 @@ export default function MarketingPage() {
               <div style={{ fontSize: '32px', marginBottom: '1rem' }}>⚙️</div>
               <strong>Automations coming soon!</strong>
               <div style={{ fontSize: '13px', marginTop: '0.5rem' }}>Features like Abandoned Cart reminders and Birthday SMS will be available here.</div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div>
+            <h3 style={{ marginTop: 0 }}>Pending Product Reviews</h3>
+            <p style={{ color: '#6B7280', fontSize: '14px' }}>Approve or reject customer reviews before they appear on the storefront.</p>
+            
+            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {loadingReviews ? (
+                <p>Loading reviews...</p>
+              ) : pendingReviews.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', background: '#F9FAFB', borderRadius: '8px', color: '#6B7280' }}>
+                  No pending reviews to moderate.
+                </div>
+              ) : (
+                pendingReviews.map(review => (
+                  <div key={review.id} style={{ border: '1px solid #E5E7EB', borderRadius: '8px', padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                        <strong style={{ fontSize: '16px' }}>{review.reviewerName}</strong>
+                        <span style={{ color: '#F59E0B' }}>
+                          {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '1rem' }}>Product ID: {review.productId}</div>
+                      <p style={{ margin: 0, color: '#374151', lineHeight: '1.5' }}>"{review.comment}"</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        onClick={() => handleApproveReview(review.id)}
+                        style={{ background: '#10B981', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >
+                        Approve
+                      </button>
+                      <button 
+                        onClick={() => handleRejectReview(review.id)}
+                        style={{ background: '#EF4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

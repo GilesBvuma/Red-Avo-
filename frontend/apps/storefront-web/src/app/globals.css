@@ -1,12 +1,11 @@
 /* ================================================================
-   GLOBAL CSS — Red Avo Sportswear
+   GLOBAL CSS — RedAvo Activewear
    Design tokens, CSS reset, base typography, utilities
 ================================================================ */
 
 /* ── Fonts injected via next/font CSS variables in layout.jsx ── */
-/* Components can use: font-family: var(--font-bebas), cursive       */
-/*                     font-family: var(--font-inter), sans-serif    */
-/*                     font-family: var(--font-playfair), serif      */
+/* Components can use: font-family: var(--font-montserrat), sans-serif */
+/*                     font-family: var(--font-playfair), serif        */
 
 /* ── CSS Custom Properties (Design Tokens) ── */
 :root {
@@ -46,7 +45,8 @@ html {
 }
 
 body {
-  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-family: var(--font-montserrat), 'Montserrat', system-ui, sans-serif;
+  font-weight: 300; /* Light */
   background: var(--cream);
   background-image: radial-gradient(circle at 50% 0%, rgba(253, 232, 239, 0.6) 0%, transparent 70%), 
                     radial-gradient(circle at 0% 100%, rgba(234, 242, 227, 0.7) 0%, transparent 50%),
@@ -59,9 +59,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Global font shorthands (used by CSS modules) ── */
-.font-display {
-  font-family: var(--font-bebas), 'Bebas Neue', cursive;
+/* ── Global Typography (Montserrat) ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  text-transform: uppercase;
+}
+
+h1, .h1 { font-weight: 500; } /* Medium */
+h2, .h2 { font-weight: 600; } /* Semi-Bold */
+h3, .h3 { font-weight: 300; } /* Light */
+
+.font-heading {
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  text-transform: uppercase;
 }
 
 .font-accent {

@@ -44,6 +44,10 @@ public class ProductService {
         return productRepository.findByIsActiveTrue();
     }
 
+    public Product getProductById(Long id) {
+        return productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found: " + id));
+    }
+
     public List<Product> getProductsByCategory(String category) {
         return productRepository.findByCategoryAndIsActiveTrue(category);
     }

@@ -18,7 +18,7 @@ function SuccessContent() {
         <CheckIcon />
       </div>
       <h1>Order Confirmed!</h1>
-      <p>Thank you for shopping with Red Avo.</p>
+      <p>Thank you for shopping with RedAvo Activewear.</p>
       
       {orderRef && (
         <div className={styles.orderRef}>

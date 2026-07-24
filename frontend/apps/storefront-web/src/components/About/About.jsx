@@ -49,14 +49,14 @@ export default function About() {
 
         {/* Right — text */}
         <div className={styles.textCol}>
-          <p className={`${styles.eyebrow} about-eyebrow`}>Our Story</p>
+          <p className={`${styles.eyebrow} about-eyebrow`}>Who We Are</p>
           <h2 id="about-heading" className={`${styles.heading} about-heading`}>
-            BORN FROM<br />PASSION.
+            HOLISTIC WELLNESS.
           </h2>
           <p className={`${styles.text} about-text`}>
-            Red Avo was built for women who move with purpose. Authentic in design.
-            Fearless in motion. Every piece we create carries the spirit of every woman
-            who refuses to be ordinary — on the court, the track, or the street.
+            RedAvo Activewear is more than just a proudly African activewear and athleisure brand. RedAvo Activewear strives to challenge the status quo by incorporating a holistic wellness lifestyle into the mix. Your mental health is just as important as your physical health — this mind-and-body focus inspires confidence in yourself from the inside out.
+            <br/><br/>
+            RedAvo Activewear's high-quality activewear apparel blends style, utility, and comfort so that you not only look good, but also feel good. Our bold range of colours have been designed to complement every skin tone and to celebrate self-expression. We want you to feel comfortable and confident, whether you're working up a sweat, shopping for groceries, or picking the kids up from school.
           </p>
         </div>
       </div>

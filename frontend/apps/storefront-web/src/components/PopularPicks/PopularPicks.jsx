@@ -17,8 +17,8 @@ export default function PopularPicks() {
     async function load() {
       try {
         const prodData = await fetchProducts();
-        // Take the last 3 items added to the inventory
-        const latest = [...prodData].reverse().slice(0, 3);
+        // Take the latest 10 items added to the inventory
+        const latest = [...prodData].reverse().slice(0, 10);
         
         const formatted = latest.map((p, index) => {
           const img = p.imageUrl || (p.imageUrls && p.imageUrls[0]) || '';
@@ -41,16 +41,26 @@ export default function PopularPicks() {
     load();
   }, []);
 
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (products.length === 0) return;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % products.length);
+    }, 4000); // 4 seconds
+    return () => clearInterval(interval);
+  }, [products.length]);
+
   useGSAP(() => {
     if (loading) return;
 
-    // Ribbon slides in from left
+    // Heading slides up
     gsap.fromTo(
-      '.popular-ribbon',
-      { xPercent: -30, opacity: 0 },
+      '.popular-heading',
+      { yPercent: 40, opacity: 0 },
       {
-        xPercent: 0, opacity: 1, duration: 0.7, ease: 'power3.out',
-        scrollTrigger: { trigger: '.popular-ribbon', start: 'top 85%' },
+        yPercent: 0, opacity: 1, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: '.popular-heading', start: 'top 85%' },
       }
     );
 
@@ -91,40 +101,47 @@ export default function PopularPicks() {
     <section id="popular" ref={sectionRef} className={styles.section} aria-labelledby="popular-heading">
       <div className={styles.container}>
         <div className={styles.header}>
-          <div className={`${styles.ribbon} popular-ribbon`} id="popular-heading" role="heading" aria-level={2}>
-            POPULAR PICKS
-          </div>
+          <h2 className={`${styles.heading} popular-heading`} id="popular-heading">
+            THE COMPLETE COLLECTION
+          </h2>
         </div>
 
-        {loading ? (
+        {loading || products.length === 0 ? (
           <p style={{ textAlign: 'center', padding: '40px 0' }}>Loading latest picks...</p>
         ) : (
-          <div className={`${styles.grid} popular-grid`}>
-            {products.map((p) => {
-              const isFeatured = p.featured;
-              const btnId = `add-cart-${p.id}`;
-              return (
-                <article
-                  key={p.id}
-                  className={`${styles.card} ${isFeatured ? `${styles.center} product-center` : `${styles.side} product-side`}`}
-                >
-                  <div className={styles.cardImg}>
-                    <Placeholder label={p.placeholder} subtitle={p.subtitle} />
+          <div className={styles.carouselWindow}>
+            <div 
+              className={`${styles.track} popular-track`}
+              style={{ '--activeIndex': activeIndex }}
+            >
+              {products.map((p, index) => {
+                const isFeatured = index === activeIndex;
+                const btnId = `add-cart-${p.id}`;
+                return (
+                  <div
+                    key={p.id}
+                    className={`${styles.cardWrap} ${isFeatured ? styles.centerWrap : ''}`}
+                  >
+                    <article className={styles.card}>
+                      <div className={styles.cardImg}>
+                        <Placeholder label={p.placeholder} subtitle={p.subtitle} />
+                      </div>
+                      <div className={styles.cardBody}>
+                        <h3 className={styles.productName}>{p.name}</h3>
+                        <p className={styles.productPrice}>{p.price}</p>
+                        <button
+                          id={btnId}
+                          className={styles.cartBtn}
+                          onClick={() => handleAddToCart(p.id, btnId)}
+                        >
+                          {cartMsg[p.id] ? '✓ ADDED' : 'ADD TO CART'}
+                        </button>
+                      </div>
+                    </article>
                   </div>
-                  <div className={styles.cardBody}>
-                    <h3 className={styles.productName}>{p.name}</h3>
-                    <p className={styles.productPrice}>{p.price}</p>
-                    <button
-                      id={btnId}
-                      className={styles.cartBtn}
-                      onClick={() => handleAddToCart(p.id, btnId)}
-                    >
-                      {cartMsg[p.id] ? '✓ ADDED' : 'ADD TO CART'}
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

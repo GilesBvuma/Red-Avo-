@@ -605,21 +605,52 @@ function SizeChips({ sizes }) {
 }
 
 // ─── Category Modal ──────────────────────────────────────────────────
-function CategoryModal({ onClose, onSaved }) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+function CategoryModal({ initialCategory, onClose, onSaved }) {
+  const [name, setName] = useState(initialCategory ? initialCategory.name : '');
+  const [description, setDescription] = useState(initialCategory ? initialCategory.description : '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  
+  // Image handling
+  const [imageFile, setImageFile] = useState(null);
+  const [previews, setPreviews] = useState(initialCategory?.imageUrl ? [initialCategory.imageUrl] : []);
+
+  const handleFiles = (filesList) => {
+    if (!filesList || filesList.length === 0) return;
+    const file = Array.from(filesList).find(f => f.type.startsWith('image/'));
+    if (file) {
+      setImageFile(file);
+      setPreviews([URL.createObjectURL(file)]);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setPreviews([]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return setError("Name is required");
     setSaving(true);
     try {
-      await api.createCategory({ name, description });
+      const data = { name, description };
+      if (previews.length === 0) data.imageUrl = null;
+      
+      let saved;
+      if (initialCategory?.id) {
+        saved = await api.updateCategory(initialCategory.id, data);
+      } else {
+        saved = await api.createCategory(data);
+      }
+      
+      if (imageFile && saved.id) {
+        await api.uploadCategoryImage(saved.id, imageFile);
+      }
+      
       onSaved();
     } catch (err) {
-      setError(err.message || 'Failed to create category');
+      setError(err.message || 'Failed to save category');
     } finally {
       setSaving(false);
     }
@@ -635,7 +666,7 @@ function CategoryModal({ onClose, onSaved }) {
         background: '#fff', borderRadius: 12, width: '100%', maxWidth: 400,
         boxShadow: '0 24px 64px rgba(0,0,0,0.2)', padding: '24px 28px'
       }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 18, color: '#1A1A1A' }}>Add Category</h3>
+        <h3 style={{ margin: '0 0 16px', fontSize: 18, color: '#1A1A1A' }}>{initialCategory ? 'Edit Category' : 'Add Category'}</h3>
         {error && <div style={{ color: '#C0392B', fontSize: 13, marginBottom: 12 }}>{error}</div>}
         <form onSubmit={handleSubmit}>
           <Field label="Category Name *">
@@ -645,6 +676,10 @@ function CategoryModal({ onClose, onSaved }) {
             <Field label="Description">
               <Input value={description} onChange={setDescription} placeholder="Optional description..." />
             </Field>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cover Image</label>
+            <MultipleImageDropZone previews={previews} onFiles={handleFiles} onRemove={handleRemoveImage} />
           </div>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
             <button type="button" onClick={onClose}
@@ -672,8 +707,12 @@ export default function StockManagementPage() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState('All');
-  const [modal, setModal]         = useState(null); // null | 'new' | product object
+  const [modal, setModal]           = useState(null);
+  const [editingProd, setEditingProd] = useState(null);
+  
   const [catModalOpen, setCatModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+
   const [confirmDelete, setConfirmDelete] = useState(null); // product id
 
   const parseDate = (d) => {
@@ -749,8 +788,53 @@ export default function StockManagementPage() {
           <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0' }}>Manage your product listings, sizes, colours and inventory</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
+          {catFilter !== 'All' && (
+            <>
+              <button
+                onClick={() => {
+                  const catObj = categories.find(c => c.name === catFilter);
+                  if (catObj) {
+                    setEditingCategory(catObj);
+                    setCatModalOpen(true);
+                  }
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: '#fff', color: '#1A1A1A', border: '1.5px solid #E8E8E8',
+                  borderRadius: 10, padding: '10px 20px', fontSize: 13,
+                  fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s',
+                }}
+              >
+                Edit Category
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm(`Are you sure you want to delete the category "${catFilter}"?`)) {
+                    const catObj = categories.find(c => c.name === catFilter);
+                    if (catObj) {
+                      try {
+                        await api.deleteCategory(catObj.id);
+                        setCatFilter('All');
+                        loadData();
+                      } catch (err) {
+                        alert(err.message || 'Failed to delete category');
+                      }
+                    }
+                  }
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: '#fff', color: '#C0392B', border: '1.5px solid #C0392B',
+                  borderRadius: 10, padding: '10px 20px', fontSize: 13,
+                  fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s',
+                }}
+              >
+                Delete Category
+              </button>
+            </>
+          )}
           <button
-            onClick={() => setCatModalOpen(true)}
+            onClick={() => { setEditingCategory(null); setCatModalOpen(true); }}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: '#fff', color: '#1A1A1A', border: '1.5px solid #E8E8E8',
@@ -942,8 +1026,9 @@ export default function StockManagementPage() {
       {/* Category modal */}
       {catModalOpen && (
         <CategoryModal
-          onClose={() => setCatModalOpen(false)}
-          onSaved={() => { setCatModalOpen(false); loadData(); }}
+          initialCategory={editingCategory}
+          onClose={() => { setCatModalOpen(false); setEditingCategory(null); }}
+          onSaved={() => { setCatModalOpen(false); setEditingCategory(null); loadData(); }}
         />
       )}
 

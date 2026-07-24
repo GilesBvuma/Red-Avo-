@@ -10,7 +10,8 @@
 
 /* Animated avocado-green blob - Hide if we have a full background image */
 .blob {
-  display: none;
+  display: block;
+  opacity: 0.15;
 }
 
 .left {
@@ -18,6 +19,7 @@
   z-index: 10;
   max-width: 600px;
   margin-top: 80px;
+  padding-left: 2rem;
 }
 
 .eyebrow {
@@ -30,18 +32,20 @@
   text-transform: uppercase;
   padding: 4px 14px;
   border-radius: 999px;
-  margin-bottom: 16px;
+  margin-bottom: 32px;
 }
 
 .heading {
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: clamp(2.2rem, 4.2vw, 3.8rem);
-  line-height: 1.0;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: #fff;
   display: flex;
   flex-wrap: wrap;
   gap: 0 0.22em;
-  text-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 
 .wordWrap {
@@ -54,47 +58,66 @@
   will-change: transform, opacity;
 }
 
+.emphasizedWord {
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
 .subheading {
   font-family: 'Playfair Display', serif;
   font-style: italic;
   font-size: clamp(1.1rem, 2vw, 1.5rem);
   color: #fff;
-  margin-top: 10px;
+  margin-top: 24px;
   will-change: transform, opacity;
-  text-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .desc {
-  margin-top: 14px;
+  margin-top: 24px;
   font-size: 0.95rem;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.85);
   max-width: 360px;
   line-height: 1.6;
   will-change: transform, opacity;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.15);
 }
 
 .cta {
   display: inline-block;
-  margin-top: 32px;
+  margin-top: 48px;
   background: var(--red);
   color: #fff;
   font-weight: 700;
   font-size: 0.88rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 14px 32px;
+  padding: 16px 36px;
   border-radius: 999px;
   text-decoration: none;
-  box-shadow: 0 8px 32px rgba(192, 57, 43, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
   will-change: transform, opacity;
+  display: inline-flex;
+  align-items: center;
 }
 
 .cta:hover {
   background: #a93226;
-  transform: translateY(-3px);
-  box-shadow: 0 14px 40px rgba(192, 57, 43, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ctaArrow {
+  margin-left: 8px;
+  font-weight: 400;
+  font-size: 1.2em;
+  transition: transform 0.25s ease;
+  line-height: 1;
+}
+
+.cta:hover .ctaArrow {
+  transform: translateX(3px);
 }
 
 /* Right side — now the full background banner */
@@ -112,8 +135,23 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(10, 18, 36, 0.6) 0%, rgba(10, 18, 36, 0.2) 60%, transparent 100%);
+  background: linear-gradient(to right, rgba(20, 20, 20, 0.45) 0%, rgba(20, 20, 20, 0.20) 50%, transparent 100%);
   z-index: 2;
+}
+
+.lightBloom {
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  width: 80vw;
+  height: 80vw;
+  max-width: 800px;
+  max-height: 800px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+  filter: blur(40px);
+  z-index: 5;
+  pointer-events: none;
 }
 
 .imageWrap {
@@ -173,93 +211,50 @@
 
 @media (max-width: 900px) {
   .hero {
-    position: relative;
-    display: block;
-    padding: 0;
-    min-height: 100vh;
-    overflow: hidden;
+    align-items: flex-end;
+    padding-bottom: 70px;
+  }
+
+  .left {
+    margin-top: 0;
+    padding-left: 1rem;
+  }
+
+  .eyebrow {
+    font-size: 0.55rem;
+    padding: 3px 10px;
+    margin-bottom: 20px;
+  }
+
+  .heading {
+    font-size: 1.8rem;
+  }
+
+  .subheading {
+    font-size: 1rem;
+    margin-top: 16px;
+  }
+
+  .desc {
+    font-size: 0.85rem;
+    margin-top: 16px;
+  }
+
+  .cta {
+    margin-top: 24px;
+    padding: 12px 28px;
+    font-size: 0.8rem;
   }
 
   .blob {
     display: none;
   }
 
-  .left {
-    position: absolute;
-    bottom: -15px;
-    left: -35px;
-    z-index: 10;
-    width: clamp(260px, 76vw, 300px);
-    height: clamp(260px, 76vw, 300px);
-    background: var(--cream);
-    border-radius: 54% 46% 62% 38% / 44% 58% 42% 56%;
-    border: 3px solid var(--sage);
-    box-shadow: 0 12px 36px rgba(26, 43, 74, 0.2);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 20px 30px 55px;
-    text-align: center;
-    pointer-events: auto;
-  }
-
-  .eyebrow {
-    font-size: 0.55rem;
-    padding: 3px 8px;
-    margin-bottom: 4px;
-  }
-
-  .heading {
-    font-size: clamp(1.2rem, 3.6vw, 1.5rem);
-    line-height: 1.05;
-    justify-content: center;
-    gap: 0 0.15em;
-    color: var(--navy);
-    text-shadow: none;
-  }
-
-  .subheading {
-    font-size: 0.88rem;
-    margin-top: 2px;
-    color: var(--red);
-    text-shadow: none;
-  }
-
-  .desc {
-    font-size: 0.68rem;
-    line-height: 1.3;
-    margin-top: 4px;
-    max-width: 190px;
-    color: #4a5570;
-    text-shadow: none;
-  }
-
-  .cta {
-    margin-top: 10px;
-    padding: 6px 16px;
-    font-size: 0.68rem;
-    box-shadow: 0 4px 14px rgba(192, 57, 43, 0.18);
-  }
-
-  .right {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-
-  .imageWrap {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-    transform: none !important;
-    box-shadow: none;
-    position: relative;
-    z-index: 1;
+  .lightBloom {
+    left: 50%;
+    width: 120vw;
+    height: 120vw;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
   }
 
   .hero::after {

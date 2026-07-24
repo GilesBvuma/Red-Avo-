@@ -10,7 +10,8 @@
   bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: clamp(5rem, 14vw, 14rem);
   color: rgba(255, 255, 255, 0.04);
   white-space: nowrap;

@@ -55,7 +55,7 @@ export async function POST(request) {
 
     // Create payment
     let payment = paynow.createPayment(orderRef, email);
-    payment.add("Red Avo Order", amount);
+    payment.add("RedAvo Activewear Order", amount);
 
     // If using placeholder credentials, just return a mock URL
     if (integrationId === '12345') {

@@ -19,12 +19,12 @@ export default function Home() {
       <main>
         <Hero />
         <Ticker text="ACTIVEWEAR THAT MOVES WITH YOU · EMPOWERING EVERY MOTION" />
-        <BrandStatement />
         <VideoStrip />
+        <BrandStatement />
         <Collections />
-        <Lookbook />
         <PopularPicks />
         <About />
+        <Lookbook />
         <Contact />
       </main>
       <Footer />

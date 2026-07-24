@@ -3,10 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
-import { fetchProducts, fetchCategories } from '@/lib/api';
+import { fetchProducts, fetchCategories, API_URL } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { useGSAP } from '@gsap/react';
+import { gsap } from '@/lib/gsap';
+import ShopByCategory from '@/components/ShopByCategory/ShopByCategory';
 import styles from './shop.module.css';
 
 /* ─── Colour map for swatches ─── */
@@ -44,6 +47,17 @@ const SORT_OPTIONS = [
    ============================================================ */
 function ProductCard({ product, onClick, listView }) {
   const [imgIndex, setImgIndex] = useState(0);
+  const [reviewSummary, setReviewSummary] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/products/${product.id}/reviews/summary`)
+      .then(res => {
+        if (!res.ok) throw new Error('Reviews not found');
+        return res.json();
+      })
+      .then(data => setReviewSummary(data))
+      .catch(() => setReviewSummary(null));
+  }, [product.id]);
 
   const images = [];
   if (product.imageUrl)  images.push(product.imageUrl);
@@ -69,33 +83,27 @@ function ProductCard({ product, onClick, listView }) {
       onKeyDown={e => e.key === 'Enter' && onClick(product)}
     >
       <div className={styles.imageWrap}>
-        <img
-          src={imgSrc(imgIndex)}
-          alt={product.name}
-          className={styles.image}
-        />
+        <div className={styles.swipeCarousel}>
+          {uniqueImages.length > 0 ? (
+            uniqueImages.map((src, i) => (
+              <img
+                key={i}
+                src={`${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${src}`}
+                alt={`${product.name} - view ${i + 1}`}
+                className={styles.image}
+                loading="lazy"
+              />
+            ))
+          ) : (
+            <img src="https://placehold.co/400x500?text=No+Image" alt={product.name} className={styles.image} />
+          )}
+        </div>
 
         {/* Badges */}
         {isSoldOut
           ? <span className={`${styles.badge} ${styles.badgeSoldOut}`}>Sold Out</span>
           : product.onSale && <span className={`${styles.badge} ${styles.badgeSale}`}>Sale</span>
         }
-
-        {/* Carousel arrows */}
-        {uniqueImages.length > 1 && (
-          <>
-            <button
-              className={`${styles.carouselBtn} ${styles.left}`}
-              onClick={e => { e.stopPropagation(); setImgIndex(p => p === 0 ? uniqueImages.length - 1 : p - 1); }}
-              aria-label="Previous image"
-            >❮</button>
-            <button
-              className={`${styles.carouselBtn} ${styles.right}`}
-              onClick={e => { e.stopPropagation(); setImgIndex(p => p === uniqueImages.length - 1 ? 0 : p + 1); }}
-              aria-label="Next image"
-            >❯</button>
-          </>
-        )}
 
         {/* Wishlist */}
         <button
@@ -112,9 +120,19 @@ function ProductCard({ product, onClick, listView }) {
 
       <div className={styles.info}>
         <h3>{product.name}</h3>
-        <p className={styles.price}>
-          ${product.price?.toFixed(2) || '0.00'}
-        </p>
+        
+        <div className={styles.priceRow}>
+          <p className={styles.price}>
+            ${product.price?.toFixed(2) || '0.00'}
+          </p>
+          {reviewSummary && reviewSummary.totalReviews > 0 && (
+            <div className={styles.reviewSummary}>
+              <span className={styles.star}>★</span>
+              <span>{reviewSummary.averageRating}</span>
+              <span className={styles.reviewCount}>({reviewSummary.totalReviews})</span>
+            </div>
+          )}
+        </div>
 
         {/* Color dots */}
         {colors.length > 0 && (
@@ -145,7 +163,7 @@ function ProductCard({ product, onClick, listView }) {
   );
 }
 
-const SHOP_HERO_IMAGES = Array.from({ length: 13 }, (_, i) => `/images/shop${i + 1}.jpg`);
+const SHOP_HERO_IMAGES = ['/images/shop14.png', '/images/shop15.png', '/images/shop16.png'];
 
 /* ============================================================
    ShopContent
@@ -159,16 +177,19 @@ function ShopContent() {
   const [loading,         setLoading]         = useState(true);
   const [email,           setEmail]           = useState('');
   const [subDone,         setSubDone]         = useState(false);
-  const [openGroups,      setOpenGroups]      = useState({ categories: true });
+  const [openGroups,      setOpenGroups]      = useState({ categories: true, colors: true, sizes: true });
   const [heroImgIndex,    setHeroImgIndex]    = useState(0);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [activeColor,     setActiveColor]     = useState(null);
+  const [activeSize,      setActiveSize]      = useState(null);
 
-  /* Modal state */
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedSize,    setSelectedSize]    = useState(null);
-  const [selectedColor,   setSelectedColor]   = useState(null);
-  const [imgIndex,        setImgIndex]        = useState(0);
+  const shopHeroRef = useRef(null);
+  const titleWordsRef = useRef([]);
+
+  /* ── Modal helpers removed ── */
 
   const { addToCart } = useCart();
+  const router = useRouter();
   const searchParams  = useSearchParams();
   const searchQuery   = searchParams.get('q') || '';
 
@@ -205,6 +226,29 @@ function ShopContent() {
     return () => clearInterval(interval);
   }, []);
 
+  /* ── Hero Animation ── */
+  useGSAP(() => {
+    const tl = gsap.timeline({ delay: 0.2 });
+
+    tl.fromTo(
+      '.shop-hero-breadcrumb',
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }
+    )
+    .fromTo(
+      titleWordsRef.current,
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
+      '-=0.6'
+    )
+    .fromTo(
+      '#hero-shop-btn',
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+      '-=0.5'
+    );
+  }, { scope: shopHeroRef, dependencies: [activeCategory] });
+
   /* ── Filter + Sort ── */
   let filtered = products;
   
@@ -224,6 +268,22 @@ function ShopContent() {
     }
   }
 
+  if (activeColor) {
+    filtered = filtered.filter(p => {
+      if (p.colors && p.colors.toLowerCase().includes(activeColor.toLowerCase())) return true;
+      if (p.variants && p.variants.some(v => v.color && v.color.toLowerCase() === activeColor.toLowerCase())) return true;
+      return false;
+    });
+  }
+
+  if (activeSize) {
+    filtered = filtered.filter(p => {
+      if (p.sizes && p.sizes.toLowerCase().includes(activeSize.toLowerCase())) return true;
+      if (p.variants && p.variants.some(v => v.size && v.size.toLowerCase() === activeSize.toLowerCase())) return true;
+      return false;
+    });
+  }
+
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'price-asc')  return (a.price || 0) - (b.price || 0);
     if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
@@ -231,33 +291,13 @@ function ShopContent() {
     return 0;
   });
 
-  /* ── Modal helpers ── */
-  const variants    = selectedProduct?.variants || [];
-  const allSizes    = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
-  const allColors   = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
-  const availForSize = selectedSize
-    ? variants.filter(v => v.size === selectedSize && v.stockQuantity > 0).map(v => v.color)
-    : [];
-  const selectedVariant = variants.find(v => v.size === selectedSize && v.color === selectedColor);
-
-  const modalImages = [];
-  if (selectedProduct?.imageUrl)  modalImages.push(selectedProduct.imageUrl);
-  if (selectedProduct?.imageUrls) modalImages.push(...selectedProduct.imageUrls);
-  const uniqueModalImages = Array.from(new Set(modalImages));
+  /* ── Product helpers ── */
 
   const openProduct = (product) => {
-    setSelectedProduct(product);
-    setSelectedSize(null);
-    setSelectedColor(null);
-    setImgIndex(0);
+    router.push(`/shop/${product.id}`);
   };
 
-  const handleAddToCart = () => {
-    if (selectedProduct && selectedVariant) {
-      addToCart(selectedProduct, selectedVariant, 1);
-      setSelectedProduct(null);
-    }
-  };
+
 
   const toggleGroup = (key) =>
     setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
@@ -282,22 +322,56 @@ function ShopContent() {
   };
   const gridItems = buildGridItems();
 
-  /* ── Active filter label ── */
+  /* ── Extract Available Colors & Sizes ── */
+  const allAvailableColors = Array.from(new Set(products.flatMap(p => {
+    let c = [];
+    if (p.colors) c = c.concat(p.colors.split(',').map(s => s.trim()));
+    if (p.variants) c = c.concat(p.variants.map(v => v.color).filter(Boolean));
+    return c;
+  }))).filter(Boolean).sort();
+
+  const allAvailableSizes = Array.from(new Set(products.flatMap(p => {
+    let s = [];
+    if (p.sizes) s = s.concat(p.sizes.split(',').map(str => str.trim()));
+    if (p.variants) s = s.concat(p.variants.map(v => v.size).filter(Boolean));
+    return s;
+  }))).filter(Boolean).sort();
+
+  /* ── Active filter label & Title Words ── */
   const activeCategoryObj = categories.find(c => c.name === activeCategory);
+  
+  titleWordsRef.current = [];
+  const getTitleWords = () => {
+    if (activeCategory) {
+      const parts = activeCategory.split(' ');
+      const first = parts[0];
+      const rest = parts.slice(1).join(' ') || 'Collection';
+      return [
+        { text: first, accent: false, br: true },
+        ...rest.split(' ').map(w => ({ text: w, accent: true, br: false }))
+      ];
+    }
+    return [
+      { text: 'Shop', accent: false, br: false },
+      { text: 'The', accent: false, br: true },
+      { text: 'Collection', accent: true, br: false }
+    ];
+  };
+  const titleWords = getTitleWords();
 
   return (
     <div className={styles.page}>
       <Nav />
 
       {/* ── HERO ── */}
-      <section className={styles.shopHero} aria-label="Shop hero">
+      <section ref={shopHeroRef} className={styles.shopHero} aria-label="Shop hero">
         {/* Full-bleed background slideshow */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           {SHOP_HERO_IMAGES.map((src, index) => (
             <img
               key={src}
               src={src}
-              alt={`Red Avo activewear ${index + 1}`}
+              alt={`RedAvo Activewear activewear ${index + 1}`}
               className={styles.shopHeroImage}
               style={{
                 opacity: heroImgIndex === index ? 1 : 0,
@@ -310,46 +384,79 @@ function ShopContent() {
 
         <div className={styles.shopHeroLeft}>
           {/* Breadcrumb */}
-          <nav className={styles.shopHeroBreadcrumb} aria-label="Breadcrumb">
+          <nav className={`shop-hero-breadcrumb ${styles.shopHeroBreadcrumb}`} aria-label="Breadcrumb">
             <a href="/">Home</a>
             <span className={styles.shopHeroSep} aria-hidden="true">›</span>
             <span>{activeCategory || 'Shop'}</span>
           </nav>
 
-          <span className={`section-label ${styles.shopHeroLabel}`}>Our Catalogue</span>
+          
           <h1 className={styles.shopHeroTitle}>
-            {activeCategory
-              ? <>{activeCategory.split(' ')[0]}<br /><span className={styles.shopHeroTitleAccent}>{activeCategory.split(' ').slice(1).join(' ') || 'Collection'}</span></>
-              : <>Shop The<br /><span className={styles.shopHeroTitleAccent}>Collection</span></>
-            }
+            {titleWords.map((item, i) => (
+              <React.Fragment key={i}>
+                <span style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom', paddingBottom: '4px', marginRight: item.br ? '0' : '0.2em' }}>
+                  <span
+                    className={item.accent ? styles.shopHeroTitleAccent : ''}
+                    ref={(el) => {
+                      if (el && !titleWordsRef.current.includes(el)) {
+                        titleWordsRef.current.push(el);
+                      }
+                    }}
+                    style={{ display: 'inline-block', willChange: 'transform, opacity' }}
+                  >
+                    {item.text}
+                  </span>
+                </span>
+                {item.br && <br />}
+              </React.Fragment>
+            ))}
           </h1>
-          <p className={styles.shopHeroSub}>
-            Authentic activewear built for her motion. Every piece crafted to move as powerfully as you do.
-          </p>
-          <a href="#product-grid" className="btn-pill" id="hero-shop-btn">
-            Shop Now
+          <a href="#product-grid" className={styles.shopHeroCta} id="hero-shop-btn">
+            Shop Now <span className={styles.ctaArrow}>&rarr;</span>
           </a>
         </div>
       </section>
+
+      {/* ── SHOP BY CATEGORY ── */}
+      <ShopByCategory categories={categories} products={products} />
 
       <main style={{ flex: 1 }}>
         {/* ── SIDEBAR + GRID LAYOUT ── */}
         <div className={styles.shopLayout}>
 
           {/* ── SIDEBAR ── */}
-          <aside className={styles.sidebar} aria-label="Filter products">
-            <p className={styles.sidebarTitle}>FILTERS</p>
+          <aside className={`${styles.sidebar} ${isMobileFilterOpen ? styles.sidebarOpen : ''}`} aria-label="Filter products">
+            <div className={styles.sidebarHeader}>
+              <p className={styles.sidebarTitle}>FILTERS</p>
+              <button className={styles.closeSidebarBtn} onClick={() => setIsMobileFilterOpen(false)}>✕</button>
+            </div>
 
             {/* Active chips */}
-            {activeCategory && (
+            {(activeCategory || activeColor || activeSize) && (
               <div className={styles.activeFilters}>
                 <p className={styles.activeFiltersLabel}>Active Filters</p>
                 <div className={styles.filterChips}>
-                  <button className={styles.filterChip} onClick={() => setActiveCategory(null)}>
-                    {activeCategory} ✕
-                  </button>
+                  {activeCategory && (
+                    <button className={styles.filterChip} onClick={() => setActiveCategory(null)}>
+                      {activeCategory} ✕
+                    </button>
+                  )}
+                  {activeColor && (
+                    <button className={styles.filterChip} onClick={() => setActiveColor(null)}>
+                      {activeColor} ✕
+                    </button>
+                  )}
+                  {activeSize && (
+                    <button className={styles.filterChip} onClick={() => setActiveSize(null)}>
+                      {activeSize} ✕
+                    </button>
+                  )}
                 </div>
-                <button className={styles.clearAll} onClick={() => setActiveCategory(null)}>
+                <button className={styles.clearAll} onClick={() => {
+                  setActiveCategory(null);
+                  setActiveColor(null);
+                  setActiveSize(null);
+                }}>
                   Clear all
                 </button>
               </div>
@@ -404,6 +511,67 @@ function ShopContent() {
                 </div>
               )}
             </div>
+
+            {/* Colors group */}
+            {allAvailableColors.length > 0 && (
+              <div className={styles.filterGroup}>
+                <div
+                  className={styles.filterGroupHeader}
+                  onClick={() => toggleGroup('colors')}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={openGroups.colors}
+                  onKeyDown={e => e.key === 'Enter' && toggleGroup('colors')}
+                >
+                  <span className={styles.filterGroupLabel}>Colors</span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}>▼</span>
+                </div>
+                {openGroups.colors && (
+                  <div className={styles.filterColorGrid}>
+                    {allAvailableColors.map(color => (
+                      <button
+                        key={color}
+                        className={`${styles.filterColorBtn} ${activeColor === color ? styles.active : ''}`}
+                        onClick={() => setActiveColor(activeColor === color ? null : color)}
+                        style={{ backgroundColor: color.toLowerCase() }}
+                        title={color}
+                        aria-label={`Filter by color ${color}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sizes group */}
+            {allAvailableSizes.length > 0 && (
+              <div className={styles.filterGroup}>
+                <div
+                  className={styles.filterGroupHeader}
+                  onClick={() => toggleGroup('sizes')}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={openGroups.sizes}
+                  onKeyDown={e => e.key === 'Enter' && toggleGroup('sizes')}
+                >
+                  <span className={styles.filterGroupLabel}>Sizes</span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}>▼</span>
+                </div>
+                {openGroups.sizes && (
+                  <div className={styles.filterSizeGrid}>
+                    {allAvailableSizes.map(size => (
+                      <button
+                        key={size}
+                        className={`${styles.filterSizeBtn} ${activeSize === size ? styles.active : ''}`}
+                        onClick={() => setActiveSize(activeSize === size ? null : size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </aside>
 
           {/* ── CONTENT AREA ── */}
@@ -429,6 +597,13 @@ function ShopContent() {
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
+                <button
+                  className={`${styles.gridToggleBtn} ${styles.mobileFilterBtn}`}
+                  onClick={() => setIsMobileFilterOpen(true)}
+                  aria-label="Filter & Sort"
+                >
+                  Filter
+                </button>
                 <div className={styles.gridToggle} role="group" aria-label="View toggle">
                   <button
                     className={`${styles.gridToggleBtn} ${!listView ? styles.active : ''}`}
@@ -478,7 +653,7 @@ function ShopContent() {
                     <div key={item.key} className={styles.inlinePromo} aria-label="Promotional banner">
                       <div className={styles.inlinePromoBlob} aria-hidden="true" />
                       <div className={styles.inlinePromoText}>
-                        <p className={styles.inlinePromoEyebrow}>Red Avo · Limited Drop</p>
+                        <p className={styles.inlinePromoEyebrow}>RedAvo Activewear · Limited Drop</p>
                         <p className={styles.inlinePromoTitle}>New Season Arrivals</p>
                       </div>
                       <button className={styles.inlinePromoBtn} onClick={() => {
@@ -545,129 +720,7 @@ function ShopContent() {
         </div>
       </main>
 
-      {/* ── VARIANT MODAL ── */}
-      {selectedProduct && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => setSelectedProduct(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Product details for ${selectedProduct.name}`}
-        >
-          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <button
-              className={styles.closeBtn}
-              onClick={() => setSelectedProduct(null)}
-              aria-label="Close"
-            >✕</button>
 
-            <div className={styles.modalLayout}>
-              {/* Image */}
-              <div className={styles.modalImage}>
-                <div className={styles.carouselWrap}>
-                  {uniqueModalImages.length > 1 && (
-                    <button className={`${styles.carouselBtn} ${styles.left}`} onClick={() => setImgIndex(i => i === 0 ? uniqueModalImages.length - 1 : i - 1)}>❮</button>
-                  )}
-                  <img
-                    src={uniqueModalImages.length > 0 ? `${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${uniqueModalImages[imgIndex]}` : 'https://placehold.co/400x500?text=No+Image'}
-                    alt={selectedProduct.name}
-                  />
-                  {uniqueModalImages.length > 1 && (
-                    <button className={`${styles.carouselBtn} ${styles.right}`} onClick={() => setImgIndex(i => i === uniqueModalImages.length - 1 ? 0 : i + 1)}>❯</button>
-                  )}
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className={styles.modalDetails}>
-                <h2>{selectedProduct.name}</h2>
-                <p className={styles.modalPrice}>${selectedProduct.price?.toFixed(2)}</p>
-                {selectedProduct.description && (
-                  <p className={styles.modalDesc}>{selectedProduct.description}</p>
-                )}
-
-                {variants.length > 0 ? (
-                  <div className={styles.variants}>
-                    {/* Size picker */}
-                    {allSizes.length > 0 && (
-                      <>
-                        <h4>Select Size</h4>
-                        <div className={styles.sizeGrid}>
-                          {allSizes.map(size => {
-                            const inStock = variants.some(v => v.size === size && v.stockQuantity > 0);
-                            return (
-                              <button
-                                key={size}
-                                className={`${styles.sizePill} ${selectedSize === size ? styles.selected : ''} ${!inStock ? styles.disabled : ''}`}
-                                onClick={() => {
-                                  if (!inStock) return;
-                                  setSelectedSize(size);
-                                  if (selectedColor && !variants.some(v => v.size === size && v.color === selectedColor && v.stockQuantity > 0)) {
-                                    setSelectedColor(null);
-                                  }
-                                }}
-                                aria-pressed={selectedSize === size}
-                                aria-disabled={!inStock}
-                              >
-                                {size}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Color picker */}
-                    {allColors.length > 0 && (
-                      <>
-                        <h4>Select Color {selectedSize ? '' : '(choose a size first)'}</h4>
-                        <div className={styles.colorGrid}>
-                          {allColors.map(color => {
-                            const available = selectedSize
-                              ? availForSize.includes(color)
-                              : variants.some(v => v.color === color && v.stockQuantity > 0);
-                            return (
-                              <button
-                                key={color}
-                                title={color}
-                                className={`${styles.colorCircle} ${selectedColor === color ? styles.selected : ''} ${!available ? styles.disabled : ''}`}
-                                style={{ background: getColorHex(color) }}
-                                onClick={() => {
-                                  if (available) setSelectedColor(color);
-                                }}
-                                aria-label={color}
-                                aria-pressed={selectedColor === color}
-                                aria-disabled={!available}
-                              />
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-
-                    {selectedVariant && (
-                      <p style={{ marginBottom: 16, fontSize: 13, color: '#10B981', fontWeight: 600 }}>
-                        ✓ {selectedVariant.stockQuantity} in stock
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className={styles.noVariants}>No options available.</p>
-                )}
-
-                <button
-                  className={styles.addToCartBtn}
-                  disabled={!selectedVariant || selectedVariant.stockQuantity <= 0}
-                  onClick={handleAddToCart}
-                  id="modal-add-to-cart"
-                >
-                  {selectedVariant ? 'Add to Cart' : 'Select Size & Colour'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </div>

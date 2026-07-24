@@ -52,7 +52,8 @@
 }
 
 .heading {
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: clamp(3rem, 7vw, 6.5rem);
   line-height: 1.0;
   color: var(--navy);

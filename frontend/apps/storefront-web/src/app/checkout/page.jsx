@@ -20,8 +20,15 @@ export default function CheckoutPage() {
     email: '',
     phone: '',
     deliveryMethod: 'DELIVERY', // or 'COLLECTION'
+    country: 'Zimbabwe',
+    firstName: '',
+    lastName: '',
+    company: '',
+    address: '',
+    apartment: '',
+    city: '',
     deliveryZone: DELIVERY_ZONES[0].id,
-    address: ''
+    postalCode: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -54,7 +61,9 @@ export default function CheckoutPage() {
         customerName: formData.name,
         phone: formData.phone,
         deliveryMethod: formData.deliveryMethod,
-        deliveryAddress: formData.deliveryMethod === 'DELIVERY' ? `[Zone: ${selectedZone.name}] ${formData.address}` : null,
+        deliveryAddress: formData.deliveryMethod === 'DELIVERY' 
+          ? `[Zone: ${selectedZone.name}] ${formData.firstName} ${formData.lastName}, ${formData.company ? formData.company + ', ' : ''}${formData.address}, ${formData.apartment ? formData.apartment + ', ' : ''}${formData.city}, ${formData.country}, ${formData.postalCode}` 
+          : null,
         deliveryFee: deliveryFee,
         items: orderItems
       };
@@ -157,33 +166,62 @@ export default function CheckoutPage() {
             </div>
 
             {formData.deliveryMethod === 'DELIVERY' && (
-              <>
+              <div className={styles.deliveryForm}>
                 <div className={styles.inputGroup}>
-                  <label>City / Suburb (Delivery Zone)</label>
-                  <select 
-                    name="deliveryZone" 
-                    value={formData.deliveryZone} 
-                    onChange={handleChange}
-                    required
-                  >
-                    {DELIVERY_ZONES.map(zone => (
-                      <option key={zone.id} value={zone.id}>
-                        {zone.name} (${zone.fee.toFixed(2)})
-                      </option>
-                    ))}
+                  <label>Country/Region</label>
+                  <select name="country" value={formData.country} onChange={handleChange}>
+                    <option value="Zimbabwe">Zimbabwe</option>
+                    <option value="South Africa">South Africa</option>
                   </select>
                 </div>
-                <div className={styles.inputGroup}>
-                  <label>Delivery Address</label>
-                  <textarea 
-                    name="address" 
-                    required 
-                    value={formData.address} 
-                    onChange={handleChange} 
-                    rows={3}
-                  />
+                
+                <div className={styles.row}>
+                  <div className={styles.inputGroup}>
+                    <label>First name</label>
+                    <input type="text" name="firstName" required value={formData.firstName} onChange={handleChange} />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Last name</label>
+                    <input type="text" name="lastName" required value={formData.lastName} onChange={handleChange} />
+                  </div>
                 </div>
-              </>
+
+                <div className={styles.inputGroup}>
+                  <label>Company (optional)</label>
+                  <input type="text" name="company" value={formData.company} onChange={handleChange} />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Address</label>
+                  <input type="text" name="address" required value={formData.address} onChange={handleChange} />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Apartment, suite, etc. (optional)</label>
+                  <input type="text" name="apartment" value={formData.apartment} onChange={handleChange} />
+                </div>
+
+                <div className={styles.row}>
+                  <div className={styles.inputGroup}>
+                    <label>City</label>
+                    <input type="text" name="city" required value={formData.city} onChange={handleChange} />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Province / Zone</label>
+                    <select name="deliveryZone" value={formData.deliveryZone} onChange={handleChange} required>
+                      {DELIVERY_ZONES.map(zone => (
+                        <option key={zone.id} value={zone.id}>
+                          {zone.name} (${zone.fee.toFixed(2)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Postal code</label>
+                    <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} />
+                  </div>
+                </div>
+              </div>
             )}
 
             <button type="submit" className={styles.submitBtn} disabled={loading}>

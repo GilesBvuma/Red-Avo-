@@ -46,7 +46,8 @@
 }
 
 .mainText {
-  font-family: 'Bebas Neue', cursive;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
   font-size: clamp(4rem, 11vw, 10rem);
   color: var(--navy);
   line-height: 0.95;
