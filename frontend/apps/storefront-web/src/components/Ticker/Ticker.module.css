@@ -5,6 +5,10 @@
   will-change: transform, opacity;
 }
 
+.ticker.ccw {
+  clip-path: polygon(0 14px, 100% 0, 100% calc(100% - 14px), 0 100%);
+}
+
 .track {
   display: flex;
   width: max-content;

@@ -11,11 +11,37 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
+    // ── Allowed MIME types for product image uploads ───────────────
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"
+    );
+    private static final int MAX_FILES_PER_UPLOAD = 10;
+
+    /**
+     * Validates uploaded files before any disk I/O.
+     * Throws {@link IllegalArgumentException} (→ 400) if count or MIME type is invalid.
+     */
+    private void validateImageFiles(MultipartFile[] files) {
+        if (files.length > MAX_FILES_PER_UPLOAD) {
+            throw new IllegalArgumentException(
+                    "Too many files. Maximum " + MAX_FILES_PER_UPLOAD + " per upload.");
+        }
+        for (MultipartFile file : files) {
+            String contentType = file.getContentType();
+            if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+                throw new IllegalArgumentException(
+                        "Invalid file type: '" + contentType + "'. " +
+                        "Only JPEG, PNG, WebP and GIF images are allowed.");
+            }
+        }
+    }
 
     @Autowired
     private ProductService productService;
@@ -86,6 +112,7 @@ public class ProductController {
             @PathVariable Long id,
             @RequestParam("files") MultipartFile[] files) throws IOException {
 
+        validateImageFiles(files);
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
         
@@ -124,6 +151,7 @@ public class ProductController {
             @PathVariable Long id,
             @RequestParam("files") MultipartFile[] files) throws IOException {
 
+        validateImageFiles(files);
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
         

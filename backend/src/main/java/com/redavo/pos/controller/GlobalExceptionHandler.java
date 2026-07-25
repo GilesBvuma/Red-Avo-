@@ -1,5 +1,8 @@
 package com.redavo.pos.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -25,6 +29,13 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final Environment env;
+
+    public GlobalExceptionHandler(Environment env) {
+        this.env = env;
+    }
 
     // ── 400 Bad Request ─────────────────────────────────────────────────────
 
@@ -76,18 +87,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
-        // Log for server-side debugging
-        System.err.println("[GlobalExceptionHandler] Unhandled exception: " + ex.getMessage());
-        ex.printStackTrace();
-        
-        String topStackTrace = ex.getStackTrace().length > 0 
-                ? ex.getStackTrace()[0].toString() 
-                : "no stack trace";
-        
-        return error(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Debug Error: " + ex.getClass().getSimpleName() + 
-                " | Msg: " + ex.getMessage() + 
-                " | At: " + topStackTrace);
+        // Always log full detail server-side with structured SLF4J
+        log.error("Unhandled exception [{}]: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+
+        // Only expose internals in local / dev profile — never in staging or production
+        boolean isDev = Arrays.stream(env.getActiveProfiles())
+                .anyMatch(p -> p.equals("local") || p.equals("dev"));
+
+        String message = isDev
+                ? "Dev — " + ex.getClass().getSimpleName() + ": " + ex.getMessage()
+                : "An unexpected error occurred. Please contact support if the problem persists.";
+
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 
     // ── Builder ─────────────────────────────────────────────────────────────

@@ -54,6 +54,39 @@ public class NotificationService {
     @Value("${twilio.enabled:false}")
     private boolean twilioEnabled;
 
+    @Value("${app.admin.notify-email:}")
+    private String adminNotifyEmail;
+
+    public void sendAdminContactEmail(String customerName, String customerEmail, String messageBody) {
+        String toAddress = adminNotifyEmail != null && !adminNotifyEmail.isBlank() ? adminNotifyEmail : fromAddress;
+        String subject = "New Contact Form Submission from " + customerName;
+        String html = String.format(
+            "<h3>New Contact Message</h3>" +
+            "<p><strong>Name:</strong> %s</p>" +
+            "<p><strong>Email:</strong> %s</p>" +
+            "<br/>" +
+            "<p><strong>Message:</strong></p>" +
+            "<p>%s</p>",
+            customerName.replace("<", "&lt;").replace(">", "&gt;"),
+            customerEmail.replace("<", "&lt;").replace(">", "&gt;"),
+            messageBody.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+        );
+        
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setFrom("Storefront Contact <" + fromAddress + ">");
+            helper.setReplyTo(customerEmail);
+            helper.setTo(toAddress);
+            helper.setSubject(subject);
+            helper.setText("Name: " + customerName + "\nEmail: " + customerEmail + "\n\n" + messageBody, html);
+            mailSender.send(message);
+            System.out.println("[EMAIL ✅] Sent contact notification to " + toAddress);
+        } catch (Exception e) {
+            System.err.println("[EMAIL ❌] Failed to send contact notification: " + e.getMessage());
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════
     //  📧  EMAIL — Gmail SMTP
     // ═══════════════════════════════════════════════════════════

@@ -12,7 +12,7 @@ async function apiFetch(endpoint, options = {}) {
   try {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('redavo_token');
+      const token = sessionStorage.getItem('redavo_token');
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
@@ -31,8 +31,8 @@ async function apiFetch(endpoint, options = {}) {
       if (res.status === 401 && typeof window !== 'undefined') {
         if (!_redirectingToLogin) {
           _redirectingToLogin = true;
-          localStorage.removeItem('redavo_token');
-          localStorage.removeItem('redavo_user');
+          sessionStorage.removeItem('redavo_token');
+          sessionStorage.removeItem('redavo_user');
           window.location.href = '/auth/role-select?reason=session-expired';
         }
       }
@@ -93,7 +93,7 @@ export async function uploadProductImages(id, files) {
   }
   const headers = {};
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('redavo_token');
+    const token = sessionStorage.getItem('redavo_token');
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
   const res = await fetch(`${API_BASE}/products/${id}/images`, {
@@ -112,7 +112,7 @@ export async function uploadProductInvoices(id, files) {
   }
   const headers = {};
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('redavo_token');
+    const token = sessionStorage.getItem('redavo_token');
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
   const res = await fetch(`${API_BASE}/products/${id}/invoices`, {
@@ -147,7 +147,7 @@ export async function uploadCategoryImage(id, file) {
   
   const headers = {};
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('redavo_token');
+    const token = sessionStorage.getItem('redavo_token');
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
   
@@ -242,6 +242,14 @@ export async function sendBulkNotification(payload) {
 
 export async function fetchNotificationHistory() {
   return apiFetch('/notify/history');
+}
+
+export async function fetchContactMessages() {
+  return apiFetch('/admin/contact');
+}
+
+export async function markContactMessageRead(id) {
+  return apiFetch(`/admin/contact/${id}/read`, { method: 'POST' });
 }
 
 // ── Transfers & Stores & Stock ────────────────────────────────────────────

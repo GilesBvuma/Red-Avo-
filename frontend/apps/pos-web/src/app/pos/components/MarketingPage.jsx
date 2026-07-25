@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BulkNotifyPanel from './BulkNotifyPanel'; // Re-use the existing component for now
-import { fetchPendingReviews, approveReview, deleteReview } from '../lib/api';
+import { fetchPendingReviews, approveReview, deleteReview, fetchContactMessages, markContactMessageRead } from '../lib/api';
 
 export default function MarketingPage() {
   const [activeTab, setActiveTab] = useState('campaigns');
@@ -11,11 +11,15 @@ export default function MarketingPage() {
     { id: 'campaigns', label: 'Campaigns & Bulk Notify' },
     { id: 'segments', label: 'Customer Segments' },
     { id: 'automations', label: 'Automations' },
-    { id: 'reviews', label: 'Product Reviews' }
+    { id: 'reviews', label: 'Product Reviews' },
+    { id: 'inquiries', label: 'Customer Inquiries' }
   ];
 
   const [pendingReviews, setPendingReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const [inquiries, setInquiries] = useState([]);
+  const [loadingInquiries, setLoadingInquiries] = useState(false);
 
   const loadReviews = async () => {
     setLoadingReviews(true);
@@ -29,13 +33,36 @@ export default function MarketingPage() {
     }
   };
 
+  const loadInquiries = async () => {
+    setLoadingInquiries(true);
+    try {
+      const data = await fetchContactMessages();
+      setInquiries(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingInquiries(false);
+    }
+  };
+
   const fetchPendingReviewsWrapper = () => loadReviews();
 
   useEffect(() => {
     if (activeTab === 'reviews') {
       loadReviews();
+    } else if (activeTab === 'inquiries') {
+      loadInquiries();
     }
   }, [activeTab]);
+
+  const handleMarkInquiryRead = async (id) => {
+    try {
+      await markContactMessageRead(id);
+      setInquiries(prev => prev.map(msg => msg.id === id ? { ...msg, isRead: true } : msg));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleApproveReview = async (id) => {
     try {
@@ -175,6 +202,57 @@ export default function MarketingPage() {
                         Reject
                       </button>
                     </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'inquiries' && (
+          <div>
+            <h3 style={{ marginTop: 0 }}>Customer Inquiries</h3>
+            <p style={{ color: '#6B7280', fontSize: '14px' }}>Messages submitted via the Storefront contact form.</p>
+            
+            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {loadingInquiries ? (
+                <p>Loading messages...</p>
+              ) : inquiries.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', background: '#F9FAFB', borderRadius: '8px', color: '#6B7280' }}>
+                  No customer messages found.
+                </div>
+              ) : (
+                inquiries.map(msg => (
+                  <div key={msg.id} style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    padding: '1.5rem', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start',
+                    background: msg.isRead ? '#F9FAFB' : '#fff',
+                    borderLeft: msg.isRead ? '1px solid #E5E7EB' : '4px solid #C0392B'
+                  }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                        <strong style={{ fontSize: '16px', color: '#111827' }}>{msg.name}</strong>
+                        <a href={`mailto:${msg.email}`} style={{ fontSize: '14px', color: '#3B82F6', textDecoration: 'none' }}>{msg.email}</a>
+                        <span style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                          {new Date(msg.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p style={{ margin: '12px 0 0', color: '#374151', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                        {msg.message}
+                      </p>
+                    </div>
+                    {!msg.isRead && (
+                      <button 
+                        onClick={() => handleMarkInquiryRead(msg.id)}
+                        style={{ background: '#F3F4F6', color: '#4B5563', border: '1px solid #D1D5DB', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                      >
+                        Mark as Read
+                      </button>
+                    )}
                   </div>
                 ))
               )}

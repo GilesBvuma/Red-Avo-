@@ -4,6 +4,7 @@ import com.redavo.pos.dto.ReviewDto;
 import com.redavo.pos.dto.ReviewSummaryDto;
 import com.redavo.pos.model.Review;
 import com.redavo.pos.repository.ReviewRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class ReviewController {
     @PostMapping("/{productId}/reviews")
     public ResponseEntity<Review> submitReview(
             @PathVariable Long productId,
-            @RequestBody ReviewDto request) {
+            @Valid @RequestBody ReviewDto request) {
         
         Review review = new Review();
         review.setProductId(productId);

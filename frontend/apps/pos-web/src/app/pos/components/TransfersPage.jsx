@@ -10,6 +10,7 @@ export default function TransfersPage() {
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]); // Needed to look up variants
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('ALL'); // Filters: ALL, REQUESTED, DISPATCHED, RECEIVED, etc.
   
   const [modal, setModal] = useState(null); // 'new', 'receive', 'resolve'
   const [selectedTransfer, setSelectedTransfer] = useState(null);
@@ -131,6 +132,11 @@ export default function TransfersPage() {
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center' }}>Loading transfers...</div>;
   }
+
+  // Filter and sort newest on top
+  const filteredTransfers = transfers
+    .filter(t => statusFilter === 'ALL' || t.status === statusFilter)
+    .sort((a, b) => b.id - a.id);
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: '#F5F5F5' }}>
@@ -300,11 +306,34 @@ export default function TransfersPage() {
         </div>
       ) : (
         <div style={{ padding: '28px' }}>
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E8E8E8', overflow: 'hidden' }}>
-          {transfers.length === 0 ? (
-            <div style={{ padding: 60, textAlign: 'center' }}>No transfers found.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+          {/* Status Filter Tabs */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+            {['ALL', 'REQUESTED', 'DISPATCHED', 'RECEIVED', 'RESOLVED'].map(status => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  border: '1px solid ' + (statusFilter === status ? '#111827' : '#E8E8E8'),
+                  background: statusFilter === status ? '#111827' : '#fff',
+                  color: statusFilter === status ? '#fff' : '#4B5563',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {status.charAt(0) + status.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E8E8E8', overflow: 'hidden' }}>
+            {filteredTransfers.length === 0 ? (
+              <div style={{ padding: 60, textAlign: 'center' }}>No transfers found.</div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#F9F9F9', borderBottom: '1px solid #E8E8E8' }}>
                   <th style={{ padding: '12px', fontWeight: 700 }}>ID</th>
@@ -316,7 +345,7 @@ export default function TransfersPage() {
                 </tr>
               </thead>
               <tbody>
-                {transfers.map(t => (
+                {filteredTransfers.map(t => (
                     <tr key={t.id} style={{ borderBottom: '1px solid #F0F0F0' }}>
                       <td style={{ padding: '12px' }}>TX-{t.id}</td>
                       <td style={{ padding: '12px' }}>{t.variant.sku}</td>

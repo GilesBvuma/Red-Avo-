@@ -19,6 +19,8 @@ export default function Ticker({
   bg = 'var(--navy)',
   color = '#fff',
   accentColor = 'var(--pink)',
+  slant = 'cw',
+  style = {},
 }) {
   const sectionRef = useRef(null);
 
@@ -46,8 +48,8 @@ export default function Ticker({
   return (
     <section
       ref={sectionRef}
-      className={styles.ticker}
-      style={{ background: bg }}
+      className={`${styles.ticker} ${slant === 'ccw' ? styles.ccw : ''}`}
+      style={{ background: bg, ...style }}
       aria-label="Brand marquee"
     >
       <div

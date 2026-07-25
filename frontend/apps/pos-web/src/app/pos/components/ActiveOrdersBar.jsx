@@ -1,17 +1,63 @@
 'use client';
 
-const ACTIVE_ORDERS = [
-  { id: '001', customer: 'Tanya M.', items: 3, status: 'Processing' },
-  { id: '002', customer: 'Rudo C.',  items: 1, status: 'Ready' },
-  { id: '003', customer: 'Natasha D.', items: 2, status: 'Processing' },
-];
+import { useState, useEffect } from 'react';
+import { fetchOrders } from '../lib/api';
 
 export default function ActiveOrdersBar() {
+  const [activeOrders, setActiveOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const allOrders = await fetchOrders();
+        const activeOnlineOrders = (allOrders || [])
+          .filter(o => o.source === 'ONLINE' && ['PENDING_PAYMENT', 'CONFIRMED', 'DISPATCHED'].includes(o.status))
+          .map(o => {
+            const itemsCount = (o.items || []).reduce((sum, item) => sum + item.quantity, 0);
+            let displayStatus = 'Processing';
+            if (o.status === 'PENDING_PAYMENT') displayStatus = 'Pending';
+            if (o.status === 'DISPATCHED') displayStatus = 'Ready';
+            
+            return {
+              id: o.id.toString().padStart(3, '0'),
+              customer: o.customerName || 'Walk-in',
+              items: itemsCount,
+              status: displayStatus,
+              rawStatus: o.status
+            };
+          });
+        setActiveOrders(activeOnlineOrders);
+      } catch (err) {
+        console.error('Failed to fetch active orders', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadOrders();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="pos-active-bar" role="complementary" aria-label="Active orders">
+        <div className="pos-active-bar-label">Active</div>
+        <div style={{ padding: '10px 20px', color: '#6B7280', fontSize: '13px' }}>Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="pos-active-bar" role="complementary" aria-label="Active orders">
       <div className="pos-active-bar-label">Active</div>
       <div className="pos-active-orders">
-        {ACTIVE_ORDERS.map((order) => (
+        {activeOrders.length === 0 && (
+          <div style={{ padding: '10px 20px', color: '#9CA3AF', fontSize: '13px' }}>No active online orders</div>
+        )}
+        {activeOrders.map((order) => (
           <div
             key={order.id}
             className="pos-order-tile"

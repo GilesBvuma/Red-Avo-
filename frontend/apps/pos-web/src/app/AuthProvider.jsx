@@ -29,8 +29,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Check if user is logged in and token is not expired
-    const token = localStorage.getItem('redavo_token');
-    const userData = localStorage.getItem('redavo_user');
+    const token = sessionStorage.getItem('redavo_token');
+    const userData = sessionStorage.getItem('redavo_user');
 
     if (token && userData) {
       if (isTokenValid(token)) {
@@ -39,8 +39,8 @@ export function AuthProvider({ children }) {
         setUser(JSON.parse(userData));
       } else {
         // Token has expired — clear stale session to avoid 401 loops
-        localStorage.removeItem('redavo_token');
-        localStorage.removeItem('redavo_user');
+        sessionStorage.removeItem('redavo_token');
+        sessionStorage.removeItem('redavo_user');
         clearAuthToken();
       }
     }
@@ -73,8 +73,8 @@ export function AuthProvider({ children }) {
       username: res.name || res.email,
     };
 
-    localStorage.setItem('redavo_token', res.token);
-    localStorage.setItem('redavo_user', JSON.stringify(userData));
+    sessionStorage.setItem('redavo_token', res.token);
+    sessionStorage.setItem('redavo_user', JSON.stringify(userData));
     setUser(userData);
 
     // Route by role — extend this switch when new dashboards are added
@@ -89,8 +89,8 @@ export function AuthProvider({ children }) {
 
   const handleLogout = () => {
     clearAuthToken();
-    localStorage.removeItem('redavo_token');
-    localStorage.removeItem('redavo_user');
+    sessionStorage.removeItem('redavo_token');
+    sessionStorage.removeItem('redavo_user');
     setUser(null);
     router.push('/auth/role-select');
   };
