@@ -1,0 +1,236 @@
+.widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.colLabel {
+  color: #fff;
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.error {
+  background: rgba(192, 57, 43, 0.1);
+  color: #ff6b6b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(192, 57, 43, 0.3);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.helpText {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.inputWrap {
+  display: flex;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  padding: 12px 18px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+.btn {
+  background: var(--red);
+  border: none;
+  padding: 12px 18px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background 0.22s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) { background: #a93226; }
+.btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.fullInput {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+}
+.fullInput::placeholder { color: rgba(255, 255, 255, 0.3); }
+.fullInput:focus { border-color: rgba(255, 255, 255, 0.4); }
+
+.fullBtn {
+  background: var(--red);
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.22s ease;
+  width: 100%;
+}
+
+.fullBtn:hover:not(:disabled) { background: #a93226; }
+.fullBtn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.textBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+.textBtn:hover { color: rgba(255, 255, 255, 0.8); }
+
+.authenticated {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.welcomeText {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.emailText {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.authLinks {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.authLink {
+  color: var(--pink);
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+.authLink:hover { text-decoration: underline; }
+
+.logoutBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.logoutBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Light Theme Overrides */
+.light .colLabel {
+  color: var(--navy);
+}
+
+.light .helpText {
+  color: #5a6175;
+}
+
+.light .inputWrap {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f9f9f9;
+}
+
+.light .input {
+  color: var(--navy);
+  background: transparent;
+}
+
+.light .input::placeholder {
+  color: #9ca3af;
+}
+
+.light .inputWrap:focus-within {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.03);
+}
+
+.light .error {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+.light .welcomeText {
+  color: var(--navy);
+}
+
+.light .emailText {
+  color: #5a6175;
+}
+
+.light .authHeader {
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+
+.light .authLink {
+  color: var(--navy);
+}
+
+.light .authLink:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+.light .detailLabel {
+  color: #9ca3af;
+}
+
+.light .detailValue {
+  color: var(--navy);
+}
+
+.light .logoutBtn {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.light .logoutBtn:hover {
+  background: #fef2f2;
+}

@@ -35,9 +35,9 @@ export default function About() {
   return (
     <section id="about" ref={sectionRef} className={styles.section} aria-labelledby="about-heading">
       {/* Decorative avocado icons */}
-      <span className={`${styles.avoDeco} ${styles.d1}`} aria-hidden="true">🥑</span>
-      <span className={`${styles.avoDeco} ${styles.d2}`} aria-hidden="true">🥑</span>
-      <span className={`${styles.avoDeco} ${styles.d3}`} aria-hidden="true">🥑</span>
+      <img src="/images/emoji.png" alt="" className={`${styles.avoDeco} ${styles.d1}`} aria-hidden="true" />
+      <img src="/images/emoji.png" alt="" className={`${styles.avoDeco} ${styles.d2}`} aria-hidden="true" />
+      <img src="/images/emoji.png" alt="" className={`${styles.avoDeco} ${styles.d3}`} aria-hidden="true" />
       <div className={`${styles.dots} ${styles.dots1}`} aria-hidden="true" />
       <div className={`${styles.dots} ${styles.dots2}`} aria-hidden="true" />
 

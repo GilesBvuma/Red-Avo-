@@ -37,7 +37,7 @@ export default function CommunitySection() {
           Join the Movement
         </h2>
         <p className={`community-sub ${styles.communitySub}`}>
-          Real women. Real motion. Tag us <strong>@redavo</strong> to be featured.
+          Real women. Real motion. Tag us on our handles to be featured.
         </p>
 
         <div className={`community-socials ${styles.communitySocials}`}>
@@ -48,7 +48,7 @@ export default function CommunitySection() {
             FACEBOOK
           </a>
           <a href="#" target="_blank" rel="noopener noreferrer" className={`community-social-btn ${styles.socialBigBtn}`}>
-            TWITTER
+            TIKTOK
           </a>
         </div>
       </div>

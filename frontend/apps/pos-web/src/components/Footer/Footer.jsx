@@ -48,11 +48,11 @@ export default function Footer() {
             </div>
             <p className={styles.tagline}>Authentic · Fearless</p>
             <div className={styles.hearts} aria-hidden="true">
-              <span>🥑</span>
+              <img src="/images/emoji.png" alt="" className={styles.footerEmoji} />
               <span style={{ color: 'var(--pink)', opacity: 0.6 }}>♥</span>
-              <span>🥑</span>
+              <img src="/images/emoji.png" alt="" className={styles.footerEmoji} />
               <span style={{ color: 'var(--pink)', opacity: 0.6 }}>♥</span>
-              <span>🥑</span>
+              <img src="/images/emoji.png" alt="" className={styles.footerEmoji} />
             </div>
           </div>
 
@@ -75,7 +75,7 @@ export default function Footer() {
               <input
                 className={styles.subInput}
                 type="email"
-                placeholder={subDone ? "You're subscribed 🥑" : 'your@email.com'}
+                placeholder={subDone ? "You're subscribed!" : 'your@email.com'}
                 id="footer-email"
                 aria-label="Email address"
                 value={email}

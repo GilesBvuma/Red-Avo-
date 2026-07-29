@@ -6,10 +6,7 @@ import Ticker from '@/components/Ticker/Ticker';
 import BrandStatement from '@/components/BrandStatement/BrandStatement';
 import VideoStrip from '@/components/VideoStrip/VideoStrip';
 import Collections from '@/components/Collections/Collections';
-import Lookbook from '@/components/Lookbook/Lookbook';
 import PopularPicks from '@/components/PopularPicks/PopularPicks';
-import About from '@/components/About/About';
-import Contact from '@/components/Contact/Contact';
 import Footer from '@/components/Footer/Footer';
 
 export default function Home() {
@@ -22,11 +19,7 @@ export default function Home() {
         <VideoStrip />
         <BrandStatement />
         <Collections />
-        <PopularPicks />
-        <About />
-        <Lookbook />
-        <Contact />
-      </main>
+        <PopularPicks />      </main>
       <Footer />
     </>
   );

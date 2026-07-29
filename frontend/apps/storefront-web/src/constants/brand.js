@@ -12,11 +12,12 @@ export const COLORS = {
 
 // ─── Navigation Links ─────────────────────────────────────────────
 export const NAV_LINKS = [
+  { label: 'My Account',  href: '/account' },
   { label: 'Home',        href: '/' },
   { label: 'Shop',        href: '/shop' },
   { label: 'Collections', href: '/collections' },
-  { label: 'About',       href: '/#about' },
-  { label: 'Contact',     href: '/#contact' },
+  { label: 'Our Story',     href: '/our-story' },
+  { label: 'Contact',     href: '/contact' },
 ];
 
 // ─── Collection Categories ────────────────────────────────────────

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { fetchCustomers, createCustomer, updateCustomer, deleteCustomer, sendBulkEmail } from '../lib/api';
+import { fetchCustomers, createCustomer, updateCustomer, deleteCustomer, sendBulkEmail, importCustomerExcel } from '../lib/api';
+import ExcelImportExport from './ExcelImportExport';
+import { exportCustomersToXlsx } from '../lib/export-customers';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 const EMPTY_FORM = {
@@ -344,6 +346,16 @@ export default function CustomersPage() {
             <div style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Excel Import / Export Panel */}
+      <div style={{ padding: '0 28px' }}>
+        <ExcelImportExport
+          entityLabel="Customers"
+          importFn={(file) => importCustomerExcel(file)}
+          exportFn={() => exportCustomersToXlsx(customers)}
+          onImportSuccess={load}
+        />
       </div>
 
       {/* Search */}

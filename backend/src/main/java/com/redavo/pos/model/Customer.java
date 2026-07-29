@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+
 @Entity
 @Table(name = "customers")
 @Data
@@ -36,6 +37,13 @@ public class Customer {
 
     private String address;
     private String notes;                  // staff notes about customer
+
+    // ── Excel-import supplemental fields ─────────────────────────────
+    /** External customer code from client's legacy system (e.g. "SC2"). Set on import, not overwritten on re-import. */
+    private String customerCode;
+
+    /** Date of first known visit — SET ON CREATE ONLY, never overwritten on re-import. */
+    private LocalDateTime firstVisitAt;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean isActive = true;

@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import Placeholder from '@/components/Placeholder/Placeholder';
+import Image from 'next/image';
 import styles from './BrandStatement.module.css';
 
 export default function BrandStatement() {
@@ -67,7 +68,9 @@ export default function BrandStatement() {
       <div className={styles.blobBg} aria-hidden="true" />
 
       {/* Faded avocado watermark */}
-      <div className={styles.avoWatermark} aria-hidden="true">🥑</div>
+      <div className={styles.avoWatermark} aria-hidden="true">
+        <Image src="/images/emoji.png" alt="" fill style={{ objectFit: 'contain' }} />
+      </div>
 
       <div className={styles.inner}>
         {/* Large display text with image embedded in "Q" */}
@@ -90,7 +93,7 @@ export default function BrandStatement() {
         <p className={`${styles.subText} brand-sub`}>
           At Red Avo, every stitch is a commitment to her movement.
           <br />
-          Premium fabric. Fearless design.
+          Premium fabric. Design detail focus.
         </p>
       </div>
     </section>

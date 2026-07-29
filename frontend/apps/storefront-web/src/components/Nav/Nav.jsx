@@ -1,12 +1,13 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useGSAP } from '@gsap/react';
 import { gsap, ScrollTrigger, Observer } from '@/lib/gsap';
 import { NAV_LINKS } from '@/constants/brand';
 import Placeholder from '@/components/Placeholder/Placeholder';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import styles from './Nav.module.css';
 
@@ -14,6 +15,9 @@ export default function Nav() {
   const navRef = useRef(null);
   const { cartCount } = useCart();
   const router = useRouter();
+  const pathname = usePathname();
+  const isLightNav = pathname === '/our-story' || pathname === '/contact';
+  
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -43,18 +47,19 @@ export default function Nav() {
 
   return (
     <>
-      <nav ref={navRef} className={styles.nav} role="navigation" aria-label="Main navigation">
+      <nav ref={navRef} className={`${styles.nav} ${isLightNav ? styles.navLight : ''}`} role="navigation" aria-label="Main navigation">
         <div className={styles.inner}>
           {/* Logo */}
           <div className={styles.logoWrap}>
-            <Link href="/">
-              <Placeholder label="/images/logo3.png" subtitle="RedAvo Activewear Logo" className={styles.logo} />
+            <Link href="/" className={styles.logoLink}>
+              <Image src="/images/logo.png" alt="RedAvo Activewear Logo" width={180} height={64} className={`${styles.logo} ${styles.logoDesktop}`} priority />
+              <Image src="/images/logo3.png" alt="RedAvo Activewear Logo" width={180} height={64} className={`${styles.logo} ${styles.logoMobile}`} priority />
             </Link>
           </div>
 
           {/* Centre links */}
           <ul className={styles.links} role="menubar">
-            {NAV_LINKS.map((link) => (
+            {NAV_LINKS.filter(link => link.label !== 'My Account').map((link) => (
               <li key={link.href} role="none">
                 <Link href={link.href} className={styles.link} role="menuitem">
                   {link.label}
@@ -82,6 +87,9 @@ export default function Nav() {
                 <SearchIcon />
               </button>
             )}
+            <Link href="/account" className={styles.iconBtn} aria-label="Account" id="nav-account">
+              <UserIcon />
+            </Link>
             <Link href="/cart" className={styles.iconBtn} aria-label="Cart" id="nav-cart">
               <CartIcon />
               {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
@@ -106,7 +114,7 @@ export default function Nav() {
               <button className={styles.closeMobileMenu} onClick={() => setIsMobileMenuOpen(false)}>✕</button>
             </div>
             <ul className={styles.mobileLinks}>
-              {NAV_LINKS.map((link) => (
+              {NAV_LINKS.filter(link => link.label !== 'My Account').map((link) => (
                 <li key={link.href}>
                   <Link 
                     href={link.href} 
@@ -136,6 +144,15 @@ function CartIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }

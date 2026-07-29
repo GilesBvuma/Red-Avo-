@@ -37,7 +37,7 @@ export default function Lookbook() {
       <div className={styles.container}>
         <span className={`${styles.label} lb-label`}>Inspiration</span>
         <h2 id="lookbook-heading" className={`${styles.heading} lb-heading`}>
-          THE RED AVO LOOK
+          RedAvo Fits Lookbook
         </h2>
 
         <div className={`${styles.grid} lb-grid`}>

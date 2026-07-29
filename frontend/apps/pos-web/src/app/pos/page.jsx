@@ -129,6 +129,9 @@ export default function POSPage() {
   const { toasts, addToast, removeToast } = useToasts();
   const { user, logout } = useAuth();
 
+  // Prevent rendering components that fetch data if unauthenticated (while redirecting)
+  if (!user) return null;
+
   const handleAdd      = useCallback((p, v) => setCart((c) => addToCart(c, p, v)), []);
   const handleIncrease = useCallback((itemKey) => setCart((c) => increaseQty(c, itemKey)), []);
   const handleDecrease = useCallback((itemKey) => setCart((c) => decreaseQty(c, itemKey)), []);

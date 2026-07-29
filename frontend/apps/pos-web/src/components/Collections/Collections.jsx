@@ -51,7 +51,7 @@ export default function Collections() {
       <div className={styles.container}>
         <span className={`${styles.label} collections-label`}>Shop by Category</span>
         <h2 id="collections-heading" className={`${styles.heading} collections-heading`}>
-          SHOP THE COLLECTION
+          THE SPRING COLLECTION
         </h2>
 
         <div className={`${styles.grid} coll-grid`}>

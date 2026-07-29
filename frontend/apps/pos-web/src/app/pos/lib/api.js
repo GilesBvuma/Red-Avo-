@@ -240,7 +240,49 @@ export async function sendBulkNotification(payload) {
   return apiFetch('/notify/bulk', { method: 'POST', body: JSON.stringify(payload) });
 }
 
+// ── Excel Import ──────────────────────────────────────────────────
+/**
+ * Uploads a customer .xlsx file to the backend for batch upsert.
+ * DO NOT set Content-Type manually — let the browser set the multipart boundary.
+ */
+export async function importCustomerExcel(file) {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('redavo_token') : null;
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_BASE}/customers/import`, {
+    method: 'POST',
+    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * Uploads an inventory .xlsx file to the backend for batch upsert.
+ * DO NOT set Content-Type manually — let the browser set the multipart boundary.
+ */
+export async function importInventoryExcel(file) {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('redavo_token') : null;
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_BASE}/products/import`, {
+    method: 'POST',
+    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function fetchNotificationHistory() {
+
   return apiFetch('/notify/history');
 }
 

@@ -233,18 +233,13 @@ public class OrderService {
         if (item.getVariantId() != null) {
             ProductVariant variant = variantRepository.findById(item.getVariantId())
                     .orElseThrow(() -> new IllegalArgumentException("Variant not found: " + item.getVariantId()));
-            try {
-                stockLedgerService.applyDelta(
-                        variant.getId(),
-                        order.getStoreId() != null ? order.getStoreId() : DEFAULT_STORE_ID,
-                        -item.getQuantity(),
-                        LedgerReason.SALE,
-                        "ORD-" + order.getId(),
-                        actor);
-            } catch (IllegalArgumentException e) {
-                System.err.println("[OrderService] Stock deduction via ledger failed for variant "
-                        + variant.getSku() + ": " + e.getMessage());
-            }
+            stockLedgerService.applyDelta(
+                    variant.getId(),
+                    order.getStoreId() != null ? order.getStoreId() : DEFAULT_STORE_ID,
+                    -item.getQuantity(),
+                    LedgerReason.SALE,
+                    "ORD-" + order.getId(),
+                    actor);
             // Bug #3 FIX: do NOT call variant.setStockQuantity() or product.setStockQuantity() here.
             // The ledger is the single authoritative write path. The cached stockQuantity fields
             // on product_variants and products are reconciled separately, never during checkout.
@@ -258,19 +253,14 @@ public class OrderService {
 
         if (!variants.isEmpty()) {
             ProductVariant variant = variants.get(0);
-            try {
-                stockLedgerService.applyDelta(
-                        variant.getId(),
-                        // Bug #1 FIX: use the order's actual store, not the hardcoded DEFAULT_STORE_ID.
-                        order.getStoreId() != null ? order.getStoreId() : DEFAULT_STORE_ID,
-                        -item.getQuantity(),
-                        LedgerReason.SALE,
-                        "ORD-" + order.getId(),
-                        actor);
-            } catch (IllegalArgumentException e) {
-                System.err.println("[OrderService] Stock deduction via ledger failed for variant "
-                        + variant.getSku() + ": " + e.getMessage());
-            }
+            stockLedgerService.applyDelta(
+                    variant.getId(),
+                    // Bug #1 FIX: use the order's actual store, not the hardcoded DEFAULT_STORE_ID.
+                    order.getStoreId() != null ? order.getStoreId() : DEFAULT_STORE_ID,
+                    -item.getQuantity(),
+                    LedgerReason.SALE,
+                    "ORD-" + order.getId(),
+                    actor);
             java.math.BigDecimal cost = variant.getCostPrice();
             return (cost != null ? cost.doubleValue() : 0.0) * (item.getQuantity() != null ? item.getQuantity() : 1);
         } else {

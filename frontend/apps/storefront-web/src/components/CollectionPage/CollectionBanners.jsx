@@ -9,8 +9,18 @@ import styles from './CollectionPage.module.css';
 
 const BANNERS = [
   {
-    id: 'b1',
+    id: 'b5',
     num: '01',
+    title: 'New Arrivals',
+    subtitle: 'Fresh off the rail.',
+    desc: 'Be the first to wear what\'s new. Bold drops, built to last.',
+    cta: 'See New Arrivals',
+    href: '/shop?q=new-arrivals',
+    img: '/images/collection5.png',
+  },
+  {
+    id: 'b1',
+    num: '02',
     title: "Women's Collection",
     subtitle: 'Fearless. Feminine. Fierce.',
     desc: 'Crafted for the woman who refuses to slow down.',
@@ -20,7 +30,7 @@ const BANNERS = [
   },
   {
     id: 'b2',
-    num: '02',
+    num: '03',
     title: 'Sets & Matching',
     subtitle: 'Perfectly paired.',
     desc: 'Effortless put-together looks from studio to street.',
@@ -30,7 +40,7 @@ const BANNERS = [
   },
   {
     id: 'b3',
-    num: '03',
+    num: '04',
     title: 'Sports Bras',
     subtitle: 'Support meets style.',
     desc: 'High-performance support you\'ll actually want to wear.',
@@ -40,23 +50,13 @@ const BANNERS = [
   },
   {
     id: 'b4',
-    num: '04',
+    num: '05',
     title: 'Leggings',
     subtitle: 'Second-skin comfort.',
     desc: 'Buttery-soft, squat-proof, designed to flatter every curve.',
     cta: 'Shop Leggings',
     href: '/shop?q=leggings',
     img: '/images/collection4.png',
-  },
-  {
-    id: 'b5',
-    num: '05',
-    title: 'New Arrivals',
-    subtitle: 'Fresh off the rail.',
-    desc: 'Be the first to wear what\'s new. Bold drops, built to last.',
-    cta: 'See New Arrivals',
-    href: '/shop?q=new-arrivals',
-    img: '/images/collection5.png',
   },
 ];
 

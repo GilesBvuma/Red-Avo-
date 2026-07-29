@@ -16,7 +16,7 @@ import styles from './Ticker.module.css';
 export default function Ticker({
   text,
   direction = 'ltr',
-  bg = 'var(--navy)',
+  bg = '#5E080C',
   color = '#fff',
   accentColor = 'var(--pink)',
   slant = 'cw',

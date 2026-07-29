@@ -7,7 +7,7 @@ import Placeholder from '@/components/Placeholder/Placeholder';
 import Link from 'next/link';
 import styles from './Hero.module.css';
 
-const WORDS = ['WHERE', 'EVERY', 'MOVE', 'TELLS', 'A', 'STORY.'];
+const WORDS = ['Own', 'your', 'story.', 'Move', 'with', 'confidence'];
 
 export default function Hero() {
   const sectionRef = useRef(null);
@@ -33,10 +33,6 @@ export default function Hero() {
       { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
       '-=0.7'
     )
-    // Subheading
-    .fromTo('#hero-sub', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.6')
-    // Description
-    .fromTo('#hero-desc', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.6')
     // CTA
     .fromTo('#hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5');
 
@@ -68,13 +64,13 @@ export default function Hero() {
 
       {/* ── Left column ── */}
       <div className={styles.left}>
-        <span id="hero-badge" className={styles.eyebrow}>New Collection · 2026</span>
+        <span id="hero-badge" className={styles.eyebrow}>New Drop·Spring 2026</span>
 
-        <h1 className={styles.heading} aria-label="Where every move tells a story.">
+        <h1 className={styles.heading} aria-label="Own your story. Move with confidence">
           {WORDS.map((word, i) => (
             <span key={word + i} className={styles.wordWrap}>
               <span
-                className={`${styles.word} ${word === 'MOVE' ? styles.emphasizedWord : ''}`}
+                className={`${styles.word} ${word === 'Move' ? styles.emphasizedWord : ''}`}
                 ref={(el) => (wordsRef.current[i] = el)}
               >
                 {word}
@@ -82,9 +78,6 @@ export default function Hero() {
             </span>
           ))}
         </h1>
-
-        <p id="hero-sub"  className={styles.subheading}>WHAT'S YOURS?</p>
-        
 
         <Link id="hero-cta" href="/shop" className={styles.cta}>
           Shop the Collection <span className={styles.ctaArrow}>&rarr;</span>

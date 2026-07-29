@@ -17,8 +17,10 @@ export default function PopularPicks() {
     async function load() {
       try {
         const prodData = await fetchProducts();
+        // Filter for products that have images
+        const withImages = prodData.filter(p => p.imageUrl || (p.imageUrls && p.imageUrls.length > 0));
         // Take the latest 10 items added to the inventory
-        const latest = [...prodData].reverse().slice(0, 10);
+        const latest = [...withImages].reverse().slice(0, 10);
         
         const formatted = latest.map((p, index) => {
           const img = p.imageUrl || (p.imageUrls && p.imageUrls[0]) || '';

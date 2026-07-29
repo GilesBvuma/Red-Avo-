@@ -690,7 +690,7 @@ function ShopContent() {
             <input
               className={styles.newsletterInput}
               type="email"
-              placeholder={subDone ? "You're in! 🥑" : 'your@email.com'}
+              placeholder={subDone ? "You're in!" : 'your@email.com'}
               value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubscribe()}

@@ -47,13 +47,6 @@ export default function Footer() {
               <Placeholder label="/images/logo.png" subtitle="RedAvo Activewear Logo" className={styles.logo} />
             </div>
             <p className={styles.tagline}>Authentic. Fearless</p>
-            <div className={styles.hearts} aria-hidden="true">
-              <span>🥑</span>
-              <span style={{ color: 'var(--pink)', opacity: 0.6 }}>♥</span>
-              <span>🥑</span>
-              <span style={{ color: 'var(--pink)', opacity: 0.6 }}>♥</span>
-              <span>🥑</span>
-            </div>
           </div>
 
           {/* Column 2 — Nav */}
@@ -68,50 +61,50 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* Column 3 — Subscribe */}
+          {/* Column 3 — Support */}
+          <nav className={`${styles.col} footer-col`} aria-label="Support navigation">
+            <p className={styles.colLabel}>Support</p>
+            <ul className={styles.navList}>
+              <li><a href="/faq" className={styles.navLink}>FAQ</a></li>
+              <li><a href="/size-chart" className={styles.navLink}>Sizes Chart</a></li>
+              <li><a href="/gift-card" className={styles.navLink}>GIFT CARD</a></li>
+              <li><a href="/returns" className={styles.navLink}>Returns & Exchanges</a></li>
+              <li><a href="/shipping" className={styles.navLink}>Shipping</a></li>
+              <li><a href="/contact" className={styles.navLink}>Contact Us</a></li>
+            </ul>
+          </nav>
+
+          {/* Column 4 — Newsletter */}
           <div className={`${styles.col} footer-col`}>
-            <p className={styles.colLabel}>Stay in the loop</p>
-            <div className={styles.subForm} role="form" aria-label="Email subscription">
-              <input
-                className={styles.subInput}
-                type="email"
-                placeholder={subDone ? "You're subscribed 🥑" : 'your@email.com'}
-                id="footer-email"
-                aria-label="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
+            <p className={styles.colLabel}>Newsletter</p>
+            <p className={styles.navLink} style={{marginBottom: '1rem', lineHeight: '1.4'}}>
+              Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
+            </p>
+            <div className={styles.subForm}>
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                className={styles.subInput} 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
               />
-              <button
-                className={styles.subBtn}
-                aria-label="Subscribe"
-                id="footer-sub-btn"
-                onClick={handleSubscribe}
-              >
-                <ArrowIcon />
+              <button onClick={handleSubscribe} className={styles.subBtn}>
+                {subDone ? 'Done' : 'Join'}
               </button>
             </div>
           </div>
+
         </div>
 
         {/* Bottom bar */}
         <div className={styles.bar}>
           <p className={styles.copy}>© 2025 RedAvo Activewear. All rights reserved.</p>
           <div className={styles.barLinks}>
-            <a href="#" className={styles.barLink}>Privacy Policy</a>
-            <a href="#" className={styles.barLink}>Terms of Service</a>
-            <a href="#" className={styles.barLink}>Size Guide</a>
+            <a href="/privacy" className={styles.barLink}>Privacy Policy & Terms</a>
+            <a href="/size-chart" className={styles.barLink}>Size Guide</a>
           </div>
         </div>
       </div>
     </footer>
-  );
-}
-
-function ArrowIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-    </svg>
   );
 }

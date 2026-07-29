@@ -4,9 +4,9 @@ import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import CollectionHero from '@/components/CollectionPage/CollectionHero';
 import Ticker from '@/components/Ticker/Ticker';
-import CollectionBanners from '@/components/CollectionPage/CollectionBanners';
-import CollectionFeatures from '@/components/CollectionPage/CollectionFeatures';
-import CommunitySection from '@/components/CollectionPage/CommunitySection';
+import ShopByCategory from '@/components/CollectionPage/ShopByCategory';
+import CollectionBanner1 from '@/components/CollectionPage/CollectionBanner1';
+import BrandValues from '@/components/CollectionPage/BrandValues';
 
 export default function CollectionsPage() {
   return (
@@ -17,11 +17,16 @@ export default function CollectionsPage() {
         <Ticker 
           text="EMPOWERING EVERY MOTION · ACTIVEWEAR THAT MOVES WITH YOU" 
           slant="ccw"
-          style={{ marginTop: '-14px', marginBottom: '-14px', position: 'relative', zIndex: 10 }}
+          style={{
+            marginTop: '-14px',
+            marginBottom: '-14px',
+            position: 'relative',
+            zIndex: 10,
+          }}
         />
-        <CollectionBanners />
-        <CollectionFeatures />
-        <CommunitySection />
+        <ShopByCategory />
+        <CollectionBanner1 />
+        <BrandValues />
       </main>
       <Footer />
     </>

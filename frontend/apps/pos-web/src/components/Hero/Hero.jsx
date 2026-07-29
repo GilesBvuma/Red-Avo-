@@ -6,7 +6,7 @@ import { gsap, ScrollTrigger } from '@/lib/gsap';
 import Placeholder from '@/components/Placeholder/Placeholder';
 import styles from './Hero.module.css';
 
-const WORDS = ['WHERE', 'EVERY', 'MOVE', 'TELLS', 'A', 'STORY.'];
+const WORDS = ['Own', 'your', 'story.', 'Move', 'with', 'confidence'];
 
 export default function Hero() {
   const sectionRef = useRef(null);
@@ -28,8 +28,7 @@ export default function Hero() {
         ease:     'power3.out',
       }
     )
-    // Subheading
-    .fromTo('#hero-sub',   { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.55 }, '-=0.3')
+    // Subheading (removed)
     // Description
     .fromTo('#hero-desc',  { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5  }, '-=0.3')
     // CTA
@@ -79,9 +78,9 @@ export default function Hero() {
 
       {/* ── Left column ── */}
       <div className={styles.left}>
-        <span className={styles.eyebrow}>New Collection · 2026</span>
+        <span className={styles.eyebrow}>New drop·Spring 2026</span>
 
-        <h1 className={styles.heading} aria-label="Where every move tells a story.">
+        <h1 className={styles.heading} aria-label="Own your story. Move with confidence.">
           {WORDS.map((word, i) => (
             <span key={word + i} className={styles.wordWrap}>
               <span
@@ -93,8 +92,7 @@ export default function Hero() {
             </span>
           ))}
         </h1>
-
-        <p id="hero-sub"  className={styles.subheading}>WHAT'S YOURS?</p>
+        
         <p id="hero-desc" className={styles.desc}>
           Premium women's activewear. Built for her motion.
         </p>

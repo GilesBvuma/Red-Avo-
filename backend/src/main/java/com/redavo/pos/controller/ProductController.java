@@ -1,6 +1,8 @@
 package com.redavo.pos.controller;
 
+import com.redavo.pos.dto.ImportResultDTO;
 import com.redavo.pos.model.Product;
+import com.redavo.pos.service.InventoryExcelImportService;
 import com.redavo.pos.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +47,27 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private InventoryExcelImportService inventoryExcelImportService;
+
+    // ── IMPORT from Excel ──────────────────────────────────────────
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ResponseEntity<ImportResultDTO> importInventoryExcel(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                ImportResultDTO.builder().status("FAILED").filename(file.getOriginalFilename())
+                    .errors(List.of("Uploaded file is empty.")).build());
+        }
+        String ext = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        if (!ext.endsWith(".xlsx") && !ext.endsWith(".xls")) {
+            return ResponseEntity.badRequest().body(
+                ImportResultDTO.builder().status("FAILED").filename(file.getOriginalFilename())
+                    .errors(List.of("Only .xlsx and .xls files are accepted.")).build());
+        }
+        ImportResultDTO result = inventoryExcelImportService.importFile(file);
+        return ResponseEntity.ok(result);
+    }
 
     // ── List all products ─────────────────────────────────────────
     @GetMapping

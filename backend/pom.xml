@@ -143,6 +143,13 @@
             <artifactId>guava</artifactId>
             <version>33.2.1-jre</version>
         </dependency>
+        <!-- Apache POI — Excel (.xlsx) import parsing -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import * as api from '../lib/api';
 import { Red_Rose } from 'next/font/google';
 import { useAuth } from '../../AuthProvider';
+import ExcelImportExport from './ExcelImportExport';
+import { exportInventoryToXlsx } from '../lib/export-inventory';
 
 // ─── Constants ──────────────────────────────────────────────────────
 const SIZES_ALL  = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -877,6 +879,17 @@ export default function StockManagementPage() {
             <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
+      </div>
+
+
+      {/* Excel Import / Export Panel */}
+      <div style={{ padding: '16px 28px 0' }}>
+        <ExcelImportExport
+          entityLabel="Inventory"
+          importFn={(file) => api.importInventoryExcel(file)}
+          exportFn={() => exportInventoryToXlsx(products)}
+          onImportSuccess={loadData}
+        />
       </div>
 
       {/* Search + filters */}

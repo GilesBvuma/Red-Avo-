@@ -1,11 +1,15 @@
 package com.redavo.pos.controller;
 
+import com.redavo.pos.dto.ImportResultDTO;
 import com.redavo.pos.model.Customer;
 import com.redavo.pos.repository.CustomerRepository;
+import com.redavo.pos.service.CustomerExcelImportService;
 import com.redavo.pos.service.NotificationService;
+import com.redavo.pos.service.OtpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +20,66 @@ public class CustomerController {
 
     @Autowired private CustomerRepository customerRepository;
     @Autowired private NotificationService notificationService;
+    @Autowired private CustomerExcelImportService customerExcelImportService;
+    @Autowired private OtpService otpService;
+
+    // ── IMPORT from Excel ──────────────────────────────────────────
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ResponseEntity<ImportResultDTO> importExcel(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                ImportResultDTO.builder().status("FAILED").filename(file.getOriginalFilename())
+                    .errors(List.of("Uploaded file is empty.")).build());
+        }
+        String ext = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        if (!ext.endsWith(".xlsx") && !ext.endsWith(".xls")) {
+            return ResponseEntity.badRequest().body(
+                ImportResultDTO.builder().status("FAILED").filename(file.getOriginalFilename())
+                    .errors(List.of("Only .xlsx and .xls files are accepted.")).build());
+        }
+        ImportResultDTO result = customerExcelImportService.importFile(file);
+        return ResponseEntity.ok(result);
+    }
+
+    // ── OTP Authentication for Customers ───────────────────────────
+    @PostMapping("/auth/otp/send")
+    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
+        }
+        
+        try {
+            otpService.generateAndSendOtp(email.trim().toLowerCase());
+            return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to send OTP"));
+        }
+    }
+
+    @PostMapping("/auth/otp/verify")
+    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String otp = payload.get("otp");
+        
+        if (email == null || otp == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email and OTP are required"));
+        }
+        
+        email = email.trim().toLowerCase();
+        boolean isValid = otpService.validateOtp(email, otp);
+        if (!isValid) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired OTP"));
+        }
+        
+        // OTP is valid. Check if customer exists.
+        var existingCustomer = customerRepository.findByEmail(email);
+        if (existingCustomer.isPresent()) {
+            return ResponseEntity.ok(Map.of("exists", true, "customer", existingCustomer.get()));
+        } else {
+            return ResponseEntity.ok(Map.of("exists", false));
+        }
+    }
 
     // ── GET all customers ──────────────────────────────────────────
     @GetMapping
