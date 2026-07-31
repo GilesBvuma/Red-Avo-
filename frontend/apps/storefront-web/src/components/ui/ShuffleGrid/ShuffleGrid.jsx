@@ -130,6 +130,11 @@ export default function ShuffleHero() {
           Read our story
         </a>
       </div>
+
+      {/* Right - shuffle grid */}
+      <div className={styles.gridCol}>
+        <ShuffleGrid />
+      </div>
     </section>
   );
 }

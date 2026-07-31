@@ -85,41 +85,10 @@ export default function OurStoryPage() {
             </div>
           </div>
 
-          {/* Row 3: Brand Values & Voice + Image 3 */}
-          <div className={styles.editorialRow}>
-            <div className={styles.editorialText}>
-              <div className={styles.cardGrid} style={{ marginTop: 0, gap: '24px' }}>
-                <div className={styles.card}>
-                  <h3 className={styles.cardHeading}>Our Brand Values</h3>
-                  <ul className={styles.ulList}>
-                    <li>Balance</li>
-                    <li>Holistic health</li>
-                    <li>Self-improvement</li>
-                    <li>Confidence</li>
-                    <li>Comfort</li>
-                  </ul>
-                </div>
-                <div className={styles.card}>
-                  <h3 className={styles.cardHeading}>Our Brand Voice</h3>
-                  <p className={styles.cardText}>
-                    A hard-working, authentic, bold woman who believes that the most important 
-                    investment you can make is in yourself.
-                  </p>
-                  <br/>
-                  <h3 className={styles.cardHeading}>Our Brand Tone</h3>
-                  <p className={styles.cardText}>
-                    Positive, strong-minded, courageous, and empowered.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-small-2.PNG" alt="Lookbook 3" fill style={{ objectFit: 'cover' }} unoptimized={true} />
-            </div>
-          </div>
+
 
           {/* Row 4: Brand Promise & Positioning + Image 4 */}
-          <div className={`${styles.editorialRow} ${styles.reverse}`}>
+          <div className={styles.editorialRow}>
             <div className={styles.editorialText}>
               <span className={styles.sectionLabel}>02 — Brand Vision</span>
               <h2 className={styles.sectionHeading}>Our Vision & Promise</h2>
@@ -141,7 +110,7 @@ export default function OurStoryPage() {
           </div>
 
           {/* Row 5: Brand Pillars + Image 5 */}
-          <div className={styles.editorialRow}>
+          <div className={`${styles.editorialRow} ${styles.reverse}`}>
             <div className={styles.editorialText}>
               <h3 className={styles.accentHeading}>Brand Pillars</h3>
               <div className={styles.cardGrid} style={{ marginTop: 0, gap: '24px', gridTemplateColumns: '1fr' }}>
@@ -174,7 +143,7 @@ export default function OurStoryPage() {
           </div>
 
           {/* Row 6: Brand Vision List + Image 6 */}
-          <div className={`${styles.editorialRow} ${styles.reverse}`}>
+          <div className={styles.editorialRow}>
             <div className={styles.editorialText}>
               <h3 className={styles.accentHeading}>Brand Vision</h3>
               <div className={styles.textBlock}>

@@ -104,7 +104,7 @@ export default function PopularPicks() {
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={`${styles.heading} popular-heading`} id="popular-heading">
-            THE COMPLETE COLLECTION
+            THE FITS LOOK BOOK
           </h2>
         </div>
 

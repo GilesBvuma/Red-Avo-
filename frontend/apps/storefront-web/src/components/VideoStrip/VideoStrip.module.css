@@ -70,3 +70,17 @@
   text-align: center;
   will-change: transform, opacity;
 }
+
+@media (max-width: 900px) {
+  .section::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: var(--blush);
+    z-index: 2;
+    pointer-events: none;
+  }
+}

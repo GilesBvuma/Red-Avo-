@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCustomers, createCustomer, updateCustomer, deleteCustomer, sendBulkEmail, importCustomerExcel } from '../lib/api';
 import ExcelImportExport from './ExcelImportExport';
+import Pagination from './Pagination';
 import { exportCustomersToXlsx } from '../lib/export-customers';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -278,6 +279,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [modal,     setModal]     = useState(null);   // null | 'new' | customer object
   const [bulkModal, setBulkModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -364,7 +366,7 @@ export default function CustomersPage() {
           <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth={2} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
             placeholder="Search by name, email or phone…"
             style={{ width:'100%', height:36, padding:'0 12px 0 36px', border:'1.5px solid #E8E8E8', borderRadius:8, fontSize:13, outline:'none', background:'#fff', boxSizing:'border-box' }}
           />
@@ -392,11 +394,11 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((c, i) => {
+                {filtered.slice((currentPage - 1) * 20, currentPage * 20).map((c, i, arr) => {
                   const fullName = `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Unknown';
                   return (
                     <tr key={c.id}
-                      style={{ borderBottom: i < filtered.length - 1 ? '1px solid #F0F0F0' : 'none', transition:'background 0.12s' }}
+                      style={{ borderBottom: i < arr.length - 1 ? '1px solid #F0F0F0' : 'none', transition:'background 0.12s' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#FAFAF5'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
@@ -454,6 +456,13 @@ export default function CustomersPage() {
                 })}
               </tbody>
             </table>
+          )}
+          {filtered.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filtered.length / 20)}
+              onPageChange={setCurrentPage}
+            />
           )}
         </div>
       </div>

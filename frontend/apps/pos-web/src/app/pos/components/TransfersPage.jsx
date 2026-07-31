@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as api from '../lib/api';
 import { useAuth } from '../../AuthProvider';
+import Pagination from './Pagination';
 
 export default function TransfersPage() {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export default function TransfersPage() {
   const [products, setProducts] = useState([]); // Needed to look up variants
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL'); // Filters: ALL, REQUESTED, DISPATCHED, RECEIVED, etc.
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [modal, setModal] = useState(null); // 'new', 'receive', 'resolve'
   const [selectedTransfer, setSelectedTransfer] = useState(null);
@@ -308,23 +310,23 @@ export default function TransfersPage() {
         <div style={{ padding: '28px' }}>
           {/* Status Filter Tabs */}
           <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-            {['ALL', 'REQUESTED', 'DISPATCHED', 'RECEIVED', 'RESOLVED'].map(status => (
+            {['ALL', 'REQUESTED', 'DISPATCHED', 'RECEIVED', 'RESOLVED', 'CANCELLED'].map(s => (
               <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
+                key={s}
+                onClick={() => { setStatusFilter(s); setCurrentPage(1); }}
                 style={{
                   padding: '6px 14px',
                   borderRadius: 20,
-                  border: '1px solid ' + (statusFilter === status ? '#111827' : '#E8E8E8'),
-                  background: statusFilter === status ? '#111827' : '#fff',
-                  color: statusFilter === status ? '#fff' : '#4B5563',
+                  border: '1px solid ' + (statusFilter === s ? '#111827' : '#E8E8E8'),
+                  background: statusFilter === s ? '#111827' : '#fff',
+                  color: statusFilter === s ? '#fff' : '#4B5563',
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
               >
-                {status.charAt(0) + status.slice(1).toLowerCase()}
+                {s.charAt(0) + s.slice(1).toLowerCase()}
               </button>
             ))}
           </div>
@@ -345,7 +347,7 @@ export default function TransfersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTransfers.map(t => (
+                {filteredTransfers.slice((currentPage - 1) * 20, currentPage * 20).map(t => (
                     <tr key={t.id} style={{ borderBottom: '1px solid #F0F0F0' }}>
                       <td style={{ padding: '12px' }}>TX-{t.id}</td>
                       <td style={{ padding: '12px' }}>{t.variant.sku}</td>
@@ -379,6 +381,13 @@ export default function TransfersPage() {
                 ))}
               </tbody>
             </table>
+          )}
+          {filteredTransfers.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredTransfers.length / 20)}
+              onPageChange={setCurrentPage}
+            />
           )}
         </div>
       </div>

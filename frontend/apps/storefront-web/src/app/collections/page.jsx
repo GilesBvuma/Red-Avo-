@@ -6,8 +6,6 @@ import CollectionHero from '@/components/CollectionPage/CollectionHero';
 import Ticker from '@/components/Ticker/Ticker';
 import ShopByCategory from '@/components/CollectionPage/ShopByCategory';
 import CollectionBanner1 from '@/components/CollectionPage/CollectionBanner1';
-import BrandValues from '@/components/CollectionPage/BrandValues';
-
 export default function CollectionsPage() {
   return (
     <>
@@ -26,7 +24,6 @@ export default function CollectionsPage() {
         />
         <ShopByCategory />
         <CollectionBanner1 />
-        <BrandValues />
       </main>
       <Footer />
     </>

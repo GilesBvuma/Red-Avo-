@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/*/reviews").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/stock/products/*/variants").permitAll() // storefront variant reads
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/community").permitAll() // storefront community grid
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders").permitAll() // Storefront checkout
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/orders/*/confirm").permitAll() // PayNow webhook
                 .requestMatchers("/uploads/**").permitAll() // Public images

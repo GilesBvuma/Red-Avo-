@@ -5,6 +5,7 @@ import * as api from '../lib/api';
 import { Red_Rose } from 'next/font/google';
 import { useAuth } from '../../AuthProvider';
 import ExcelImportExport from './ExcelImportExport';
+import Pagination from './Pagination';
 import { exportInventoryToXlsx } from '../lib/export-inventory';
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -709,6 +710,7 @@ export default function StockManagementPage() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
   const [modal, setModal]           = useState(null);
   const [editingProd, setEditingProd] = useState(null);
   
@@ -898,14 +900,14 @@ export default function StockManagementPage() {
           <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth={2} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
             placeholder="Search products, SKU…"
             style={{ width: '100%', height: 36, padding: '0 12px 0 36px', border: '1.5px solid #E8E8E8', borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
           />
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
           {['All', ...categories.map(c => c.name)].map(cat => (
-            <button key={cat} onClick={() => setCatFilter(cat)}
+            <button key={cat} onClick={() => { setCatFilter(cat); setCurrentPage(1); }}
               style={{
                 padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
                 border: '1.5px solid', borderColor: catFilter === cat ? '#C0392B' : '#E8E8E8',
@@ -939,8 +941,8 @@ export default function StockManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((p, i) => (
-                  <tr key={p.id} style={{ borderBottom: i < filteredProducts.length - 1 ? '1px solid #F0F0F0' : 'none', transition: 'background 0.12s' }}
+                {filteredProducts.slice((currentPage - 1) * 20, currentPage * 20).map((p, i, arr) => (
+                  <tr key={p.id} style={{ borderBottom: i < arr.length - 1 ? '1px solid #F0F0F0' : 'none', transition: 'background 0.12s' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#FAFAF5'}
                     onMouseLeave={e => e.currentTarget.style.background = ''}
                   >
@@ -1022,6 +1024,13 @@ export default function StockManagementPage() {
                 ))}
               </tbody>
             </table>
+          )}
+          {filteredProducts.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredProducts.length / 20)}
+              onPageChange={setCurrentPage}
+            />
           )}
         </div>
       </div>

@@ -6,6 +6,7 @@ import Ticker from '@/components/Ticker/Ticker';
 import BrandStatement from '@/components/BrandStatement/BrandStatement';
 import VideoStrip from '@/components/VideoStrip/VideoStrip';
 import Collections from '@/components/Collections/Collections';
+import Community from '@/components/Community/Community';
 import PopularPicks from '@/components/PopularPicks/PopularPicks';
 import Footer from '@/components/Footer/Footer';
 
@@ -19,7 +20,9 @@ export default function Home() {
         <VideoStrip />
         <BrandStatement />
         <Collections />
-        <PopularPicks />      </main>
+        <PopularPicks />
+        <Community />
+      </main>
       <Footer />
     </>
   );

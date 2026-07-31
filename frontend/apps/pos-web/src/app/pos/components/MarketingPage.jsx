@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BulkNotifyPanel from './BulkNotifyPanel'; // Re-use the existing component for now
+import CommunityTab from './CommunityTab';
 import { fetchPendingReviews, approveReview, deleteReview, fetchContactMessages, markContactMessageRead } from '../lib/api';
 
 export default function MarketingPage() {
@@ -12,7 +13,8 @@ export default function MarketingPage() {
     { id: 'segments', label: 'Customer Segments' },
     { id: 'automations', label: 'Automations' },
     { id: 'reviews', label: 'Product Reviews' },
-    { id: 'inquiries', label: 'Customer Inquiries' }
+    { id: 'inquiries', label: 'Customer Inquiries' },
+    { id: 'community', label: '📸 Community' },
   ];
 
   const [pendingReviews, setPendingReviews] = useState([]);
@@ -258,6 +260,10 @@ export default function MarketingPage() {
               )}
             </div>
           </div>
+        )}
+
+        {activeTab === 'community' && (
+          <CommunityTab />
         )}
       </div>
     </div>

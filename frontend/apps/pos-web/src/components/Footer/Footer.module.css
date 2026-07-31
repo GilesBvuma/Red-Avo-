@@ -1,5 +1,5 @@
 .footer {
-  background: #8F0D13;
+  background: var(--cream);
   position: relative;
   overflow: hidden;
   padding: 70px 6vw 30px;
@@ -13,7 +13,7 @@
   font-family: var(--font-montserrat), sans-serif;
   font-weight: 600;
   font-size: clamp(5rem, 14vw, 14rem);
-  color: rgba(255, 255, 255, 0.04);
+  color: rgba(0, 0, 0, 0.05);
   white-space: nowrap;
   pointer-events: none;
   letter-spacing: 0.06em;
@@ -57,7 +57,7 @@
 }
 
 .tagline {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(0, 0, 0, 0.6);
   font-size: 0.88rem;
   font-style: italic;
   margin-bottom: 14px;
@@ -71,7 +71,7 @@
 }
 
 .colLabel {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(0, 0, 0, 0.8);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -87,28 +87,28 @@
 }
 
 .navLink {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(0, 0, 0, 0.6);
   text-decoration: none;
   font-size: 0.92rem;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
-.navLink:hover { color: #fff; }
+.navLink:hover { color: #000; }
 
 /* Subscribe form */
 .subForm {
   display: flex;
   border-radius: 999px;
   overflow: hidden;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(0, 0, 0, 0.2);
 }
 
 .subInput {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.05);
   border: none;
   padding: 12px 18px;
-  color: #fff;
+  color: #000;
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   outline: none;
@@ -116,7 +116,7 @@
   min-width: 0;
 }
 
-.subInput::placeholder { color: rgba(255, 255, 255, 0.3); }
+.subInput::placeholder { color: rgba(0, 0, 0, 0.4); }
 
 .subBtn {
   background: var(--red);
@@ -135,7 +135,7 @@
 
 /* Bottom bar */
 .bar {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding-top: 22px;
   display: flex;
   justify-content: space-between;
@@ -145,7 +145,7 @@
 }
 
 .copy {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.5);
   font-size: 0.8rem;
 }
 
@@ -155,13 +155,13 @@
 }
 
 .barLink {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(0, 0, 0, 0.5);
   font-size: 0.8rem;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.barLink:hover { color: rgba(255, 255, 255, 0.7); }
+.barLink:hover { color: rgba(0, 0, 0, 0.9); }
 
 @media (max-width: 900px) {
   .top { grid-template-columns: 1fr; gap: 32px; }

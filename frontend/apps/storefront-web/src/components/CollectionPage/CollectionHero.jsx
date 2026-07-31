@@ -53,8 +53,8 @@ export default function CollectionHero() {
           <span>Collections</span>
         </nav>
         <h1 className={`${styles.heroHeading} hero-text-anim`}>
-          WEAR THAT
-          <span style={{ display: 'block' }}>MOVES WITH YOU</span>
+          CRAFTED FOR
+          <span style={{ display: 'block' }}>ALL BODY TYPES</span>
         </h1>
         <p className={`${styles.heroBody} hero-text-anim`}>
           Performance-driven pieces.<br/>

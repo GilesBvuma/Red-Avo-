@@ -27,3 +27,9 @@ export async function initiatePaynowCheckout(payload) {
   if (!res.ok) throw new Error('Failed to initiate checkout');
   return res.json();
 }
+
+export async function fetchCommunityPosts() {
+  const res = await fetch(`${API_URL}/community`);
+  if (!res.ok) throw new Error('Failed to fetch community posts');
+  return res.json();
+}

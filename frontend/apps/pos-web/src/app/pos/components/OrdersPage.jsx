@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import * as api from '../lib/api';
+import Pagination from './Pagination';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('POS'); // 'POS' or 'ONLINE'
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -58,7 +60,7 @@ export default function OrdersPage() {
 
       <div style={{ padding: '0 28px', marginTop: '24px', display: 'flex', gap: '16px', borderBottom: '1px solid #E8E8E8' }}>
         <button 
-          onClick={() => setActiveTab('POS')}
+          onClick={() => { setActiveTab('POS'); setCurrentPage(1); }}
           style={{ 
             background: 'none', border: 'none', cursor: 'pointer', padding: '12px 16px',
             fontSize: '14px', fontWeight: activeTab === 'POS' ? 700 : 500,
@@ -69,7 +71,7 @@ export default function OrdersPage() {
           POS Orders
         </button>
         <button 
-          onClick={() => setActiveTab('ONLINE')}
+          onClick={() => { setActiveTab('ONLINE'); setCurrentPage(1); }}
           style={{ 
             background: 'none', border: 'none', cursor: 'pointer', padding: '12px 16px',
             fontSize: '14px', fontWeight: activeTab === 'ONLINE' ? 700 : 500,
@@ -87,10 +89,13 @@ export default function OrdersPage() {
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E8E8E8', overflow: 'hidden' }}>
           {loading ? (
             <div style={{ padding: 60, textAlign: 'center' }}>Loading orders...</div>
-          ) : orders.length === 0 ? (
-            <div style={{ padding: 60, textAlign: 'center' }}>No orders found.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+          ) : (() => {
+            const filteredOrders = orders.filter(o => o.source === activeTab);
+            return filteredOrders.length === 0 ? (
+              <div style={{ padding: 60, textAlign: 'center' }}>No orders found.</div>
+            ) : (
+              <>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#F9F9F9', borderBottom: '1px solid #E8E8E8' }}>
                   <th style={thStyle}>Order Ref</th>
@@ -104,7 +109,7 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.filter(o => o.source === activeTab).map(o => (
+                {filteredOrders.slice((currentPage - 1) * 20, currentPage * 20).map(o => (
                   <tr key={o.id} style={{ borderBottom: '1px solid #F0F0F0' }}>
                     <td style={tdStyle}><strong>{o.orderReference}</strong></td>
                     <td style={tdStyle}>{new Date(o.createdAt).toLocaleString()}</td>
@@ -181,7 +186,16 @@ export default function OrdersPage() {
                 ))}
               </tbody>
             </table>
-          )}
+            {filteredOrders.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredOrders.length / 20)}
+                onPageChange={setCurrentPage}
+              />
+            )}
+            </>
+          );
+          })()}
         </div>
       </div>
     </div>

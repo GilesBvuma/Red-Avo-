@@ -375,3 +375,41 @@ export async function fetchEmployeeRecentSales(id) {
 export async function fetchStoreDashboard(id) {
   return apiFetch(`/stores/${id}/dashboard`);
 }
+
+// ── Community (Admin) ─────────────────────────────────────────────
+
+export async function fetchAdminCommunityPosts() {
+  return apiFetch('/admin/community');
+}
+
+export async function createCommunityPost(dto) {
+  return apiFetch('/admin/community', { method: 'POST', body: JSON.stringify(dto) });
+}
+
+export async function updateCommunityPost(id, dto) {
+  return apiFetch(`/admin/community/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+}
+
+export async function deleteCommunityPost(id) {
+  return apiFetch(`/admin/community/${id}`, { method: 'DELETE' });
+}
+
+export async function toggleCommunityPostActive(id) {
+  return apiFetch(`/admin/community/${id}/active`, { method: 'PATCH' });
+}
+
+export async function uploadCommunityFile(file, type = 'media') {
+  const formData = new FormData();
+  formData.append('file', file);
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('redavo_token') : null;
+  const res = await fetch(`${API_BASE}/admin/community/upload?type=${type}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'Upload failed');
+  }
+  return res.json(); // { url: "/uploads/..." }
+}

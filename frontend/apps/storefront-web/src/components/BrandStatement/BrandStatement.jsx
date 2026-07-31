@@ -98,7 +98,7 @@ export default function BrandStatement() {
         <p className={`${styles.subText} brand-sub`}>
           At RedAvo Activewear, every stitch is a commitment to her movement.
           <br />
-          Premium fabric. Design detail focused.
+          Premium fabric. Design detail focus.
         </p>
       </div>
     </section>
