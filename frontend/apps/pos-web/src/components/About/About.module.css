@@ -1,0 +1,90 @@
+.section {
+  background: var(--sage);
+  padding: 110px 6vw;
+  overflow: hidden;
+  position: relative;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Blob-clipped image */
+.imageWrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 55% 45% 60% 40% / 40% 60% 45% 55%;
+  overflow: hidden;
+  box-shadow: 0 16px 64px rgba(26, 43, 74, 0.15);
+  will-change: transform, opacity;
+}
+
+/* Text column */
+.textCol { position: relative; z-index: 1; }
+
+.eyebrow {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 14px;
+  will-change: transform, opacity;
+}
+
+.heading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.5rem, 5vw, 4.2rem);
+  color: var(--navy);
+  line-height: 1;
+  margin-bottom: 24px;
+  will-change: transform, opacity;
+}
+
+.text {
+  font-size: 1.05rem;
+  color: #4a5570;
+  line-height: 1.8;
+  max-width: 480px;
+  will-change: transform, opacity;
+}
+
+/* Decorative avocados */
+.avoDeco {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  opacity: 0.12;
+  object-fit: contain;
+}
+
+.d1 { top: 8%;  left: 2%;  width: 56px; height: 56px; }
+.d2 { bottom: 10%; right: 3%; width: 72px; height: 72px; }
+.d3 { top: 48%; left: 46%; width: 40px; height: 40px; }
+
+/* Dot patterns */
+.dots {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  background-image: radial-gradient(circle, rgba(93, 138, 60, 0.22) 2px, transparent 2px);
+  background-size: 12px 12px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dots1 { top: 10%; right: 5%; }
+.dots2 { bottom: 8%; left: 5%; }
+
+@media (max-width: 900px) {
+  .inner { grid-template-columns: 1fr; gap: 40px; }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "@red-avo/api-client",
+  "version": "0.1.0",
+  "main": "index.js",
+  "description": "Shared API client for Red Avo frontend apps — wraps all Spring Boot endpoints"
+}

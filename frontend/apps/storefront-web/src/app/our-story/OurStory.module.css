@@ -1,0 +1,261 @@
+.main {
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--collection-white, #FFFFFF);
+  overflow: hidden;
+}
+
+/* Hero wrapper — same cream as page */
+.heroSection {
+  background: url('/images/Our%20Story.png') center/cover no-repeat;
+  position: relative;
+  z-index: 1;
+}
+
+
+
+/* No fade strip needed — same background throughout */
+.heroFade {
+  display: none;
+}
+
+/* =============================================================
+   FULL WIDTH HERO (Matched to Collections/Home)
+   ============================================================= */
+.fullHero {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 600px;
+  max-height: 900px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  overflow: hidden;
+  background-color: var(--collection-black, #000);
+}
+
+.fullHeroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  z-index: 2;
+}
+
+.fullHeroContent {
+  position: relative;
+  z-index: 3;
+  padding: 0 clamp(20px, 5vw, 100px);
+  padding-bottom: 80px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.heroHeading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  margin-bottom: 24px;
+}
+
+/* Watermarks */
+.watermark {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  filter: grayscale(100%);
+  opacity: 0.08;
+}
+
+.watermark1 {
+  width: clamp(250px, 30vw, 500px);
+  top: 15%;
+  right: -10%;
+  transform: rotate(15deg);
+}
+
+.watermark2 {
+  width: clamp(400px, 50vw, 900px);
+  top: 50%;
+  left: -15%;
+  transform: rotate(-25deg);
+}
+
+.watermark3 {
+  width: clamp(300px, 40vw, 650px);
+  bottom: 5%;
+  right: -5%;
+  transform: rotate(10deg);
+}
+
+.contentSection {
+  padding: 80px 6vw;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Typography styles matching Brand Identity */
+.sectionBlock {
+  margin-bottom: 80px;
+}
+
+.sectionLabel {
+  display: inline-block;
+  background: var(--blush);
+  color: var(--red);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 999px;
+  margin-bottom: 24px;
+}
+
+.sectionHeading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  color: var(--navy);
+  margin-bottom: 32px;
+  font-weight: 700;
+}
+
+.textBlock {
+  font-size: 1.15rem;
+  color: #5A6175;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.textBlock p {
+  margin-bottom: 24px;
+}
+
+/* Grid for smaller blocks like voice/tone/pillars */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  margin-top: 40px;
+}
+
+.card {
+  position: relative;
+  background: var(--collection-white, #FFFFFF);
+  padding: 40px;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+  z-index: 2;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+}
+
+.cardHeading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: 1.5rem;
+  color: var(--red);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.cardText {
+  font-size: 1.05rem;
+  color: #5A6175;
+  line-height: 1.7;
+}
+
+.ulList {
+  list-style-type: disc;
+  margin-left: 24px;
+  margin-bottom: 24px;
+  color: #5A6175;
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.ulList li {
+  margin-bottom: 8px;
+}
+
+.accentHeading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--collection-black, #1a2332);
+  margin-bottom: 24px;
+}
+
+/* =============================================================
+   EDITORIAL LAYOUT (Zig-Zag)
+   ============================================================= */
+.editorialRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  margin-bottom: 120px;
+}
+
+.editorialRow.reverse {
+  direction: rtl;
+}
+
+.editorialRow.reverse > * {
+  direction: ltr;
+}
+
+.editorialImageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/5;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+}
+
+.editorialText {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .editorialRow {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 80px;
+  }
+  .editorialRow.reverse {
+    direction: ltr;
+  }
+  .editorialImageWrap {
+    aspect-ratio: 1; /* Square on mobile for better fit */
+  }
+}
+
+@media (max-width: 768px) {
+  .heroSection {
+    background: url('/images/Our%20Story%20mobile.png') center/cover no-repeat;
+  }
+  .fullHero {
+    height: auto;
+    min-height: 75vh;
+    max-height: unset;
+    aspect-ratio: 3/4;
+    align-items: flex-end;
+  }
+  .fullHeroContent {
+    padding-bottom: 40px;
+  }
+  .heroHeading {
+    font-size: 1.8rem;
+    margin-bottom: 16px;
+  }
+}

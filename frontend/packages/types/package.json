@@ -1,0 +1,6 @@
+{
+  "name": "@red-avo/types",
+  "version": "0.1.0",
+  "main": "index.js",
+  "description": "Shared JSDoc type definitions for Red Avo frontend apps"
+}

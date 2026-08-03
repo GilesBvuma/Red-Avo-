@@ -1,0 +1,187 @@
+.root {
+  overflow-x: hidden;
+}
+
+/* ── Full-screen sticky section ── */
+.section {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Background ── */
+.bgWrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transition: opacity 0.1s linear;
+  will-change: opacity;
+}
+
+.bgImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.bgOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Media expanding box ── */
+.mediaOuter {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100dvh;
+}
+
+.mediaBox {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.35);
+  transition: width 0.05s linear, height 0.05s linear;
+  will-change: width, height;
+}
+
+.mediaInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  pointer-events: none;
+}
+
+.mediaDimmer {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+/* ── Sliding labels inside the box ── */
+.labels {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 1rem;
+  gap: 0.25rem;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #1a2332;
+  margin-bottom: 8px;
+  pointer-events: auto;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.breadcrumb a:hover {
+  opacity: 1;
+}
+
+.breadcrumbSep {
+  opacity: 0.4;
+}
+
+.labelText {
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.05em;
+  transition: none;
+  will-change: transform;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+
+/* ── Title that splits apart ── */
+.titleRow {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  pointer-events: none;
+}
+
+.titleWord {
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+  transition: none;
+  will-change: transform;
+}
+
+.blendDiff {
+  mix-blend-mode: difference;
+}
+
+/* ── Revealed children ── */
+.content {
+  transition: opacity 0.7s ease;
+  will-change: opacity;
+}
+
+@media (max-width: 768px) {
+  .titleWord {
+    font-size: clamp(2rem, 10vw, 3.5rem);
+  }
+  .labelText {
+    font-size: 0.85rem;
+  }
+}

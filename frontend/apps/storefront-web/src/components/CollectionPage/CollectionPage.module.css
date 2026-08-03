@@ -1,0 +1,497 @@
+/* ============================================================
+   CollectionPage.module.css — RedAvo Activewear Collections Page
+   Premium editorial sportswear aesthetic
+   ============================================================ */
+
+/* Brand Colors */
+:global(:root) {
+  --collection-burgundy: #8F0D13;
+  --collection-green: #73BD29;
+  --collection-cream: #F6F4C0;
+  --collection-charcoal: #555555;
+  --collection-black: #000000;
+  --collection-white: #FFFFFF;
+  --collection-soft-burgundy: #7C1117;
+  --collection-sage: #8BBF55;
+  --collection-warm-cream: #FAF8E9;
+  --collection-light-gray: #F7F7F7;
+}
+
+:global(.btn-pill) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: var(--collection-black);
+  color: var(--collection-white);
+  padding: 14px 32px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+:global(.btn-pill:hover) {
+  transform: scale(1.05);
+  background-color: var(--collection-charcoal);
+}
+
+/* =============================================================
+   FULL WIDTH HERO
+   ============================================================= */
+.fullHero {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 600px;
+  max-height: 900px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  overflow: hidden;
+  background-color: var(--collection-black);
+}
+
+.fullHeroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  z-index: 2;
+}
+
+.fullHeroContent {
+  position: relative;
+  z-index: 3;
+  padding: 0 clamp(20px, 5vw, 100px);
+  padding-bottom: 80px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.mobileImage {
+  display: none !important;
+}
+
+.desktopImage {
+  display: block !important;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.breadcrumb a:hover {
+  opacity: 1;
+}
+
+.breadcrumbSep {
+  opacity: 0.4;
+}
+
+.heroHeading {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  margin-bottom: 24px;
+}
+
+.heroBody {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 360px;
+  line-height: 1.6;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.15);
+  margin-bottom: 40px;
+}
+
+.heroCta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 24px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 16px 36px;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.heroCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.ctaArrow {
+  margin-left: 8px;
+  font-weight: 400;
+  font-size: 1.2em;
+  transition: transform 0.25s ease;
+  line-height: 1;
+}
+
+.heroCta:hover .ctaArrow {
+  transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+  .mobileImage {
+    display: block !important;
+  }
+  .desktopImage {
+    display: none !important;
+  }
+  .fullHero {
+    height: auto;
+    min-height: 75vh;
+    max-height: unset;
+    aspect-ratio: 3/4;
+    align-items: flex-end;
+  }
+  .fullHeroContent {
+    padding-bottom: 40px;
+  }
+  .heroHeading {
+    font-size: 1.8rem;
+    margin-bottom: 16px;
+  }
+  .heroBody {
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+  }
+  .heroCta {
+    padding: 12px 28px;
+    font-size: 0.8rem;
+    margin-top: 16px;
+  }
+}
+
+
+/* =============================================================
+   SHOP BY CATEGORY
+   ============================================================= */
+.shopByCategory {
+  padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 60px);
+  background: var(--collection-white);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  margin-bottom: 40px;
+}
+
+.sectionLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--collection-sage);
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.sectionTitle {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 700;
+  color: var(--collection-black);
+}
+
+.embla {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding-bottom: 24px;
+}
+
+.embla::-webkit-scrollbar {
+  display: none;
+}
+
+.embla__container {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+}
+
+.embla__slide {
+  flex: 0 0 auto;
+  width: 55vw;
+  max-width: 600px;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 1024px) {
+  .embla__slide {
+    flex: 0 0 75%;
+  }
+}
+
+@media (max-width: 768px) {
+  .embla {
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+  .embla__container {
+    flex-direction: column;
+    width: 100%;
+  }
+  .embla__slide {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  .categoryCard {
+    height: auto;
+    min-height: unset;
+    aspect-ratio: 16/9;
+  }
+}
+
+.categoryCard {
+  position: relative;
+  background: var(--collection-white);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  display: flex;
+  height: auto;
+  aspect-ratio: 16/9;
+  transition: transform 0.3s ease;
+}
+
+.categoryCard:hover {
+  transform: translateY(-8px);
+}
+
+.categoryImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.categoryContent {
+  position: relative;
+  z-index: 3;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  width: 60%;
+}
+
+@media (max-width: 768px) {
+  .categoryContent {
+    padding: 24px;
+    width: 75%;
+  }
+  .eyebrow {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  .headline {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+  }
+  .subtext {
+    display: none;
+  }
+}
+
+.eyebrow {
+  font: 700 12px/1.4 var(--font-montserrat), sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #d9713c;
+  margin-bottom: 8px;
+}
+
+.headline {
+  font: 800 34px/1.1 var(--font-montserrat), sans-serif;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  color: #1a2332;
+  margin-bottom: 12px;
+}
+
+.subtext {
+  font: 400 15px/1.5 var(--font-montserrat), sans-serif;
+  color: #5c6470;
+  margin-bottom: 24px;
+}
+
+.ctaButton {
+  background: #1a2332;
+  color: #fff;
+  font: 700 13px/1 var(--font-montserrat), sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 50px;
+  padding: 14px 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  text-decoration: none;
+  transition: transform 0.3s ease, background 0.3s ease;
+  width: max-content;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  background: #111827;
+}
+
+/* =============================================================
+   COLLECTION BANNERS
+   ============================================================= */
+.fullWidthBanner {
+  position: relative;
+  width: 100%;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.fullWidthBannerOverlay {
+  position: absolute;
+  inset: 0;
+  /* Very subtle gradient, barely visible, just enough to make text readable */
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.1) 40%, transparent 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.fullWidthBannerContent {
+  position: relative;
+  z-index: 3;
+  padding: 0 clamp(20px, 5vw, 100px);
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.bannerSubtitle {
+  font-size: clamp(0.7rem, 1vw, 1rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  letter-spacing: 0.05em;
+}
+
+.bannerTitle {
+  font-size: clamp(1.5rem, 3.5vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 32px;
+  line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+  .fullWidthBanner {
+    min-height: unset;
+    height: auto;
+    aspect-ratio: 16/9;
+  }
+  .bannerTitle {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  .bannerSubtitle {
+    font-size: 0.7rem;
+    margin-bottom: 8px;
+  }
+}
+
+/* =============================================================
+   BRAND VALUES
+   ============================================================= */
+.valuesSection {
+  padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 60px);
+  background: var(--collection-white);
+}
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+  .valuesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .valuesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.valueCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.valueIconWrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--collection-warm-cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--collection-burgundy);
+}
+
+.valueTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--collection-black);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.valueDesc {
+  font-size: 0.95rem;
+  color: var(--collection-charcoal);
+  line-height: 1.5;
+}

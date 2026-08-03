@@ -1,0 +1,12 @@
+target/
+.env
+*.env
+*.log
+login.json
+payload.json
+test.json
+.idea/
+*.iml
+.vscode/
+Dockerfile
+.dockerignore

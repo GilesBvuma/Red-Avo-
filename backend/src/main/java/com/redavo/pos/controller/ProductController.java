@@ -1,0 +1,204 @@
+package com.redavo.pos.controller;
+
+import com.redavo.pos.dto.ImportResultDTO;
+import com.redavo.pos.model.Product;
+import com.redavo.pos.service.InventoryExcelImportService;
+import com.redavo.pos.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+
+    // ── Allowed MIME types for product image uploads ───────────────
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"
+    );
+    private static final int MAX_FILES_PER_UPLOAD = 10;
+
+    /**
+     * Validates uploaded files before any disk I/O.
+     * Throws {@link IllegalArgumentException} (→ 400) if count or MIME type is invalid.
+     */
+    private void validateImageFiles(MultipartFile[] files) {
+        if (files.length > MAX_FILES_PER_UPLOAD) {
+            throw new IllegalArgumentException(
+                    "Too many files. Maximum " + MAX_FILES_PER_UPLOAD + " per upload.");
+        }
+        for (MultipartFile file : files) {
+            String contentType = file.getContentType();
+            if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+                throw new IllegalArgumentException(
+                        "Invalid file type: '" + contentType + "'. " +
+                        "Only JPEG, PNG, WebP and GIF images are allowed.");
+            }
+        }
+    }
+
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    private InventoryExcelImportService inventoryExcelImportService;
+
+    // ── IMPORT from Excel ──────────────────────────────────────────
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ResponseEntity<ImportResultDTO> importInventoryExcel(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                ImportResultDTO.builder().status("FAILED").filename(file.getOriginalFilename())
+                    .errors(List.of("Uploaded file is empty.")).build());
+        }
+        String ext = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        if (!ext.endsWith(".xlsx") && !ext.endsWith(".xls")) {
+            return ResponseEntity.badRequest().body(
+                ImportResultDTO.builder().status("FAILED").filename(file.getOriginalFilename())
+                    .errors(List.of("Only .xlsx and .xls files are accepted.")).build());
+        }
+        ImportResultDTO result = inventoryExcelImportService.importFile(file);
+        return ResponseEntity.ok(result);
+    }
+
+    // ── List all products ─────────────────────────────────────────
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable String category) {
+        return ResponseEntity.ok(productService.getProductsByCategory(category));
+    }
+
+    // ── Create product ────────────────────────────────────────────
+    @PostMapping
+    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        return ResponseEntity.ok(productService.createProduct(product));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        try {
+            return ResponseEntity.ok(productService.updateProduct(id, product));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+    }
+
+    // ── Stock quantity only ───────────────────────────────────────
+    @PutMapping("/{id}/stock")
+    public ResponseEntity<?> updateStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        try {
+            int quantity = body.getOrDefault("quantity", 0);
+            return ResponseEntity.ok(productService.updateStock(id, quantity));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+    }
+
+    // ── Delete ────────────────────────────────────────────────────
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+    }
+
+    // ── Image upload ──────────────────────────────────────────────
+    // Saves the image to the pos-web public folder so Next.js can serve it directly.
+    // Path: <project-root>/frontend/apps/pos-web/public/uploads/<uuid>.<ext>
+    // Override with UPLOAD_DIR env variable in production (e.g. /var/www/uploads).
+    @org.springframework.beans.factory.annotation.Value("${app.upload.dir:../frontend/apps/pos-web/public/uploads}")
+    private String uploadDir;
+
+    @PostMapping("/{id}/images")
+    public ResponseEntity<Map<String, List<String>>> uploadImages(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) throws IOException {
+
+        validateImageFiles(files);
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(uploadPath);
+        
+        List<String> uploadedUrls = new java.util.ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) continue;
+            
+            String originalName = file.getOriginalFilename();
+            String extension    = (originalName != null && originalName.contains("."))
+                    ? originalName.substring(originalName.lastIndexOf('.'))
+                    : ".jpg";
+            String filename = UUID.randomUUID() + extension;
+            
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            String imageUrl = "/uploads/" + filename;
+            uploadedUrls.add(imageUrl);
+        }
+
+        // Fetch product and append urls
+        Product product = productService.getAllProducts().stream().filter(p -> p.getId().equals(id)).findFirst().orElseThrow();
+        if (product.getImageUrls() == null) product.setImageUrls(new java.util.ArrayList<>());
+        product.getImageUrls().addAll(uploadedUrls);
+        
+        // If no primary image is set, set it to the first one
+        if ((product.getImageUrl() == null || product.getImageUrl().isBlank()) && !uploadedUrls.isEmpty()) {
+            product.setImageUrl(uploadedUrls.get(0));
+        }
+        
+        productService.updateProduct(id, product);
+
+        return ResponseEntity.ok(Map.of("imageUrls", uploadedUrls));
+    }
+
+    @PostMapping("/{id}/invoices")
+    public ResponseEntity<Map<String, List<String>>> uploadInvoices(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) throws IOException {
+
+        validateImageFiles(files);
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(uploadPath);
+        
+        List<String> uploadedUrls = new java.util.ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) continue;
+            
+            String originalName = file.getOriginalFilename();
+            String extension    = (originalName != null && originalName.contains("."))
+                    ? originalName.substring(originalName.lastIndexOf('.'))
+                    : ".jpg";
+            String filename = "invoice-" + UUID.randomUUID() + extension;
+            
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            String invoiceUrl = "/uploads/" + filename;
+            uploadedUrls.add(invoiceUrl);
+        }
+
+        Product product = productService.getAllProducts().stream().filter(p -> p.getId().equals(id)).findFirst().orElseThrow();
+        if (product.getSupplierInvoices() == null) product.setSupplierInvoices(new java.util.ArrayList<>());
+        product.getSupplierInvoices().addAll(uploadedUrls);
+        
+        productService.updateProduct(id, product);
+
+        return ResponseEntity.ok(Map.of("supplierInvoices", uploadedUrls));
+    }
+}

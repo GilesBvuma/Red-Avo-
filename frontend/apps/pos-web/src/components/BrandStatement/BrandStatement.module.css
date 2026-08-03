@@ -1,0 +1,79 @@
+.section {
+  position: relative;
+  overflow: hidden;
+  padding: 130px 6vw 120px;
+  background: var(--blush);
+  text-align: center;
+}
+
+.blobBg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vw;
+  height: 80vw;
+  max-width: 900px;
+  max-height: 900px;
+  background: rgba(253, 232, 239, 0.55);
+  border-radius: 50% 60% 45% 55% / 55% 45% 60% 40%;
+  z-index: 0;
+  animation: blobMorph 10s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes blobMorph {
+  0%   { border-radius: 50% 60% 45% 55% / 55% 45% 60% 40%; }
+  100% { border-radius: 60% 45% 55% 40% / 40% 60% 45% 55%; }
+}
+
+.avoWatermark {
+  position: absolute;
+  left: -2vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(200px, 30vw, 400px);
+  height: clamp(200px, 30vw, 400px);
+  opacity: 0.15;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+}
+
+.mainText {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 600;
+  font-size: clamp(4rem, 11vw, 10rem);
+  color: var(--navy);
+  line-height: 0.95;
+  will-change: transform, opacity;
+  display: inline-block;
+}
+
+.imgCircle {
+  display: inline-block;
+  vertical-align: middle;
+  width: clamp(60px, 10vw, 110px);
+  height: clamp(60px, 10vw, 110px);
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 6px;
+  will-change: transform, opacity;
+  position: relative;
+  top: -4px;
+}
+
+.subText {
+  margin-top: 32px;
+  font-size: 1.1rem;
+  color: #5a6070;
+  max-width: 520px;
+  margin-inline: auto;
+  line-height: 1.75;
+  will-change: transform, opacity;
+}

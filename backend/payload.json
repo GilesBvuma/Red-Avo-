@@ -1,0 +1,16 @@
+{
+  "name": "Tracksuit",
+  "sku": "RA-4428",
+  "category": "sets",
+  "description": "Short description...",
+  "price": 40.00,
+  "vatRate": 0,
+  "discount": 0,
+  "onSale": false,
+  "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
+  "colors": ["Crimson Red", "Matte Black", "Soft White", "Sand"],
+  "variants": [
+    {"color": "Crimson Red", "size": "XS", "stockQuantity": 5, "sellPrice": 40.00, "costPrice": 0, "sku": "RA-4428-CRI-XS"},
+    {"color": "Crimson Red", "size": "XL", "stockQuantity": 5, "sellPrice": 40.00, "costPrice": 0, "sku": "RA-4428-CRI-XL"}
+  ]
+}
