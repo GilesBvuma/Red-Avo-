@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
@@ -35,19 +35,19 @@ export default function About() {
   return (
     <section id="about" ref={sectionRef} className={styles.section} aria-labelledby="about-heading">
       {/* Decorative avocado icons */}
-      <img src="/images/emoji.png" alt="" className={`${styles.avoDeco} ${styles.d1}`} aria-hidden="true" />
-      <img src="/images/emoji.png" alt="" className={`${styles.avoDeco} ${styles.d2}`} aria-hidden="true" />
-      <img src="/images/emoji.png" alt="" className={`${styles.avoDeco} ${styles.d3}`} aria-hidden="true" />
+      <img src="/images/logo3 - footer.png" alt="" className={`${styles.avoDeco} ${styles.d1}`} aria-hidden="true" />
+      <img src="/images/logo3 - footer.png" alt="" className={`${styles.avoDeco} ${styles.d2}`} aria-hidden="true" />
+      <img src="/images/logo3 - footer.png" alt="" className={`${styles.avoDeco} ${styles.d3}`} aria-hidden="true" />
       <div className={`${styles.dots} ${styles.dots1}`} aria-hidden="true" />
       <div className={`${styles.dots} ${styles.dots2}`} aria-hidden="true" />
 
       <div className={styles.inner}>
-        {/* Left — blob-clipped image */}
+        {/* Left â€” blob-clipped image */}
         <div className={`${styles.imageWrap} about-img`}>
           <Placeholder label="/images/about-lifestyle.PNG" subtitle="Brand lifestyle image" />
         </div>
 
-        {/* Right — text */}
+        {/* Right â€” text */}
         <div className={styles.textCol}>
           <p className={`${styles.eyebrow} about-eyebrow`}>Our Story</p>
           <h2 id="about-heading" className={`${styles.heading} about-heading`}>
@@ -56,7 +56,7 @@ export default function About() {
           <p className={`${styles.text} about-text`}>
             Red Avo was built for women who move with purpose. Authentic in design.
             Fearless in motion. Every piece we create carries the spirit of every woman
-            who refuses to be ordinary — on the court, the track, or the street.
+            who refuses to be ordinary â€” on the court, the track, or the street.
           </p>
         </div>
       </div>

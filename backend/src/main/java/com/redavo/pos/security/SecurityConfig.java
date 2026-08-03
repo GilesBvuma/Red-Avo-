@@ -68,6 +68,9 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll() // Public images
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Swagger UI
                 .requestMatchers("/error").permitAll() // Allow Spring Boot error endpoint
+                .requestMatchers("/api/gift-cards/purchase", "/api/gift-cards/redeem").permitAll() // Gift card storefront
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/gift-cards/validate/**").permitAll() // Gift card balance check
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/gift-cards/tiers").permitAll() // Gift card tiers
 
                 // ── Admin-only endpoints — enforced at HTTP level ───────────────────────────────
                 .requestMatchers("/api/auth/register/employee").hasRole("ADMIN")

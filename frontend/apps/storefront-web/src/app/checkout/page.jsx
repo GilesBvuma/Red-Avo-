@@ -34,9 +34,40 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Gift card state
+  const [gcCode, setGcCode] = useState('');
+  const [gcApplied, setGcApplied] = useState(null); // { code, amountApplied, remainingBalance }
+  const [gcError, setGcError] = useState('');
+  const [gcLoading, setGcLoading] = useState(false);
+
   const selectedZone = DELIVERY_ZONES.find(z => z.id === formData.deliveryZone) || DELIVERY_ZONES[0];
   const deliveryFee = formData.deliveryMethod === 'DELIVERY' ? selectedZone.fee : 0;
-  const total = cartTotal + deliveryFee;
+  const gcDiscount = gcApplied ? Math.min(gcApplied.amountApplied, cartTotal + deliveryFee) : 0;
+  const total = Math.max(0, cartTotal + deliveryFee - gcDiscount);
+
+  const handleApplyGiftCard = async () => {
+    if (!gcCode.trim()) return;
+    setGcLoading(true);
+    setGcError('');
+    try {
+      const res = await fetch(`/api/gift-cards/validate/${encodeURIComponent(gcCode.trim())}`);
+      const data = await res.json();
+      if (!data.valid) {
+        setGcError(data.status === 'REDEEMED' ? 'This gift card has been fully redeemed.' :
+                   data.status === 'VOIDED' ? 'This gift card has been voided.' :
+                   data.status === 'PENDING' ? 'This gift card is still processing.' :
+                   'Invalid gift card code.');
+        return;
+      }
+      const available = Number(data.remainingBalance);
+      const toApply = Math.min(available, cartTotal + deliveryFee);
+      setGcApplied({ code: gcCode.trim().toUpperCase(), amountApplied: toApply, remainingBalance: available });
+    } catch {
+      setGcError('Could not validate gift card. Please try again.');
+    } finally {
+      setGcLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -48,11 +79,27 @@ export default function CheckoutPage() {
     setError('');
 
     try {
-      const orderItems = cartItems.map(item => ({
-        productId: item.product.id,
-        variantId: item.variant.id,
-        quantity: item.quantity,
-        price: item.variant.sellPrice > 0 ? item.variant.sellPrice : (item.product.price || 0)
+      const orderItems = cartItems.filter(i => !i.isGiftCard).map(item => {
+        const itemPrice = item.variant.sellPrice > 0 ? item.variant.sellPrice : (item.product.price || 0);
+        return {
+          productId: item.product.id,
+          variantId: item.variant.id,
+          productName: `${item.product.name} (${item.variant.size} - ${item.variant.color})`,
+          quantity: item.quantity,
+          unitPrice: itemPrice,
+          lineTotal: itemPrice * item.quantity
+        };
+      });
+
+      const giftCards = cartItems.filter(i => i.isGiftCard).map(gc => ({
+        tierId: gc.tierId,
+        amount: gc.amount,
+        purchaserName: gc.purchaserName,
+        purchaserEmail: gc.purchaserEmail,
+        recipientName: gc.recipientName,
+        recipientEmail: gc.recipientEmail,
+        personalMessage: gc.personalMessage,
+        recipientBirthday: gc.recipientBirthday
       }));
 
       const payload = {
@@ -65,7 +112,8 @@ export default function CheckoutPage() {
           ? `[Zone: ${selectedZone.name}] ${formData.firstName} ${formData.lastName}, ${formData.company ? formData.company + ', ' : ''}${formData.address}, ${formData.apartment ? formData.apartment + ', ' : ''}${formData.city}, ${formData.country}, ${formData.postalCode}` 
           : null,
         deliveryFee: deliveryFee,
-        items: orderItems
+        items: orderItems,
+        giftCards: giftCards
       };
 
       const res = await initiatePaynowCheckout(payload);
@@ -224,9 +272,47 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <button type="submit" className={styles.submitBtn} disabled={loading}>
-              {loading ? 'Processing...' : 'Pay with PayNow'}
-            </button>
+            {/* ── Gift Card Panel ────────────────────── */}
+            <div className={styles.gcPanel}>
+              <details open={!!gcApplied}>
+                <summary className={styles.gcSummary}>🎁 Have a Gift Card?</summary>
+                <div className={styles.gcBody}>
+                  {!gcApplied ? (
+                    <>
+                      <div className={styles.gcInputRow}>
+                        <input
+                          type="text"
+                          placeholder="GC-XXXX-XXXX-XXXX"
+                          value={gcCode}
+                          onChange={e => { setGcCode(e.target.value.toUpperCase()); setGcError(''); }}
+                          className={styles.gcInput}
+                          maxLength={20}
+                        />
+                        <button type="button" onClick={handleApplyGiftCard} className={styles.gcApplyBtn} disabled={gcLoading}>
+                          {gcLoading ? '...' : 'Apply'}
+                        </button>
+                      </div>
+                      {gcError && <p className={styles.gcError}>{gcError}</p>}
+                    </>
+                  ) : (
+                    <div className={styles.gcApplied}>
+                      <span>✓ <strong>{gcApplied.code}</strong> — <span style={{color:'#8F0D13'}}>−${gcApplied.amountApplied.toFixed(2)}</span> applied</span>
+                      <button type="button" onClick={() => { setGcApplied(null); setGcCode(''); }} className={styles.gcRemove}>Remove</button>
+                    </div>
+                  )}
+                </div>
+              </details>
+            </div>
+
+            {total === 0 ? (
+              <button type="submit" className={styles.submitBtn} disabled={loading}>
+                {loading ? 'Completing Order...' : 'Complete Order (No payment needed)'}
+              </button>
+            ) : (
+              <button type="submit" className={styles.submitBtn} disabled={loading}>
+                {loading ? 'Processing...' : `Pay $${total.toFixed(2)} with PayNow`}
+              </button>
+            )}
             <PaymentMethods />
           </form>
           
@@ -234,6 +320,14 @@ export default function CheckoutPage() {
              <h2>Order Summary</h2>
              <div className={styles.items}>
                {cartItems.map(item => {
+                 if (item.isGiftCard) {
+                   return (
+                     <div key={item.cartKey} className={styles.summaryItem}>
+                       <span>1x {item.tierName || 'Gift Card'} (Digital)</span>
+                       <span>${Number(item.amount).toFixed(2)}</span>
+                     </div>
+                   );
+                 }
                  const price = item.variant.sellPrice > 0 ? item.variant.sellPrice : (item.product.price || 0);
                  return (
                    <div key={item.variant.id} className={styles.summaryItem}>
@@ -251,6 +345,12 @@ export default function CheckoutPage() {
                 <div className={styles.summaryRow}>
                   <span>Delivery Fee</span>
                   <span>${deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
+              {gcApplied && (
+                <div className={styles.summaryRow} style={{color:'#8F0D13'}}>
+                  <span>🎁 Gift Card ({gcApplied.code})</span>
+                  <span>−${gcApplied.amountApplied.toFixed(2)}</span>
                 </div>
               )}
               <div className={`${styles.summaryRow} ${styles.total}`}>

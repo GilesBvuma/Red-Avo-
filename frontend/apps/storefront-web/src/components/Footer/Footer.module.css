@@ -3,6 +3,7 @@
   position: relative;
   overflow: hidden;
   padding: 70px 6vw 30px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .watermark {
@@ -167,10 +168,31 @@
   .top { grid-template-columns: 1fr; gap: 32px; }
   .bar { flex-direction: column; align-items: flex-start; }
   .logoWrap {
-    width: 160px;
-    height: 140px;
+    width: 100%;
+    height: auto;
   }
   .logo {
-    height: 70px !important;
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+}
+
+@media (min-width: 901px) {
+  .top { align-items: stretch; }
+  .logoCol { height: 100%; }
+  .logoWrap {
+    width: 100%;
+    height: 100%;
+    margin-bottom: 0;
+    transform: translateY(-40px) scale(0.85);
+    transform-origin: top center;
+  }
+  .logo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: top !important;
+    border-radius: 10px;
   }
 }

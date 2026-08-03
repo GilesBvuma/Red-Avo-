@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
@@ -12,7 +12,7 @@ export default function AccountPage() {
       <Nav />
       <main className={styles.main}>
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -20,7 +20,7 @@ export default function AccountPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}

@@ -13,11 +13,7 @@ export default function Footer() {
   const [subDone, setSubDone] = useState(false);
 
   useGSAP(() => {
-    // Watermark text drifts up slightly on mount for a living feel
-    gsap.fromTo('.footer-watermark', { yPercent: 6, opacity: 0 }, {
-      yPercent: 0, opacity: 1, duration: 1, ease: 'power2.out',
-      scrollTrigger: { trigger: footerRef.current, start: 'top 90%' },
-    });
+
     gsap.fromTo('.footer-col', { yPercent: 20, opacity: 0 }, {
       yPercent: 0, opacity: 1, stagger: 0.12, duration: 0.7, ease: 'power3.out',
       scrollTrigger: { trigger: footerRef.current, start: 'top 90%' },
@@ -33,27 +29,25 @@ export default function Footer() {
 
   return (
     <footer id="footer" ref={footerRef} className={styles.footer} role="contentinfo">
-      {/* Large background watermark */}
-      <div className={`${styles.watermark} footer-watermark`} aria-hidden="true">
-        RED AVO
-      </div>
 
       <div className={styles.inner}>
         {/* Top row */}
         <div className={styles.top}>
-          {/* Column 1 — Logo & tagline */}
-          <div className={`${styles.col} footer-col`}>
+          {/* Column 1 — Logo */}
+          <div className={`${styles.col} ${styles.logoCol} footer-col`}>
             <div className={styles.logoWrap}>
-              <Placeholder label="/images/logo.png" subtitle="RedAvo Activewear Logo" className={styles.logo} />
+              <picture>
+                <source media="(max-width: 900px)" srcSet="/images/logo.png" />
+                <img src="/images/logo3 - footer.png" alt="RedAvo Activewear Logo" className={styles.logo} />
+              </picture>
             </div>
-            <p className={styles.tagline}>Authentic. Fearless</p>
           </div>
 
           {/* Column 2 — Nav */}
           <nav className={`${styles.col} footer-col`} aria-label="Footer navigation">
             <p className={styles.colLabel}>Navigate</p>
             <ul className={styles.navList}>
-              {NAV_LINKS.map((link) => (
+              {NAV_LINKS.filter(link => link.label !== 'Contact').map((link) => (
                 <li key={link.href}>
                   <a href={link.href} className={styles.navLink}>{link.label}</a>
                 </li>

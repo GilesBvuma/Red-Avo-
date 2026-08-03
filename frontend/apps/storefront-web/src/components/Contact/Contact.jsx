@@ -12,19 +12,6 @@ export default function Contact() {
   const [form, setForm]       = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
-  useGSAP(() => {
-    // Left panel slides from left
-    gsap.fromTo('.contact-left-panel', { xPercent: -12, opacity: 0 }, {
-      xPercent: 0, opacity: 1, duration: 0.85, ease: 'power3.out',
-      scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
-    });
-    // Right panel slides from right
-    gsap.fromTo('.contact-right-panel', { xPercent: 12, opacity: 0 }, {
-      xPercent: 0, opacity: 1, duration: 0.85, ease: 'power3.out',
-      scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
-      delay: 0.1,
-    });
-  }, { scope: sectionRef });
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));

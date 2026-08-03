@@ -16,7 +16,7 @@ export default function Nav() {
   const { cartCount } = useCart();
   const router = useRouter();
   const pathname = usePathname();
-  const isLightNav = pathname === '/our-story' || pathname === '/contact';
+  const isLightNav = pathname === '/our-story';
   
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

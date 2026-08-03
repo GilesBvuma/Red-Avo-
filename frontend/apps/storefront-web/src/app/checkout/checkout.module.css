@@ -233,3 +233,103 @@
   border-top: 1px solid #3f3f46;
   padding-top: 16px;
 }
+
+/* ── Gift Card Panel ─────────────────────────────────────────────── */
+.gcPanel {
+  margin: 20px 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gcSummary {
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.gcSummary::-webkit-details-marker { display: none; }
+
+.gcBody {
+  padding: 0 18px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.gcInputRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.gcInput {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  font-family: monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.gcInput:focus {
+  border-color: #8F0D13;
+}
+
+.gcApplyBtn {
+  background: #8F0D13;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.gcApplyBtn:hover { background: #7C1117; }
+.gcApplyBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.gcError {
+  color: #f87171;
+  font-size: 0.82rem;
+  margin: 8px 0 0;
+}
+
+.gcApplied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  color: #d1fae5;
+  font-size: 0.9rem;
+  gap: 12px;
+}
+
+.gcRemove {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #a1a1aa;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.gcRemove:hover { border-color: #f87171; color: #f87171; }
+

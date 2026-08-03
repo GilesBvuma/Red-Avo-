@@ -223,6 +223,23 @@ export async function fetchChannelStatus() {
   return apiFetch('/dashboard/channels');
 }
 
+// ── Marketing & Communications ───────────────────────────────────────
+export async function sendNewsletter(payload) {
+  return apiFetch('/marketing/newsletter', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function sendSmsBlast(payload) {
+  return apiFetch('/marketing/sms', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function sendWhatsAppBlast(payload) {
+  return apiFetch('/marketing/whatsapp', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function validateGiftCard(code) {
+  return apiFetch(`/gift-cards/validate/${encodeURIComponent(code)}`);
+}
+
 // ── Notifications ─────────────────────────────────────────────────
 export async function sendEmailNotification(payload) {
   return apiFetch('/notify/email', { method: 'POST', body: JSON.stringify(payload) });
@@ -413,3 +430,12 @@ export async function uploadCommunityFile(file, type = 'media') {
   }
   return res.json(); // { url: "/uploads/..." }
 }
+
+// ── Gift Cards ─────────────────────────────────────────────────────────────
+export const fetchGiftCards = () => apiFetch('/admin/gift-cards');
+export const voidGiftCard   = (id) => apiFetch(`/admin/gift-cards/${id}/void`, { method: 'POST' });
+export const releaseGiftCard = (id) => apiFetch(`/admin/gift-cards/${id}/release-now`, { method: 'POST' });
+export const fetchGiftCardLedger = (id) => apiFetch(`/admin/gift-cards/${id}/ledger`);
+export const fetchTiers = () => apiFetch('/gift-cards/tiers');
+export const updateTier = (id, data) => apiFetch(`/admin/gift-cards/tiers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+

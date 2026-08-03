@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
@@ -12,7 +12,7 @@ export default function FAQPage() {
       <main className={styles.main}>
         {/* Watermarks */}
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -20,7 +20,7 @@ export default function FAQPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -28,7 +28,7 @@ export default function FAQPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -38,7 +38,7 @@ export default function FAQPage() {
         <div className={styles.container}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
             <span>FAQ</span>
           </nav>
           <h1 className={styles.heading}>Frequently Asked Questions</h1>
@@ -53,7 +53,7 @@ export default function FAQPage() {
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>3. How can I get Free Shipping?</h2>
-              <p className={styles.text}>You’re in luck! We offer free shipping on your first order above $100.</p>
+              <p className={styles.text}>Youâ€™re in luck! We offer free shipping on your first order above $100.</p>
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>4. Can I track my order online?</h2>

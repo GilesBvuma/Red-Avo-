@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { createOrder, fetchNotificationHistory } from '../lib/api';
+import { createOrder, fetchNotificationHistory, validateGiftCard } from '../lib/api';
 
 const PAYMENT_METHODS = [
   { id: 'CASH', label: 'Cash', icon: '💵' },
   { id: 'CARD', label: 'Card', icon: '💳' },
+  { id: 'GIFT_CARD', label: 'Gift Card', icon: '🎁' },
 ];
 
 const TABS = ['Walk-in', 'Online'];
@@ -32,6 +33,11 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
   const [showHistory,  setShowHistory]  = useState(false);
   const [panelWidth,   setPanelWidth]   = useState(340);
 
+  // Gift card state
+  const [giftCardCode, setGiftCardCode] = useState('');
+  const [giftCardError, setGiftCardError] = useState('');
+  const [appliedGiftCard, setAppliedGiftCard] = useState(null);
+
   // VAT is inclusive — the listing price already includes VAT.
   // vatAmount = price × vatRate / (100 + vatRate)   (extract the embedded VAT)
   // netRevenue = listingPrice − vatAmount
@@ -44,7 +50,28 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
     return sum + lineTax;
   }, 0);
   const netRevenue = subtotal - vatAmount;   // what the store keeps after VAT
-  const total      = subtotal;               // customer pays the listing price
+  
+  // Calculate final total after gift card
+  const amountToRedeem = appliedGiftCard ? Math.min(appliedGiftCard.balance, subtotal) : 0;
+  const total = subtotal - amountToRedeem;
+
+  const handleValidateGiftCard = async () => {
+    if (!giftCardCode) return;
+    setGiftCardError('');
+    try {
+      const res = await validateGiftCard(giftCardCode);
+      if (res.valid) {
+        setAppliedGiftCard({
+          code: giftCardCode.toUpperCase().trim(),
+          balance: res.remainingBalance
+        });
+      } else {
+        setGiftCardError('Invalid or empty gift card.');
+      }
+    } catch (err) {
+      setGiftCardError('Validation failed.');
+    }
+  };
 
   const loadHistory = useCallback(async () => {
     try {
@@ -73,6 +100,8 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
         customerEmail: customer.email || null,
         customerPhone: customer.phone || null,
         paymentMethod: payMethod,
+        giftCardCodeRedeemed: appliedGiftCard ? appliedGiftCard.code : null,
+        giftCardAmountRedeemed: amountToRedeem > 0 ? amountToRedeem : null,
         subtotal,
         tax: vatAmount,
         total,
@@ -117,6 +146,8 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
       onClearCart();
       setCustomer({ name: '', email: '', phone: '' });
       setOrderNum(`#RA-${++orderCounter}`);
+      setAppliedGiftCard(null);
+      setGiftCardCode('');
     } catch (err) {
       onToast('error', 'Sale Failed', err.message || 'Could not complete the sale. Check backend.');
     } finally {
@@ -323,6 +354,39 @@ export default function OrderPanel({ cart, onRemoveItem, onClearCart, onToast })
                   </button>
                 ))}
               </div>
+
+              {payMethod === 'GIFT_CARD' && (
+                <div style={{ marginTop: '12px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="pos-input"
+                      placeholder="Enter gift card code"
+                      value={giftCardCode}
+                      onChange={(e) => {
+                        setGiftCardCode(e.target.value);
+                        setGiftCardError('');
+                        setAppliedGiftCard(null);
+                      }}
+                      style={{ marginBottom: '0', flex: 1 }}
+                    />
+                    <button
+                      className="pos-btn pos-btn-secondary"
+                      onClick={handleValidateGiftCard}
+                      disabled={!giftCardCode || appliedGiftCard}
+                      style={{ padding: '0 12px' }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {giftCardError && <div style={{ color: 'var(--pos-danger)', fontSize: '12px', marginTop: '4px' }}>{giftCardError}</div>}
+                  {appliedGiftCard && (
+                    <div style={{ color: 'var(--pos-success)', fontSize: '12px', marginTop: '4px' }}>
+                      Balance: ${appliedGiftCard.balance.toFixed(2)} | Deducting: ${amountToRedeem.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Notification history toggle */}

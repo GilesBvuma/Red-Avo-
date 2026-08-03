@@ -369,4 +369,112 @@ public class NotificationService {
         log.setOrderReference(orderRef);
         notificationLogRepo.save(log);
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🎁 GIFT CARD EMAILS
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Sends the styled gift card delivery email to the recipient.
+     * Uses logo2.png embedded as a base64 inline image.
+     */
+    public void sendGiftCardEmail(String recipientName, String recipientEmail,
+                                  String code, java.math.BigDecimal balance,
+                                  String personalMessage, String purchaserName, String imageUrl) {
+        String displayName = recipientName != null && !recipientName.isBlank() ? recipientName : "there";
+        String fromPerson  = purchaserName != null && !purchaserName.isBlank() ? purchaserName : "Someone special";
+        String msgBlock    = personalMessage != null && !personalMessage.isBlank()
+            ? "<div style='background:#fdf6ec;border-left:3px solid #8F0D13;padding:16px 20px;margin:20px 0;font-style:italic;color:#444;border-radius:4px;'>" +
+              personalMessage.replace("<","&lt;").replace(">","&gt;").replace("\n","<br/>") + "</div>"
+            : "";
+
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
+            "<meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:0;padding:0;background:#f5f5f0;font-family:Georgia,serif;'>" +
+            "<div style='max-width:580px;margin:40px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);'>" +
+
+            // Header — dark maroon brand bar
+            "<div style='background:#5E080C;padding:36px 40px;text-align:center;'>" +
+            "<img src='https://redavowear.com/images/logo2.png' alt='RedAvo' width='64' height='64' style='border-radius:50%;margin-bottom:16px;'/>" +
+            "<h1 style='color:#ffffff;font-size:26px;margin:0;letter-spacing:0.04em;'>A Gift Card for You</h1>" +
+            "<p style='color:rgba(255,255,255,0.75);margin:8px 0 0;font-size:14px;'>From " + fromPerson.replace("<","&lt;") + "</p>" +
+            "</div>" +
+
+            // Body
+            "<div style='padding:40px;'>" +
+            "<p style='font-size:17px;color:#2a2a28;margin:0 0 8px;'>Hi " + displayName.replace("<","&lt;") + ",</p>" +
+            "<p style='color:#555;line-height:1.7;margin:0 0 24px;'>" + fromPerson.replace("<","&lt;") + " has sent you a RedAvo Activewear gift card. Treat yourself to something you'll love!</p>" +
+
+            msgBlock +
+
+            // Gift card visual
+            "<div style='" + ((imageUrl != null && !imageUrl.isBlank()) ? "background:linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(" + imageUrl + ");background-size:cover;background-position:center;" : "background:linear-gradient(135deg,#5E080C 0%,#8F0D13 60%,#c0392b 100%);") + "border-radius:12px;padding:32px 28px;margin:24px 0;text-align:center;'>" +
+            "<p style='color:rgba(255,255,255,0.75);font-size:12px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px;'>RedAvo Gift Card</p>" +
+            "<p style='color:#ffffff;font-size:36px;font-weight:bold;letter-spacing:0.18em;margin:0 0 16px;font-family:monospace;'>" + code + "</p>" +
+            "<p style='color:rgba(255,255,255,0.85);font-size:14px;margin:0;'>Balance: <strong style='font-size:22px;color:#ffffff;'>$" + balance.toPlainString() + "</strong></p>" +
+            "<p style='color:rgba(255,255,255,0.6);font-size:11px;margin:12px 0 0;'>Never expires · Digital only</p>" +
+            "</div>" +
+
+            // How to redeem
+            "<h3 style='color:#2a2a28;font-size:15px;margin:24px 0 12px;'>How to redeem</h3>" +
+            "<ol style='color:#555;line-height:1.8;padding-left:20px;margin:0 0 28px;'>" +
+            "<li>Visit <a href='https://redavowear.com/shop' style='color:#8F0D13;'>redavowear.com/shop</a> and add items to your cart</li>" +
+            "<li>Proceed to checkout</li>" +
+            "<li>Enter your gift card code in the &quot;Have a Gift Card?&quot; section</li>" +
+            "<li>Your balance will be automatically applied</li>" +
+            "</ol>" +
+            "<div style='text-align:center;margin:32px 0;'>" +
+            "<a href='https://redavowear.com/shop' style='background:#8F0D13;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:999px;font-size:14px;font-weight:bold;letter-spacing:0.06em;display:inline-block;'>Shop Now</a>" +
+            "</div>" +
+            "<p style='color:#aaa;font-size:12px;text-align:center;border-top:1px solid #eee;padding-top:20px;margin-top:20px;'>RedAvo Activewear · This gift card does not expire and has no fees.<br/>Check your balance at <a href='https://redavowear.com/gift-card/check-balance' style='color:#8F0D13;'>redavowear.com/gift-card/check-balance</a></p>" +
+            "</div></div></body></html>";
+
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom("RedAvo Gift Cards <" + fromAddress + ">");
+            helper.setTo(recipientEmail);
+            helper.setSubject("🎁 You've received a RedAvo gift card from " + fromPerson);
+            helper.setText("You have a RedAvo gift card! Code: " + code + " | Balance: $" + balance.toPlainString(), html);
+            mailSender.send(mimeMessage);
+            System.out.println("[GIFT CARD EMAIL ✅] Sent to " + recipientEmail + " | Code: " + code);
+        } catch (Exception e) {
+            System.err.println("[GIFT CARD EMAIL ❌] Failed to send to " + recipientEmail + ": " + e.getMessage());
+            throw new RuntimeException("Failed to send gift card email", e);
+        }
+    }
+
+    /**
+     * Birthday reminder — fires when a recipient's birthday matches today and card is unused.
+     */
+    public void sendGiftCardBirthdayReminder(String recipientName, String recipientEmail,
+                                             java.math.BigDecimal remainingBalance, String code) {
+        String displayName = recipientName != null && !recipientName.isBlank() ? recipientName : "there";
+        String html = "<!DOCTYPE html><html><body style='margin:0;padding:0;background:#f5f5f0;font-family:Georgia,serif;'>" +
+            "<div style='max-width:560px;margin:40px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);'>" +
+            "<div style='background:#5E080C;padding:32px 40px;text-align:center;'>" +
+            "<img src='https://redavowear.com/images/logo2.png' alt='RedAvo' width='56' height='56' style='border-radius:50%;margin-bottom:12px;'/>" +
+            "<h1 style='color:#ffffff;font-size:22px;margin:0;'>Happy Birthday! 🎂</h1>" +
+            "</div>" +
+            "<div style='padding:40px;text-align:center;'>" +
+            "<p style='font-size:17px;color:#2a2a28;'>Hi " + displayName.replace("<","&lt;") + ",</p>" +
+            "<p style='color:#555;line-height:1.7;'>You have an unused RedAvo gift card worth <strong style='color:#8F0D13;font-size:20px;'>$" + remainingBalance.toPlainString() + "</strong> waiting for you — treat yourself today!</p>" +
+            "<div style='background:#fdf6ec;border-radius:8px;padding:20px;margin:24px 0;font-family:monospace;font-size:22px;letter-spacing:0.15em;color:#5E080C;font-weight:bold;'>" + code + "</div>" +
+            "<a href='https://redavowear.com/shop' style='background:#8F0D13;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:999px;font-size:14px;font-weight:bold;display:inline-block;'>Treat Yourself</a>" +
+            "<p style='color:#aaa;font-size:12px;margin-top:28px;'>RedAvo Activewear · Your gift card never expires.</p>" +
+            "</div></div></body></html>";
+
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom("RedAvo Activewear <" + fromAddress + ">");
+            helper.setTo(recipientEmail);
+            helper.setSubject("🎂 Happy Birthday! Your RedAvo gift card is waiting for you");
+            helper.setText("Happy Birthday! You have an unused $" + remainingBalance.toPlainString() + " gift card. Code: " + code, html);
+            mailSender.send(mimeMessage);
+            System.out.println("[BIRTHDAY REMINDER ✅] Sent to " + recipientEmail);
+        } catch (Exception e) {
+            System.err.println("[BIRTHDAY REMINDER ❌] Failed for " + recipientEmail + ": " + e.getMessage());
+        }
+    }
 }
+

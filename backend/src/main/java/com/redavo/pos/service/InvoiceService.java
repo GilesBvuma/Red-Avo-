@@ -227,8 +227,36 @@ public class InvoiceService {
                                                         : ColorConstants.WHITE;
                                         alt = !alt;
 
+                                        String productName = item.getProductName() != null ? item.getProductName() : "Product #" + item.getProductId();
                                         addItemRow(itemsTable, regular, rowBg,
-                                                        item.getProductName(),
+                                                        productName,
+                                                        String.valueOf(qty),
+                                                        String.format("$%.2f", unitPrice),
+                                                        String.format("$%.2f", exclVat),
+                                                        String.format("$%.2f", vatOnItem),
+                                                        String.format("$%.2f", lineTotal));
+                                }
+                        }
+
+                        if (order.getGiftCards() != null) {
+                                boolean alt = (order.getItems() != null && order.getItems().size() % 2 != 0);
+                                for (com.redavo.pos.model.OrderGiftCard gc : order.getGiftCards()) {
+                                        double unitPrice = gc.getAmount() != null ? gc.getAmount().doubleValue() : 0.0;
+                                        int qty = 1;
+                                        
+                                        double exclVat = unitPrice;
+                                        double vatOnItem = 0.0; // Gift cards usually have no VAT at purchase
+                                        double lineTotal = exclVat;
+                                        
+                                        totalExclVat += exclVat;
+                                        totalIncl += lineTotal;
+                                        
+                                        com.itextpdf.kernel.colors.Color rowBg = alt ? new DeviceRgb(0xFA, 0xFA, 0xF5) : ColorConstants.WHITE;
+                                        alt = !alt;
+                                        
+                                        String name = "Gift Card" + (gc.getRecipientName() != null ? (" for " + gc.getRecipientName()) : "");
+                                        addItemRow(itemsTable, regular, rowBg,
+                                                        name,
                                                         String.valueOf(qty),
                                                         String.format("$%.2f", unitPrice),
                                                         String.format("$%.2f", exclVat),

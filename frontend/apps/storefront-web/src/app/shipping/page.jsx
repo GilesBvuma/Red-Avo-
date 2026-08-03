@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
@@ -12,7 +12,7 @@ export default function ShippingPage() {
       <main className={styles.main}>
         {/* Watermarks */}
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -20,7 +20,7 @@ export default function ShippingPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -28,7 +28,7 @@ export default function ShippingPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -38,7 +38,7 @@ export default function ShippingPage() {
         <div className={styles.container}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
             <span>Shipping</span>
           </nav>
           <h1 className={styles.heading}>Shipping Information</h1>

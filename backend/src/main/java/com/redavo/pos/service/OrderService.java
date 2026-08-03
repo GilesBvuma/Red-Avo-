@@ -23,6 +23,7 @@ public class OrderService {
     private final InvoiceService     invoiceService;
     private final StockLedgerService stockLedgerService;
     private final ProductVariantRepository variantRepository;
+    private final GiftCardService    giftCardService;
 
     // Default store ID for orders placed via POS before full variant wiring.
     // Corresponds to the "Main Store" row inserted by V3 migration.
@@ -42,7 +43,8 @@ public class OrderService {
                         NotificationService notificationService,
                         InvoiceService invoiceService,
                         StockLedgerService stockLedgerService,
-                        ProductVariantRepository variantRepository) {
+                        ProductVariantRepository variantRepository,
+                        GiftCardService giftCardService) {
         this.productRepository  = productRepository;
         this.customerRepository = customerRepository;
         this.orderRepository    = orderRepository;
@@ -50,13 +52,14 @@ public class OrderService {
         this.invoiceService     = invoiceService;
         this.stockLedgerService = stockLedgerService;
         this.variantRepository  = variantRepository;
+        this.giftCardService    = giftCardService;
     }
 
     @Transactional
     public Order createOrder(Order order) {
         // Gap #1 — Guard: reject orders with no items to prevent ghost records
-        if (order.getItems() == null || order.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Order must contain at least one item");
+        if ((order.getItems() == null || order.getItems().isEmpty()) && (order.getGiftCards() == null || order.getGiftCards().isEmpty())) {
+            throw new IllegalArgumentException("Order must contain at least one item or gift card");
         }
 
         Long storeId = order.getStoreId();
@@ -76,25 +79,42 @@ public class OrderService {
                 item.setOrder(order);
             }
         }
+        
+        // Set back-reference on each gift card before saving
+        if (order.getGiftCards() != null) {
+            for (OrderGiftCard gc : order.getGiftCards()) {
+                gc.setOrder(order);
+            }
+        }
 
         // Bug #4 — Recompute totals server-side from item prices and vatRate.
         // Never trust subtotal/tax/total sent by the client.
         double recomputedSubtotal = 0.0;
         double recomputedVat      = 0.0;
-        for (OrderItem item : order.getItems()) {
-            double unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
-            int    qty       = item.getQuantity()  != null ? item.getQuantity()  : 1;
-            double lineTotal = unitPrice * qty;
-            recomputedSubtotal += lineTotal;
+        if (order.getItems() != null) {
+            for (OrderItem item : order.getItems()) {
+                double unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
+                int    qty       = item.getQuantity()  != null ? item.getQuantity()  : 1;
+                double lineTotal = unitPrice * qty;
+                recomputedSubtotal += lineTotal;
 
-            // Resolve vatRate from the product if available; fall back to 15%
-            double vatRate = 15.0;
-            if (item.getProductId() != null) {
-                vatRate = productRepository.findById(item.getProductId())
-                        .map(p -> p.getVatRate() != null ? p.getVatRate() : 15.0)
-                        .orElse(15.0);
+                // Resolve vatRate from the product if available; fall back to 15%
+                double vatRate = 15.0;
+                if (item.getProductId() != null) {
+                    vatRate = productRepository.findById(item.getProductId())
+                            .map(p -> p.getVatRate() != null ? p.getVatRate() : 15.0)
+                            .orElse(15.0);
+                }
+                recomputedVat += lineTotal * (vatRate / 100.0);
             }
-            recomputedVat += lineTotal * (vatRate / 100.0);
+        }
+        
+        if (order.getGiftCards() != null) {
+            for (OrderGiftCard gc : order.getGiftCards()) {
+                if (gc.getAmount() != null) {
+                    recomputedSubtotal += gc.getAmount().doubleValue();
+                }
+            }
         }
         order.setSubtotal(recomputedSubtotal);
         order.setVatAmount(recomputedVat);
@@ -214,6 +234,39 @@ public class OrderService {
         if (adminNotifyPhone != null && !adminNotifyPhone.isBlank()) {
             notificationService.sendSms(
                     null, "Admin", adminNotifyPhone, adminEmailBody, orderRef);
+        }
+
+        // ── Process Gift Cards ──────────────────────────────────────────────────
+        if (notifyOrder.getGiftCards() != null && !notifyOrder.getGiftCards().isEmpty()) {
+            for (OrderGiftCard gc : notifyOrder.getGiftCards()) {
+                com.redavo.pos.dto.GiftCardPurchaseRequest req = new com.redavo.pos.dto.GiftCardPurchaseRequest();
+                req.setTierId(gc.getTierId());
+                req.setPurchaserName(gc.getPurchaserName());
+                req.setPurchaserEmail(gc.getPurchaserEmail());
+                req.setRecipientName(gc.getRecipientName());
+                req.setRecipientEmail(gc.getRecipientEmail());
+                req.setPersonalMessage(gc.getPersonalMessage());
+                req.setRecipientBirthday(gc.getRecipientBirthday());
+                try {
+                    giftCardService.purchaseGiftCard(req);
+                } catch (Exception e) {
+                    System.err.println("Failed to issue gift card for order " + notifyOrder.getId() + ": " + e.getMessage());
+                }
+            }
+        }
+        
+        // ── Redeem Gift Card ────────────────────────────────────────────────────
+        if (notifyOrder.getGiftCardCodeRedeemed() != null && !notifyOrder.getGiftCardCodeRedeemed().isBlank() && 
+            notifyOrder.getGiftCardAmountRedeemed() != null && notifyOrder.getGiftCardAmountRedeemed() > 0) {
+            com.redavo.pos.dto.GiftCardRedeemRequest redeemReq = new com.redavo.pos.dto.GiftCardRedeemRequest();
+            redeemReq.setCode(notifyOrder.getGiftCardCodeRedeemed());
+            redeemReq.setAmountToRedeem(java.math.BigDecimal.valueOf(notifyOrder.getGiftCardAmountRedeemed()));
+            redeemReq.setOrderId(notifyOrder.getId());
+            try {
+                giftCardService.redeemPartial(redeemReq);
+            } catch (Exception e) {
+                System.err.println("Failed to redeem gift card for order " + notifyOrder.getId() + ": " + e.getMessage());
+            }
         }
 
         return notifyOrder;

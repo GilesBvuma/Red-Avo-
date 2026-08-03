@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import ShuffleHero from '@/components/ui/ShuffleGrid/ShuffleGrid';
+import StickyNote from '@/components/StickyNote/StickyNote';
 import styles from './OurStory.module.css';
 
 export default function OurStoryPage() {
@@ -13,7 +14,7 @@ export default function OurStoryPage() {
       <main className={styles.main}>
         {/* Watermarks */}
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -21,7 +22,7 @@ export default function OurStoryPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -29,7 +30,7 @@ export default function OurStoryPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -51,14 +52,11 @@ export default function OurStoryPage() {
           {/* Row 1: Who We Are (Part 1) + Image 1 */}
           <div className={styles.editorialRow}>
             <div className={styles.editorialText}>
-              <span className={styles.sectionLabel}>01 — Brand Identity</span>
+              <span className={styles.sectionLabel}>01 â€” Brand Identity</span>
               <h2 className={styles.sectionHeading}>Who We Are</h2>
               <div className={styles.textBlock}>
                 <p>
-                  RedAvo is more than just a proudly African activewear and athleisure brand. 
-                  RedAvo strives to challenge the status quo by incorporating a holistic wellness 
-                  lifestyle into the mix. Your mental health is just as important as your physical health. 
-                  This mind-and-body focus inspires confidence in yourself from the inside, out.
+                  RedAvo Activewear is a proudly Zimbabwean holistic wellness lifestyle brand. We advocate against a one size-fits-all wellness approach. We inspire women to balance and nourish mind, body and soul. RedAvo Activewearâ€™s purpose is creating well-crafted functional active & athleisure apparel, inspired by a synchronization of movement and the body.
                 </p>
               </div>
             </div>
@@ -72,11 +70,7 @@ export default function OurStoryPage() {
             <div className={styles.editorialText}>
               <div className={styles.textBlock}>
                 <p>
-                  RedAvo's high-quality activewear apparel blends style, utility, and comfort so that 
-                  you not only look good, but also feel good. Our bold range of colours have been 
-                  designed to complement every skin tone and to celebrate self-expression. We want you 
-                  to feel comfortable and confident, whether you're working up a sweat, shopping for 
-                  groceries, or picking the kids up from school.
+                  Your mental health is just as important, as your physical health. This mind-and-body focus inspires confidence in yourself from the inside-out. RedAvoâ€™s high-quality activewear apparel blends style, utility, and comfort so that you not only look good, but also feel good. We want you to feel comfortable and confident, whether youâ€™re working up a sweat, running errands, on a coffee date, picking the kids up from school or just chilling at home.
                 </p>
               </div>
             </div>
@@ -87,78 +81,54 @@ export default function OurStoryPage() {
 
 
 
-          {/* Row 4: Brand Promise & Positioning + Image 4 */}
+          {/* Row 3: Our Story (Part 1) + Image 3 */}
           <div className={styles.editorialRow}>
             <div className={styles.editorialText}>
-              <span className={styles.sectionLabel}>02 — Brand Vision</span>
-              <h2 className={styles.sectionHeading}>Our Vision & Promise</h2>
+              <span className={styles.sectionLabel}>02 â€” Our Origin</span>
+              <h2 className={styles.sectionHeading}>Our Story</h2>
               <div className={styles.textBlock}>
-                <h3 className={styles.accentHeading}>Brand Promise</h3>
                 <p>
-                  We promise to advocate for women's holistic well-being and deliver high quality activewear.
-                </p>
-                <h3 className={styles.accentHeading} style={{ marginTop: '24px' }}>Brand Positioning</h3>
-                <p>
-                  RedAvo is a proudly African activewear and athleisure brand that challenges today's fitness culture. 
-                  We inspire women to place as much emphasis on mental well-being, strength and fitness as they do on physical prowess.
+                  The brand was born out of a deeply painful personal journey of healing and rebuilding. Physical movement benefits for mental health became a turning point in this journey. The connection between mental wellbeing, nutrition and physical health became the foundation for what RedAvo Activewear would become.
                 </p>
               </div>
             </div>
             <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-large-2.PNG" alt="Lookbook 4" fill style={{ objectFit: 'cover' }} unoptimized={true} />
+              <Image src="/images/lookbook-large-2.PNG" alt="Lookbook 3" fill style={{ objectFit: 'cover' }} unoptimized={true} />
             </div>
           </div>
 
-          {/* Row 5: Brand Pillars + Image 5 */}
+          {/* Row 4: Our Story (Part 2) + Image 4 */}
           <div className={`${styles.editorialRow} ${styles.reverse}`}>
             <div className={styles.editorialText}>
-              <h3 className={styles.accentHeading}>Brand Pillars</h3>
-              <div className={styles.cardGrid} style={{ marginTop: 0, gap: '24px', gridTemplateColumns: '1fr' }}>
-                <div className={styles.card}>
-                  <h3 className={styles.cardHeading}>Calm</h3>
-                  <p className={styles.cardText}>
-                    <strong>Quiet the mind, and the soul will speak.</strong><br/><br/>
-                    RedAvo believes that looking after your mind is just as important as looking after your body.
-                  </p>
-                </div>
-                <div className={styles.card}>
-                  <h3 className={styles.cardHeading}>Capable</h3>
-                  <p className={styles.cardText}>
-                    <strong>Strive for progress, not perfection.</strong><br/><br/>
-                    RedAvo challenges today's fitness culture by showing that fitness isn't one body type, exercise routine, or latest diet fad.
-                  </p>
-                </div>
-                <div className={styles.card}>
-                  <h3 className={styles.cardHeading}>Confident</h3>
-                  <p className={styles.cardText}>
-                    <strong>You are your priority.</strong><br/><br/>
-                    RedAvo blends comfort, style and practicality so that you feel inspired to look after both your mind and body.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-small-3.PNG" alt="Lookbook 5" fill style={{ objectFit: 'cover' }} unoptimized={true} />
-            </div>
-          </div>
-
-          {/* Row 6: Brand Vision List + Image 6 */}
-          <div className={styles.editorialRow}>
-            <div className={styles.editorialText}>
-              <h3 className={styles.accentHeading}>Brand Vision</h3>
               <div className={styles.textBlock}>
-                <ul className={styles.ulList}>
-                  <li>To be the most authentic, admired and sought-after African activewear and athleisure brand.</li>
-                  <li>To have the entire RedAvo supply chain based in Africa, to support local employment and empowerment.</li>
-                  <li>To create a RedAvo community that equips individuals with tools required for mental, physical, and spiritual wellbeing.</li>
-                </ul>
+                <p>
+                  RedAvo Activewear stands for holistic wellness, balance of mind, body and soul. Our mission is to empower women and at the core to create opportunities for women and children who come from abusive and traumatic backgrounds to build financial independence and new positive chapters.
+                </p>
               </div>
             </div>
             <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-small-4.PNG" alt="Lookbook 6" fill style={{ objectFit: 'cover' }} unoptimized={true} />
+              <Image src="/images/lookbook-small-3.PNG" alt="Lookbook 4" fill style={{ objectFit: 'cover' }} unoptimized={true} />
             </div>
           </div>
 
+        </section>
+
+        {/* â”€â”€ Sticky Note Section â”€â”€ */}
+        <section style={{
+          background: '#5E080C',
+          padding: '80px 24px',
+        }}>
+          <StickyNote
+            heading="To the woman who's been meaning to start,"
+            paragraphs={[
+              "This is your reminder: you don't have to feel ready to show up.",
+              "You just have to show up.",
+              "Show up on the days you feel strong, and especially on the days you don't.",
+              "Show up when your mind is loud. Show up when your confidence is shaky. Show up when life is heavy and you're tempted to disappear into old habits, old fears, and old stories.",
+              "RedAvo was built for this exact moment, the moment you decide to pour into yourself again.",
+            ]}
+            signature="Love from Idah x"
+          />
         </section>
 
       </main>

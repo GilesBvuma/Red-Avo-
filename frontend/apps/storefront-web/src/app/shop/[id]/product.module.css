@@ -187,7 +187,7 @@
   border: 1.5px solid rgba(26,43,74,0.15);
   border-radius: 8px;
   background: transparent;
-  color: var(--navy, #1A2B4A);
+  color: var(--navy, #000000);
   padding: 12px 0;
   text-align: center;
   font-size: 0.875rem;
@@ -197,12 +197,12 @@
   text-transform: uppercase;
 }
 .sizeBtn:hover:not(.disabled) {
-  border-color: var(--navy, #1A2B4A);
+  border-color: var(--navy, #000000);
   background: rgba(26,43,74,0.04);
 }
 .sizeBtn.selected {
-  border-color: var(--navy, #1A2B4A);
-  background: var(--navy, #1A2B4A);
+  border-color: var(--navy, #000000);
+  background: var(--navy, #000000);
   color: #fff;
 }
 .sizeBtn.disabled {
@@ -229,11 +229,11 @@
 }
 .colorBtn:hover:not(.disabled) {
   transform: scale(1.15);
-  border-color: var(--navy, #1A2B4A);
+  border-color: var(--navy, #000000);
 }
 .colorBtn.selected {
-  border-color: var(--navy, #1A2B4A);
-  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--navy, #1A2B4A);
+  border-color: var(--navy, #000000);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--navy, #000000);
 }
 .colorBtn.disabled {
   opacity: 0.2;
@@ -252,7 +252,7 @@
 
 .addToCartBtn {
   width: 100%;
-  background: var(--navy, #1A2B4A);
+  background: var(--navy, #000000);
   color: #fff;
   border: none;
   border-radius: 12px;

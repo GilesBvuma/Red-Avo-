@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
@@ -69,7 +69,7 @@ export default function BrandStatement() {
 
       {/* Faded avocado watermark */}
       <div className={styles.avoWatermark} aria-hidden="true">
-        <Image src="/images/emoji.png" alt="" fill style={{ objectFit: 'contain' }} />
+        <Image src="/images/logo3 - footer.png" alt="" fill style={{ objectFit: 'contain' }} />
       </div>
 
       <div className={styles.inner}>
@@ -85,7 +85,7 @@ export default function BrandStatement() {
             {/* Q replaced by image circle */}
             <span className={`${styles.imgCircle} brand-image-circle`}>
               <Image 
-                src="/images/fabric-detail.png" 
+                src="/images/fabric-detail1.png" 
                 alt="Fabric Detail" 
                 fill 
                 style={{ objectFit: 'contain' }} 

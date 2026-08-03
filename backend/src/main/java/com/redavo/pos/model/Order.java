@@ -44,6 +44,9 @@ public class Order {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "order", fetch = FetchType.EAGER)
     private List<OrderItem> items;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "order", fetch = FetchType.EAGER)
+    private List<OrderGiftCard> giftCards;
+
     // ── Accounting breakdown ─────────────────────────────────────
     @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
     private Double subtotal = 0.0;
@@ -60,12 +63,23 @@ public class Order {
     private Double amountTendered;   // cash given by customer
     private Double changeGiven;      // change returned
 
+    // Gift card redemption fields
+    private String giftCardCodeRedeemed;
+    @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
+    private Double giftCardAmountRedeemed = 0.0;
+
     private String paynowReference;
     private String paynowPollUrl;
 
     // Statuses: PENDING_PAYMENT, CONFIRMED, DISPATCHED, DELIVERED, COLLECTED, CANCELLED, COMPLETED
     @Column(columnDefinition = "VARCHAR(50) DEFAULT 'COMPLETED'")
     private String status = "COMPLETED";
+
+    // ── Gift Card ──────────────────────────────────────────────────
+    private String giftCardCode;
+
+    @Column(columnDefinition = "DOUBLE PRECISION DEFAULT 0.0")
+    private Double giftCardAmountUsed = 0.0;
 
     // ── Timestamps ─────────────────────────────────────────────
     private LocalDateTime createdAt;

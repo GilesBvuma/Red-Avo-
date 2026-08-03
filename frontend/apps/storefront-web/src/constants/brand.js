@@ -4,7 +4,7 @@ export const COLORS = {
   green: '#5D8A3C',
   cream: '#FAFAF5',
   pink:  '#E91E8C',
-  navy:  '#1A2B4A',
+  navy:  '#000000',
   blush: '#FDE8EF',
   sage:  '#EAF2E3',
   white: '#FFFFFF',

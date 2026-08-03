@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
-import ScrollExpandMedia from '@/components/ui/ScrollExpandMedia/ScrollExpandMedia';
+
 import styles from './ContactPage.module.css';
 
 // SVG Icons
@@ -30,7 +30,7 @@ export default function ContactPage() {
       <main className={styles.main}>
         {/* Watermarks */}
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -38,7 +38,7 @@ export default function ContactPage() {
           unoptimized={true}
         />
         <Image
-          src="/images/emoji.png"
+          src="/images/logo3 - footer.png"
           alt=""
           width={800}
           height={800}
@@ -46,30 +46,12 @@ export default function ContactPage() {
           unoptimized={true}
         />
 
-        {/* Scroll-Expansion Hero */}
-        <ScrollExpandMedia
-          mediaType="video"
-          mediaSrc="/videos/Contact video.mp4"
-          posterSrc="/images/Contact-image.png"
-          bgImageSrc="/images/Contact-image.png"
-          title="Contact Us"
-          breadcrumb="Contact Us"
-          scrollToExpand="Scroll to expand"
-          textBlend
-        >
-          {/* Contact content revealed after the hero expands */}
-          <section className={styles.contentSection}>
+
+          <section className={styles.contentSection} style={{ paddingTop: '200px' }}>
             <div className={styles.grid}>
-              {/* Left Column — Info & Socials */}
+              {/* Left Column â€” Info & Socials */}
               <div className={styles.infoCol}>
-                <div className={styles.logoWrap}>
-                  <Image
-                    src="/images/logo.png"
-                    alt="RedAvo Logo"
-                    fill
-                    style={{ objectFit: 'contain', objectPosition: 'left' }}
-                  />
-                </div>
+
                 <p className={styles.infoText}>
                   We'd love to hear from you. Reach out through any of our channels below.
                 </p>
@@ -98,7 +80,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Right Column — Form */}
+              {/* Right Column â€” Form */}
               <div className={styles.formCol}>
                 <h2 className={styles.formTitle}>Get in Touch</h2>
                 <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
@@ -129,7 +111,6 @@ export default function ContactPage() {
               </div>
             </div>
           </section>
-        </ScrollExpandMedia>
       </main>
       <Footer />
     </>

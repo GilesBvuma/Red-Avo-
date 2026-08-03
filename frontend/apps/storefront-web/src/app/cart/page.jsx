@@ -60,31 +60,54 @@ export default function CartPage() {
           ) : (
             <div className={styles.layout}>
               <div className={styles.cartList}>
-                {cartItems.map(item => (
-                  <div key={item.variant.id} className={styles.cartItem}>
-                    <img 
-                      src={item.product.imageUrl ? `${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${item.product.imageUrl}` : 'https://placehold.co/100x100?text=No+Image'} 
-                      alt={item.product.name} 
-                      className={styles.itemImage}
-                    />
-                    <div className={styles.itemInfo}>
-                      <h3>{item.product.name}</h3>
-                      <p className={styles.variantInfo}>{item.variant.color} - {item.variant.size}</p>
-                      <p className={styles.price}>${(item.variant.sellPrice > 0 ? item.variant.sellPrice : (item.product.price || 0)).toFixed(2)}</p>
-                    </div>
-                    <div className={styles.actions}>
-                      <div className={styles.qtyControl}>
-                        <button onClick={() => updateQuantity(item.variant.id, item.quantity - 1)}>-</button>
-                        <span>{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.variant.id, item.quantity + 1)}
-                          disabled={item.quantity >= item.variant.stockQuantity}
-                        >+</button>
+                {cartItems.map(item => {
+                  if (item.isGiftCard) {
+                    return (
+                      <div key={item.cartKey} className={styles.cartItem}>
+                        <div className={styles.itemImage} style={{ background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '2rem' }}>🎁</div>
+                        <div className={styles.itemInfo}>
+                          <h3>{item.tierName || 'Digital Gift Card'}</h3>
+                          <p className={styles.variantInfo}>For: {item.recipientName} ({item.recipientEmail})</p>
+                          <p className={styles.price}>${Number(item.amount).toFixed(2)}</p>
+                        </div>
+                        <div className={styles.actions}>
+                          <div className={styles.qtyControl} style={{ opacity: 0.5 }}>
+                            <button disabled>-</button>
+                            <span>1</span>
+                            <button disabled>+</button>
+                          </div>
+                          <button className={styles.removeBtn} onClick={() => removeFromCart(item.cartKey)}>Remove</button>
+                        </div>
                       </div>
-                      <button className={styles.removeBtn} onClick={() => removeFromCart(item.variant.id)}>Remove</button>
+                    );
+                  }
+
+                  return (
+                    <div key={item.variant.id} className={styles.cartItem}>
+                      <img 
+                        src={item.product.imageUrl ? `${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${item.product.imageUrl}` : 'https://placehold.co/100x100?text=No+Image'} 
+                        alt={item.product.name} 
+                        className={styles.itemImage}
+                      />
+                      <div className={styles.itemInfo}>
+                        <h3>{item.product.name}</h3>
+                        <p className={styles.variantInfo}>{item.variant.color} - {item.variant.size}</p>
+                        <p className={styles.price}>${(item.variant.sellPrice > 0 ? item.variant.sellPrice : (item.product.price || 0)).toFixed(2)}</p>
+                      </div>
+                      <div className={styles.actions}>
+                        <div className={styles.qtyControl}>
+                          <button onClick={() => updateQuantity(item.variant.id, item.quantity - 1)}>-</button>
+                          <span>{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.variant.id, item.quantity + 1)}
+                            disabled={item.quantity >= item.variant.stockQuantity}
+                          >+</button>
+                        </div>
+                        <button className={styles.removeBtn} onClick={() => removeFromCart(item.variant.id)}>Remove</button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               <div className={styles.summary}>

@@ -13,6 +13,7 @@ import BusinessManagementPage from './components/BusinessManagementPage';
 import FinancialsPage from './components/FinancialsPage';
 import OrdersPage from './components/OrdersPage';
 import MarketingPage from './components/MarketingPage';
+import GiftCardsPage from './components/GiftCardsPage';
 import { NotificationToast } from './components/NotificationToast';
 import { useAuth } from '../AuthProvider';
 
@@ -175,6 +176,7 @@ export default function POSPage() {
         {activeNav === 'financials' && <FinancialsPage />}
         {activeNav === 'orders'     && <OrdersPage />}
         {activeNav === 'marketing'  && <MarketingPage />}
+        {activeNav === 'gift-cards' && <GiftCardsPage />}
       </div>
 
       {/* ── Order panel ── */}

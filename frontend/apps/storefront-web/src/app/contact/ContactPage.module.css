@@ -4,6 +4,13 @@
   background-color: var(--collection-white, #FFFFFF);
 }
 
+.contentSection {
+  padding-top: 240px;
+  padding-bottom: 80px;
+  position: relative;
+  z-index: 10;
+}
+
 /* =============================================================
    FULL WIDTH HERO
    ============================================================= */
