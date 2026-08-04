@@ -79,7 +79,7 @@
     left: 0;
     right: 0;
     height: 24px;
-    background: var(--blush);
+    background: #F7F7F5;
     z-index: 2;
     pointer-events: none;
   }

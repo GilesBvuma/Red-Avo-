@@ -2,7 +2,7 @@
   position: relative;
   overflow: hidden;
   padding: 130px 6vw 120px;
-  background: var(--blush);
+  background: #F7F7F5;
   text-align: center;
 }
 
@@ -15,7 +15,7 @@
   height: 80vw;
   max-width: 900px;
   max-height: 900px;
-  background: rgba(253, 232, 239, 0.55);
+  background: #F7F7F5;
   border-radius: 50% 60% 45% 55% / 55% 45% 60% 40%;
   z-index: 0;
   animation: blobMorph 10s ease-in-out infinite alternate;
@@ -23,8 +23,13 @@
 }
 
 @keyframes blobMorph {
-  0%   { border-radius: 50% 60% 45% 55% / 55% 45% 60% 40%; }
-  100% { border-radius: 60% 45% 55% 40% / 40% 60% 45% 55%; }
+  0% {
+    border-radius: 50% 60% 45% 55% / 55% 45% 60% 40%;
+  }
+
+  100% {
+    border-radius: 60% 45% 55% 40% / 40% 60% 45% 55%;
+  }
 }
 
 .avoWatermark {
@@ -76,4 +81,15 @@
   margin-inline: auto;
   line-height: 1.75;
   will-change: transform, opacity;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 40px 6vw 40px;
+  }
+  
+  .subText {
+    margin-top: 24px;
+    margin-bottom: 0;
+  }
 }

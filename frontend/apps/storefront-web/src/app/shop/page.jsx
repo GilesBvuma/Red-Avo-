@@ -313,7 +313,7 @@ function ShopContent() {
   const buildGridItems = () => {
     const items = [];
     sorted.forEach((product, i) => {
-      if (i > 0 && i % 8 === 0) {
+      if (i === 4) {
         items.push({ type: 'promo', key: `promo-${i}` });
       }
       items.push({ type: 'product', product, key: `prod-${product.id}` });
@@ -322,13 +322,7 @@ function ShopContent() {
   };
   const gridItems = buildGridItems();
 
-  /* ── Extract Available Colors & Sizes ── */
-  const allAvailableColors = Array.from(new Set(products.flatMap(p => {
-    let c = [];
-    if (p.colors) c = c.concat(p.colors.split(',').map(s => s.trim()));
-    if (p.variants) c = c.concat(p.variants.map(v => v.color).filter(Boolean));
-    return c;
-  }))).filter(Boolean).sort();
+  const allAvailableColors = Object.keys(COLOR_MAP);
 
   const allAvailableSizes = Array.from(new Set(products.flatMap(p => {
     let s = [];
@@ -533,7 +527,7 @@ function ShopContent() {
                         key={color}
                         className={`${styles.filterColorBtn} ${activeColor === color ? styles.active : ''}`}
                         onClick={() => setActiveColor(activeColor === color ? null : color)}
-                        style={{ backgroundColor: color.toLowerCase() }}
+                        style={{ backgroundColor: getColorHex(color) }}
                         title={color}
                         aria-label={`Filter by color ${color}`}
                       />
