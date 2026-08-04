@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
@@ -52,7 +52,7 @@ export default function OurStoryPage() {
           {/* Row 1: Who We Are (Part 1) + Image 1 */}
           <div className={styles.editorialRow}>
             <div className={styles.editorialText}>
-              <span className={styles.sectionLabel}>01 â€” Brand Identity</span>
+
               <h2 className={styles.sectionHeading}>Who We Are</h2>
               <div className={styles.textBlock}>
                 <p>
@@ -84,7 +84,7 @@ export default function OurStoryPage() {
           {/* Row 3: Our Story (Part 1) + Image 3 */}
           <div className={styles.editorialRow}>
             <div className={styles.editorialText}>
-              <span className={styles.sectionLabel}>02 â€” Our Origin</span>
+
               <h2 className={styles.sectionHeading}>Our Story</h2>
               <div className={styles.textBlock}>
                 <p>

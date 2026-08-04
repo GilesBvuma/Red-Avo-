@@ -852,8 +852,8 @@
   display: flex;
   align-items: center;
   padding: 0 48px;
-  background: linear-gradient(135deg, var(--navy) 0%, #2D4A7A 60%, #C0392B 100%);
-  box-shadow: 0 8px 32px rgba(26, 43, 74, 0.18);
+  background: #1A1A1A;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 .inlinePromoText {

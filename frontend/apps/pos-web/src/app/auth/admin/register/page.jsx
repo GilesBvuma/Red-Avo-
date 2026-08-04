@@ -15,7 +15,7 @@ export default function AdminRegister() {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
-    superPassword: '12345678' // Pre-filled from previous step theoretically, but safe to default if they reached here directly
+    superPassword: '' // Must be entered manually — must match the SUPER_PASSWORD set in the backend .env
   });
   
   const [loading, setLoading] = useState(false);
