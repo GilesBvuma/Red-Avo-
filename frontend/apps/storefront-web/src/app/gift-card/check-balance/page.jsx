@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿'use client';
 
 import { useState } from 'react';
 import Nav from '@/components/Nav/Nav';
@@ -38,9 +38,9 @@ export default function CheckBalancePage() {
         <div className={styles.container}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
             <a href="/gift-card">Gift Cards</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
             <span>Check Balance</span>
           </nav>
           <h1 className={styles.heading}>Check Gift Card Balance</h1>

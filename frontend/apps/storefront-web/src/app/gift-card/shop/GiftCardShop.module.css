@@ -43,12 +43,13 @@
 }
 
 .heroEyebrow {
+  display: inline-block;
+  color: #ffffff;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: rgba(255,255,255,0.6);
-  margin: 0 0 12px;
+  margin-bottom: 8px;
 }
 
 .heroTitle {
@@ -80,14 +81,13 @@
 }
 
 .sectionLabel {
+  display: inline-block;
+  color: #73BD29;
   font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #8F0D13;
   margin: 0 0 20px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #f0e8e8;
 }
 
 /* ── Design Grid ─────────────────────────────────────────────────────────── */

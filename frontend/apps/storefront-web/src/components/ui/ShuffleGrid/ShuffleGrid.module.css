@@ -66,14 +66,14 @@
 }
 
 .eyebrow {
-  display: block;
-  margin-top: 12px;
-  margin-bottom: 20px;
+  display: inline-block;
+  color: #73BD29;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--red, #8F0D13);
+  margin-top: 12px;
+  margin-bottom: 20px;
 }
 
 .heading {

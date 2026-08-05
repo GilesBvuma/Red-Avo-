@@ -38,16 +38,16 @@ export default function SizeChartPage() {
         <div className={styles.container}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
             <span>Size Chart</span>
           </nav>
           <h1 className={styles.heading}>Size Chart</h1>
           <div className={styles.card}>
             <p className={styles.text}>At RedAvo Activewear we use the UK size guide. We usually have sizes XS to 4XL for leggings, sports bras, and t-shirts. If you're not sure of your sizing, we encourage you to come in-store so we can assist you with your sizing.</p>
-            <p className={styles.text} style={{marginTop: '1rem'}}>Be kind to yourself when it comes to sizing. As women we tend to size ourselves one or two sizes bigger, all thanks ðŸ«£ðŸ˜’ to the unrealistic societal pressures of trying to make women feel uncomfortable and self-hate our imperfectly perfect beautiful shapes, sizes, curves and everything in-between.</p>
+            <p className={styles.text} style={{marginTop: '1rem'}}>Be kind to yourself when it comes to sizing. As women we tend to size ourselves one or two sizes bigger, all thanks to the unrealistic societal pressures of trying to make women feel uncomfortable and self-hate our imperfectly perfect beautiful shapes, sizes, curves and everything in-between.</p>
 
             <div className={styles.section} style={{marginTop: '2rem'}}>
-              <h2 className={styles.sectionHeading}>UK Womenâ€™s Size Guide: XS - 4XL</h2>
+              <h2 className={styles.sectionHeading}>UK Women's Size Guide: XS - 4XL</h2>
               
               <h3 style={{marginTop: '1.5rem', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.1rem'}}>How to measure</h3>
               <ol className={styles.text} style={{paddingLeft: '1.5rem', marginBottom: '2rem', listStyleType: 'decimal'}}>

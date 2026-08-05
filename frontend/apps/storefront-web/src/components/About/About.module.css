@@ -30,11 +30,12 @@
 .textCol { position: relative; z-index: 1; }
 
 .eyebrow {
+  display: inline-block;
+  color: #73BD29;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--green);
   margin-bottom: 14px;
   will-change: transform, opacity;
 }

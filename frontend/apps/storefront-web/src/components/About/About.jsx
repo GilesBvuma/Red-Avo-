@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
@@ -42,19 +42,19 @@ export default function About() {
       <div className={`${styles.dots} ${styles.dots2}`} aria-hidden="true" />
 
       <div className={styles.inner}>
-        {/* Left â€” blob-clipped image */}
+        {/* Left — blob-clipped image */}
         <div className={`${styles.imageWrap} about-img`}>
           <Placeholder label="/images/about-lifestyle.PNG" subtitle="Brand lifestyle image" />
         </div>
 
-        {/* Right â€” text */}
+        {/* Right — text */}
         <div className={styles.textCol}>
           <p className={`${styles.eyebrow} about-eyebrow`}>Who We Are</p>
           <h2 id="about-heading" className={`${styles.heading} about-heading`}>
             HOLISTIC WELLNESS.
           </h2>
           <p className={`${styles.text} about-text`}>
-            RedAvo Activewear is more than just a proudly African activewear and athleisure brand. RedAvo Activewear strives to challenge the status quo by incorporating a holistic wellness lifestyle into the mix. Your mental health is just as important as your physical health â€” this mind-and-body focus inspires confidence in yourself from the inside out.
+            RedAvo Activewear is more than just a proudly African activewear and athleisure brand. RedAvo Activewear strives to challenge the status quo by incorporating a holistic wellness lifestyle into the mix. Your mental health is just as important as your physical health — this mind-and-body focus inspires confidence in yourself from the inside out.
             <br/><br/>
             RedAvo Activewear's high-quality activewear apparel blends style, utility, and comfort so that you not only look good, but also feel good. Our bold range of colours have been designed to complement every skin tone and to celebrate self-expression. We want you to feel comfortable and confident, whether you're working up a sweat, shopping for groceries, or picking the kids up from school.
           </p>

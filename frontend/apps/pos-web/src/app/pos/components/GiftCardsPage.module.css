@@ -1,7 +1,7 @@
 .container {
   padding: 24px;
-  background: #000;
-  color: #fff;
+  background: var(--cream);
+  color: var(--navy);
   height: 100%;
   overflow-y: auto;
 }
@@ -26,14 +26,14 @@
 .sectionHeader h2 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #e4e4e7;
+  color: var(--navy);
   margin: 0;
 }
 
 .editInput {
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  color: #fff;
+  background: var(--white);
+  border: 1px solid #e2e8f0;
+  color: var(--navy);
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -43,13 +43,13 @@
 
 .editInput:focus {
   outline: none;
-  border-color: #fbbf24;
+  border-color: var(--red);
 }
 
 .refreshBtn {
-  background: #3f3f46;
-  color: #fff;
-  border: none;
+  background: #f1f5f9;
+  color: var(--navy);
+  border: 1px solid #e2e8f0;
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -57,14 +57,15 @@
 }
 
 .refreshBtn:hover {
-  background: #52525b;
+  background: #e2e8f0;
 }
 
 .tableWrap {
-  background: #18181b;
-  border: 1px solid #27272a;
+  background: var(--white);
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
@@ -75,11 +76,11 @@
 .table th, .table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .table th {
-  color: #a1a1aa;
+  color: #64748b;
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -102,10 +103,14 @@
   font-weight: 700;
 }
 
-.statusACTIVE { background: #064e3b; color: #34d399; }
-.statusPENDING { background: #78350f; color: #fbbf24; }
-.statusREDEEMED { background: #3f3f46; color: #a1a1aa; }
-.statusVOIDED { background: #7f1d1d; color: #f87171; }
+.statusACTIVE { 
+  background: transparent; 
+  border: 1px solid #10b981; 
+  color: #10b981; 
+}
+.statusPENDING { background: #fef3c7; color: #d97706; }
+.statusREDEEMED { background: #f1f5f9; color: #64748b; }
+.statusVOIDED { background: #fee2e2; color: #ef4444; }
 
 .releaseInfo {
   font-size: 0.7rem;
@@ -134,9 +139,9 @@
 }
 
 .actionBtn {
-  background: #27272a;
-  color: #fff;
-  border: none;
+  background: #f1f5f9;
+  color: var(--navy);
+  border: 1px solid #e2e8f0;
   padding: 6px 12px;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -144,22 +149,23 @@
 }
 
 .actionBtn:hover {
-  background: #3f3f46;
+  background: #e2e8f0;
 }
 
 .actionRelease {
   background: #fbbf24;
   color: #000;
   font-weight: 600;
+  border: none;
 }
 .actionRelease:hover { background: #f59e0b; }
 
 .actionVoid {
   background: transparent;
-  border: 1px solid #7f1d1d;
-  color: #f87171;
+  border: 1px solid var(--red);
+  color: var(--red);
 }
-.actionVoid:hover { background: #7f1d1d; color: #fff; }
+.actionVoid:hover { background: var(--red); color: #fff; }
 
 .rowPending {
   background: rgba(251, 191, 36, 0.05);
@@ -169,7 +175,7 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(26, 43, 74, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,19 +183,20 @@
 }
 
 .modal {
-  background: #18181b;
-  border: 1px solid #27272a;
+  background: var(--white);
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow-md);
 }
 
 .modalHeader {
   padding: 16px 20px;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -203,7 +210,7 @@
 .closeBtn {
   background: transparent;
   border: none;
-  color: #a1a1aa;
+  color: #64748b;
   font-size: 1.5rem;
   cursor: pointer;
 }
@@ -221,12 +228,12 @@
 .ledgerTable th, .ledgerTable td {
   padding: 10px;
   text-align: left;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.9rem;
 }
 
 .ledgerTable th {
-  color: #a1a1aa;
+  color: #64748b;
   font-size: 0.8rem;
 }
 
