@@ -195,7 +195,9 @@ public class ProductService {
 
         // For brand-new variants (just persisted above), apply their initial stock via ledger
         if (savedProduct.getVariants() != null) {
-            for (com.redavo.pos.model.ProductVariant v : savedProduct.getVariants()) {
+            java.util.List<com.redavo.pos.model.ProductVariant> variantsCopy =
+                    new java.util.ArrayList<>(savedProduct.getVariants());
+            for (com.redavo.pos.model.ProductVariant v : variantsCopy) {
                 int qty = v.getStockQuantity() != null ? v.getStockQuantity() : 0;
                 if (qty > 0 && stockLedgerService.getLedger(v.getId(), 1L).isEmpty()) {
                     v.setStockQuantity(0); // clear so delta calculation inside applyDelta is correct
