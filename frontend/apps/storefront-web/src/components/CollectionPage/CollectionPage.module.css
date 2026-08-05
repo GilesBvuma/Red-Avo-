@@ -206,13 +206,28 @@
 }
 
 .sectionLabel {
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(115, 189, 41, 0.15);
+  color: #73BD29;
   font-weight: 700;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  color: var(--collection-sage);
   letter-spacing: 0.1em;
+  padding: 6px 16px;
+  border-radius: 999px;
   margin-bottom: 12px;
-  display: block;
+  border: none;
+}
+
+.sectionLabel::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #73BD29;
+  flex-shrink: 0;
 }
 
 .sectionTitle {

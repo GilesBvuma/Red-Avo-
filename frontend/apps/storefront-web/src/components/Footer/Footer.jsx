@@ -9,7 +9,7 @@ import styles from './Footer.module.css';
 
 export default function Footer() {
   const footerRef = useRef(null);
-  const [email, setEmail]     = useState('');
+  const [email, setEmail] = useState('');
   const [subDone, setSubDone] = useState(false);
 
   useGSAP(() => {
@@ -61,7 +61,7 @@ export default function Footer() {
             <ul className={styles.navList}>
               <li><a href="/faq" className={styles.navLink}>FAQ</a></li>
               <li><a href="/size-chart" className={styles.navLink}>Sizes Chart</a></li>
-              <li><a href="/gift-card" className={styles.navLink}>GIFT CARD</a></li>
+              <li><a href="/gift-card" className={styles.navLink}>Gift Cards</a></li>
               <li><a href="/returns" className={styles.navLink}>Returns & Exchanges</a></li>
               <li><a href="/shipping" className={styles.navLink}>Shipping</a></li>
               <li><a href="/contact" className={styles.navLink}>Contact Us</a></li>
@@ -71,16 +71,16 @@ export default function Footer() {
           {/* Column 4 — Newsletter */}
           <div className={`${styles.col} footer-col`}>
             <p className={styles.colLabel}>Newsletter</p>
-            <p className={styles.navLink} style={{marginBottom: '1rem', lineHeight: '1.4'}}>
+            <p className={styles.navLink} style={{ marginBottom: '1rem', lineHeight: '1.4' }}>
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
             </p>
             <div className={styles.subForm}>
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className={styles.subInput} 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className={styles.subInput}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
               <button onClick={handleSubscribe} className={styles.subBtn}>
                 {subDone ? 'Done' : 'Join'}

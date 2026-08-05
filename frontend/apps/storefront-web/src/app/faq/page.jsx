@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
@@ -38,7 +38,7 @@ export default function FAQPage() {
         <div className={styles.container}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
             <span>FAQ</span>
           </nav>
           <h1 className={styles.heading}>Frequently Asked Questions</h1>
@@ -53,7 +53,7 @@ export default function FAQPage() {
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>3. How can I get Free Shipping?</h2>
-              <p className={styles.text}>Youâ€™re in luck! We offer free shipping on your first order above $100.</p>
+              <p className={styles.text}>You're in luck! We offer free shipping on your first order above $100.</p>
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>4. Can I track my order online?</h2>
@@ -73,7 +73,7 @@ export default function FAQPage() {
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>8. Is there a local pick-up option available for online orders?</h2>
-              <p className={styles.text}>Yes, at our store at Borrowdale Racecourse. <a href="https://maps.google.com/?q=Borrowdale+Racecourse+Harare" target="_blank" rel="noopener noreferrer" className={styles.link}>Click here</a> for Google Maps Location.</p>
+              <p className={styles.text}>Yes, at our store at Borrowdale Racecourse. <a href="https://maps.app.goo.gl/eZsimp1oo7nNpf719?g_st=awb" target="_blank" rel="noopener noreferrer" className={styles.link}>Click here</a> for Google Maps Location.</p>
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>9. Can I change my shipping address?</h2>
@@ -81,7 +81,7 @@ export default function FAQPage() {
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>10. Does RedAvo have a physical store location?</h2>
-              <p className={styles.text}>Yes, at Borrowdale Racecourse Harare. <a href="https://maps.google.com/?q=Borrowdale+Racecourse+Harare" target="_blank" rel="noopener noreferrer" className={styles.link}>Click here</a> for Google Maps Location.</p>
+              <p className={styles.text}>Yes, at Borrowdale Racecourse Harare. <a href="https://maps.app.goo.gl/eZsimp1oo7nNpf719?g_st=awb" target="_blank" rel="noopener noreferrer" className={styles.link}>Click here</a> for Google Maps Location.</p>
             </div>
             <div className={styles.section}>
               <h2 className={styles.sectionHeading}>11. Is Vat included in the cost?</h2>

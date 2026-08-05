@@ -56,7 +56,7 @@ export default function OurStoryPage() {
               <h2 className={styles.sectionHeading}>Who We Are</h2>
               <div className={styles.textBlock}>
                 <p>
-                  RedAvo Activewear is a proudly Zimbabwean holistic wellness lifestyle brand. We advocate against a one size-fits-all wellness approach. We inspire women to balance and nourish mind, body and soul. RedAvo Activewearâ€™s purpose is creating well-crafted functional active & athleisure apparel, inspired by a synchronization of movement and the body.
+                  RedAvo Activewear is a proudly Zimbabwean holistic wellness lifestyle brand. We advocate against a one size-fits-all wellness approach. We inspire women to balance and nourish mind, body and soul. RedAvo Activewear's purpose is creating well-crafted functional active & athleisure apparel, inspired by a synchronization of movement and the body.
                 </p>
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function OurStoryPage() {
             <div className={styles.editorialText}>
               <div className={styles.textBlock}>
                 <p>
-                  Your mental health is just as important, as your physical health. This mind-and-body focus inspires confidence in yourself from the inside-out. RedAvoâ€™s high-quality activewear apparel blends style, utility, and comfort so that you not only look good, but also feel good. We want you to feel comfortable and confident, whether youâ€™re working up a sweat, running errands, on a coffee date, picking the kids up from school or just chilling at home.
+                  Your mental health is just as important, as your physical health. This mind-and-body focus inspires confidence in yourself from the inside-out. RedAvo's high-quality activewear apparel blends style, utility, and comfort so that you not only look good, but also feel good. We want you to feel comfortable and confident, whether you're working up a sweat, running errands, on a coffee date, picking the kids up from school or just chilling at home.
                 </p>
               </div>
             </div>

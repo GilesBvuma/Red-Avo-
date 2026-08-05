@@ -157,28 +157,14 @@ ul, ol { list-style: none; }
   box-shadow: 0 8px 24px rgba(192, 57, 43, 0.4);
 }
 
-/* ── Section label (pill badge) ── */
+/* ── Section label ── */
 .section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--blush);
-  color: var(--red);
+  display: inline-block;
+  color: #73BD29;
   font-weight: 700;
   font-size: 0.76rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 6px 18px;
-  border-radius: 999px;
-}
-
-.section-label::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--red);
-  flex-shrink: 0;
 }
 
 /* ── Focus visible (accessibility) ── */

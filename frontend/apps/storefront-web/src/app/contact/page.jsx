@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
@@ -49,7 +49,7 @@ export default function ContactPage() {
 
           <section className={styles.contentSection} style={{ paddingTop: '200px' }}>
             <div className={styles.grid}>
-              {/* Left Column â€” Info & Socials */}
+              {/* Left Column – Info & Socials */}
               <div className={styles.infoCol}>
 
                 <p className={styles.infoText}>
@@ -80,7 +80,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Right Column â€” Form */}
+              {/* Right Column – Form */}
               <div className={styles.formCol}>
                 <h2 className={styles.formTitle}>Get in Touch</h2>
                 <form className={styles.form} onSubmit={(e) => e.preventDefault()}>

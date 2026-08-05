@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
@@ -38,7 +38,7 @@ export default function GiftCardPage() {
         <div className={styles.container}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.breadcrumbSep} aria-hidden="true">â€º</span>
+            <span className={styles.breadcrumbSep} aria-hidden="true">›</span>
             <span>Gift Cards</span>
           </nav>
           <h1 className={styles.heading}>Gift Cards</h1>
