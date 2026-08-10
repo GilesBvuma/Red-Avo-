@@ -7,41 +7,15 @@ import { useAuth } from '../../AuthProvider';
 import ExcelImportExport from './ExcelImportExport';
 import Pagination from './Pagination';
 import { exportInventoryToXlsx } from '../lib/export-inventory';
+import { HexColorPicker } from 'react-colorful';
 
 // ─── Constants ──────────────────────────────────────────────────────
-const SIZES_ALL  = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const COLORS_ALL = [
-  { name: 'Crimson Red',  hex: '#C0392B' },
-  { name: 'Matte Black',  hex: '#1A1A1A' },
-  { name: 'Soft White',   hex: '#FAFAF5' },
-  { name: 'Blush Pink',   hex: '#F4A0A0' },
-  { name: 'Forest Green', hex: '#2D6A4F' },
-  { name: 'Navy Blue',    hex: '#1B3A6B' },
-  { name: 'Stone Grey',   hex: '#9CA3AF' },
-  { name: 'Caramel',      hex: '#C68642' },
-  { name: 'Lavender',     hex: '#A78BFA' },
-  { name: 'Teal',         hex: '#0D9488' },
-  { name: 'Burgundy',     hex: '#800020' },
-  { name: 'Mustard',      hex: '#FFDB58' },
-  { name: 'Olive',        hex: '#808000' },
-  { name: 'Charcoal',     hex: '#36454F' },
-  { name: 'Peach',        hex: '#FFE5B4' },
-  { name: 'Mint Green',   hex: '#98FF98' },
-  { name: 'Coral',        hex: '#FF7F50' },
-  { name: 'Lilac',        hex: '#C8A2C8' },
-  { name: 'Slate Blue',   hex: '#6A5ACD' },
-  { name: 'Rose Gold',    hex: '#B76E79' },
-  { name: 'Taupe',        hex: '#483C32' },
-  { name: 'Chocolate',    hex: '#7B3F00' },
-  { name: 'Plum',         hex: '#8E4585' },
-  { name: 'Rust',         hex: '#B7410E' },
-  { name: 'Sand',         hex: '#C2B280' },
-  { name: 'Hot Pink',    hex: '#FF10F0' },
-  { name: 'Neon Green',   hex: '#39FF14' },
-  { name: 'Electric Blue',hex: '#7DF9FF' },
-  { name: 'Red',    hex: '#ff1010ff' },
-  
-];
+const SIZES_ALL = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+// Module-level hex lookup — populated from /api/colors on first modal open.
+// ColorDots (used in the product table) reads from this so it always has
+// up-to-date hex values without needing a prop drill.
+const colorRegistry = new Map(); // name -> hexCode
 
 // ─── Helpers ────────────────────────────────────────────────────────
 const parseCsv  = (s) => (s ? s.split(',').map(x => x.trim()).filter(Boolean) : []);
@@ -61,11 +35,120 @@ const EMPTY_FORM = {
   variants: []
 };
 
-// ─── Color swatch picker ─────────────────────────────────────────────
-function ColorPicker({ selected, onChange }) {
+// ─── Custom Color Modal (react-colorful) ──────────────────────────────
+function CustomColorModal({ onSave, onClose, saving }) {
+  const [pickedHex, setPickedHex] = useState('#C0392B');
+  const [colorName, setColorName]  = useState('');
+  const [nameError, setNameError]  = useState('');
+  const overlayRef = useRef();
+
+  // Close on overlay click
+  const handleOverlayClick = (e) => {
+    if (e.target === overlayRef.current) onClose();
+  };
+
+  const handleSave = () => {
+    if (!colorName.trim()) {
+      setNameError('Please enter a name for this color.');
+      return;
+    }
+    setNameError('');
+    onSave({ name: colorName.trim(), hexCode: pickedHex });
+  };
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleOverlayClick}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          background: '#fff', borderRadius: 16, padding: '28px 28px 24px',
+          width: 300, boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+          display: 'flex', flexDirection: 'column', gap: 16,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: '#1F2937' }}>Custom Color</span>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 18, color: '#9CA3AF', lineHeight: 1,
+            }}
+          >✕</button>
+        </div>
+
+        {/* react-colorful picker */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <HexColorPicker color={pickedHex} onChange={setPickedHex} style={{ width: '100%', height: 200 }} />
+        </div>
+
+        {/* Live preview + hex display */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: pickedHex, border: '2px solid #e0e0e0',
+              flexShrink: 0, transition: 'background 0.1s',
+            }}
+          />
+          <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#6B7280', letterSpacing: 1 }}>
+            {pickedHex.toUpperCase()}
+          </span>
+        </div>
+
+        {/* Color name input */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Color Name</label>
+          <input
+            type="text"
+            value={colorName}
+            onChange={(e) => { setColorName(e.target.value); setNameError(''); }}
+            placeholder="e.g. Sunset Coral"
+            maxLength={100}
+            style={{
+              padding: '8px 12px', borderRadius: 8, fontSize: 13,
+              border: nameError ? '1.5px solid #EF4444' : '1.5px solid #E5E7EB',
+              outline: 'none', color: '#1F2937',
+            }}
+          />
+          {nameError && (
+            <span style={{ fontSize: 11, color: '#EF4444' }}>{nameError}</span>
+          )}
+        </div>
+
+        {/* Save button */}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            padding: '10px 0', borderRadius: 8, border: 'none',
+            background: saving ? '#9CA3AF' : '#C0392B',
+            color: '#fff', fontWeight: 700, fontSize: 13,
+            cursor: saving ? 'not-allowed' : 'pointer',
+            transition: 'background 0.15s',
+          }}
+        >
+          {saving ? 'Saving…' : 'Save Color'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Color swatch picker (DB-driven) ────────────────────────────────
+function ColorPicker({ colors, selected, onChange, onAddCustom }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-      {COLORS_ALL.map(c => {
+      {colors.map(c => {
         const active = selected.includes(c.name);
         return (
           <button
@@ -75,13 +158,37 @@ function ColorPicker({ selected, onChange }) {
             onClick={() => onChange(active ? selected.filter(n => n !== c.name) : [...selected, c.name])}
             style={{
               width: 32, height: 32, borderRadius: '50%',
-              background: c.hex, border: active ? '3px solid #C0392B' : '2px solid #e0e0e0',
+              background: c.hexCode ?? c.hex,
+              border: active ? '3px solid #C0392B' : '2px solid #e0e0e0',
               cursor: 'pointer', outline: active ? '2px solid white' : 'none',
               outlineOffset: -4, transition: 'all 0.15s', boxSizing: 'border-box',
             }}
           />
         );
       })}
+
+      {/* ── Add custom color button ─────────────────────────── */}
+      <button
+        type="button"
+        title="Add custom color"
+        onClick={onAddCustom}
+        style={{
+          width: 32, height: 32, borderRadius: '50%',
+          background: '#fff', border: '2px solid #D1D5DB',
+          cursor: 'pointer', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', boxSizing: 'border-box',
+          transition: 'border-color 0.15s, box-shadow 0.15s',
+          flexShrink: 0,
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#C0392B'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(192,57,43,0.15)'; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = 'none'; }}
+      >
+        {/* Plus icon — inline SVG matching lucide-react style */}
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
     </div>
   );
 }
@@ -189,7 +296,40 @@ function ProductModal({ product, categories, onClose, onSaved }) {
   const [invoicePreviews, setInvoicePreviews] = useState(form.supplierInvoices || []);
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState('');
-  
+
+  // ── Colors from DB ───────────────────────────────────────────────
+  const [dbColors, setDbColors]                   = useState([]);
+  const [showCustomColorModal, setShowCustomColorModal] = useState(false);
+  const [savingCustomColor, setSavingCustomColor] = useState(false);
+
+  useEffect(() => {
+    api.fetchColors()
+      .then(data => {
+        const colors = Array.isArray(data) ? data : [];
+        // Populate module-level registry so ColorDots in the table can resolve hex values
+        colors.forEach(c => colorRegistry.set(c.name, c.hexCode));
+        setDbColors(colors);
+      })
+      .catch(err => console.warn('[ColorPicker] Could not load colors from API:', err));
+  }, []);
+
+  const handleSaveCustomColor = async ({ name, hexCode }) => {
+    setSavingCustomColor(true);
+    try {
+      const created = await api.createColor({ name, hexCode });
+      // Append to local palette so it's immediately available
+      setDbColors(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      // Auto-select the new color
+      setForm(f => ({ ...f, colors: [...f.colors, created.name] }));
+      setShowCustomColorModal(false);
+    } catch (err) {
+      console.error('[ColorPicker] Failed to save custom color:', err);
+      alert(err.message || 'Failed to save color. Please try again.');
+    } finally {
+      setSavingCustomColor(false);
+    }
+  };
+
   // State for tracking variant stock explicitly
   const [variantStockGrid, setVariantStockGrid] = useState({});
 
@@ -464,7 +604,19 @@ function ProductModal({ product, categories, onClose, onSaved }) {
 
           {/* Colors */}
           <Section label="Available Colors">
-            <ColorPicker selected={form.colors} onChange={v => set('colors', v)} />
+            <ColorPicker
+              colors={dbColors}
+              selected={form.colors}
+              onChange={v => set('colors', v)}
+              onAddCustom={() => setShowCustomColorModal(true)}
+            />
+            {showCustomColorModal && (
+              <CustomColorModal
+                onSave={handleSaveCustomColor}
+                onClose={() => setShowCustomColorModal(false)}
+                saving={savingCustomColor}
+              />
+            )}
           </Section>
 
           {/* Stock */}
@@ -583,10 +735,10 @@ function ColorDots({ colors }) {
   return (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
       {list.slice(0, 6).map(name => {
-        const c = COLORS_ALL.find(x => x.name === name);
+        const hex = colorRegistry.get(name) ?? '#ccc';
         return (
           <div key={name} title={name}
-            style={{ width: 14, height: 14, borderRadius: '50%', background: c?.hex ?? '#ccc', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
+            style={{ width: 14, height: 14, borderRadius: '50%', background: hex, border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
           />
         );
       })}
@@ -746,6 +898,19 @@ export default function StockManagementPage() {
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Pre-populate colorRegistry so ColorDots in the table has hex values
+  // available immediately, before the user opens the Add Stock modal.
+  useEffect(() => {
+    api.fetchColors()
+      .then(data => {
+        if (Array.isArray(data)) {
+          data.forEach(c => colorRegistry.set(c.name, c.hexCode));
+        }
+      })
+      .catch(() => {}); // non-critical — dots fall back to #ccc
+  }, []);
+
 
   const handleDelete = async (id) => {
     await api.deleteProduct(id);
