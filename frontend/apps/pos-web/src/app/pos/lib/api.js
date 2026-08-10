@@ -439,3 +439,14 @@ export const fetchGiftCardLedger = (id) => apiFetch(`/admin/gift-cards/${id}/led
 export const fetchTiers = () => apiFetch('/gift-cards/tiers');
 export const updateTier = (id, data) => apiFetch(`/admin/gift-cards/tiers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 
+// ── Colors ─────────────────────────────────────────────────────────────────
+/** Fetches the full colors palette from the database (sorted A–Z). */
+export const fetchColors = () => apiFetch('/colors');
+
+/**
+ * Persists a new custom color.
+ * @param {{ name: string, hexCode: string }} data
+ */
+export const createColor = (data) =>
+  apiFetch('/colors', { method: 'POST', body: JSON.stringify(data) });
+
