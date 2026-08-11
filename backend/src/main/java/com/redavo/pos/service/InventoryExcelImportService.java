@@ -257,9 +257,32 @@ public class InventoryExcelImportService {
             if (dto.getDefaultPrice() != null) v.setSellPrice(dto.getDefaultPrice());
             if (dto.getCost()         != null) v.setCostPrice(dto.getCost());
             v.setStockQuantity(dto.getTotalStock()); // stock is always overwritten on update
-            if (dto.getOption1Value() != null) v.setColor(dto.getOption1Value());
-            if (dto.getOption2Value() != null) v.setSize(dto.getOption2Value());
+            String opt1Name = dto.getOption1Name() != null ? dto.getOption1Name().trim().toLowerCase() : "";
+            String opt2Name = dto.getOption2Name() != null ? dto.getOption2Name().trim().toLowerCase() : "";
 
+            String mappedColor = null;
+            String mappedSize = null;
+
+            if (opt1Name.contains("color") || opt1Name.contains("colour")) {
+                mappedColor = dto.getOption1Value();
+            } else if (opt1Name.contains("size")) {
+                mappedSize = dto.getOption1Value();
+            }
+
+            if (opt2Name.contains("color") || opt2Name.contains("colour")) {
+                mappedColor = dto.getOption2Value();
+            } else if (opt2Name.contains("size")) {
+                mappedSize = dto.getOption2Value();
+            }
+
+            // Fallback just in case the headers are missing or weirdly named, we keep the original logic as a last resort
+            if (mappedColor == null && mappedSize == null && dto.getOption1Value() != null) {
+                mappedColor = dto.getOption1Value();
+                mappedSize = dto.getOption2Value();
+            }
+
+            if (mappedColor != null) v.setColor(mappedColor);
+            if (mappedSize != null) v.setSize(mappedSize);
             // Also update the parent product's metadata
             Product p = v.getProduct();
             if (dto.getProductName() != null && !dto.getProductName().isBlank()) p.setName(dto.getProductName());
@@ -297,8 +320,32 @@ public class InventoryExcelImportService {
             ProductVariant v = new ProductVariant();
             v.setProduct(product);
             v.setSku(dto.getSku());
-            v.setColor(dto.getOption1Value());
-            v.setSize(dto.getOption2Value());
+            String opt1Name = dto.getOption1Name() != null ? dto.getOption1Name().trim().toLowerCase() : "";
+            String opt2Name = dto.getOption2Name() != null ? dto.getOption2Name().trim().toLowerCase() : "";
+
+            String mappedColor = null;
+            String mappedSize = null;
+
+            if (opt1Name.contains("color") || opt1Name.contains("colour")) {
+                mappedColor = dto.getOption1Value();
+            } else if (opt1Name.contains("size")) {
+                mappedSize = dto.getOption1Value();
+            }
+
+            if (opt2Name.contains("color") || opt2Name.contains("colour")) {
+                mappedColor = dto.getOption2Value();
+            } else if (opt2Name.contains("size")) {
+                mappedSize = dto.getOption2Value();
+            }
+
+            // Fallback just in case the headers are missing or weirdly named, we keep the original logic as a last resort
+            if (mappedColor == null && mappedSize == null && dto.getOption1Value() != null) {
+                mappedColor = dto.getOption1Value();
+                mappedSize = dto.getOption2Value();
+            }
+
+            v.setColor(mappedColor);
+            v.setSize(mappedSize);
             v.setSellPrice(dto.getDefaultPrice() != null ? dto.getDefaultPrice() : BigDecimal.ZERO);
             v.setCostPrice(dto.getCost() != null ? dto.getCost() : BigDecimal.ZERO);
             v.setStockQuantity(dto.getTotalStock());
