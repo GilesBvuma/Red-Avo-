@@ -291,33 +291,66 @@
   color: var(--navy);
 }
 
-/* Color Filters */
+/* Color Filters — labeled rows: circle + name */
 .filterColorGrid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 8px 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0 10px;
 }
 
-.filterColorBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+/* Full-width row button */
+.filterColorItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
   cursor: pointer;
-  padding: 0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  padding: 5px 6px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  text-align: left;
+  width: 100%;
 }
 
-.filterColorBtn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.filterColorItem:hover {
+  background: rgba(26, 43, 74, 0.05);
 }
 
-.filterColorBtn.active {
-  border: 2px solid var(--navy);
-  transform: scale(1.15);
-  box-shadow: 0 0 0 2px #fff inset, 0 4px 12px rgba(0,0,0,0.15);
+/* The colour circle */
+.filterColorCircle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+  display: block;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.filterColorItem:hover .filterColorCircle {
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+/* Active state — red ring like the POS */
+.activeColorItem .filterColorCircle {
+  border: 2.5px solid #C0392B;
+  box-shadow: 0 0 0 2px #fff inset, 0 0 0 4px rgba(192, 57, 43, 0.2);
+}
+
+/* The colour name */
+.filterColorName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy);
+  line-height: 1.2;
+  transition: color 0.15s, font-weight 0.15s;
+}
+
+.activeColorItem .filterColorName {
+  font-weight: 700;
+  color: #C0392B;
 }
 
 /* Size Filters */
@@ -330,27 +363,30 @@
 
 .filterSizeBtn {
   background: #fff;
-  border: 1px solid rgba(26, 43, 74, 0.12);
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
+  border: 1.5px solid rgba(26, 43, 74, 0.14);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--navy);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   font-family: var(--font-montserrat), sans-serif;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .filterSizeBtn:hover {
-  border-color: var(--navy);
+  border-color: #C0392B;
+  color: #C0392B;
 }
 
 .filterSizeBtn.active {
-  background: var(--navy);
+  background: #C0392B;
   color: #fff;
-  border-color: var(--navy);
+  border-color: #C0392B;
 }
+
 
 /* Active filter chips */
 .activeFilters {

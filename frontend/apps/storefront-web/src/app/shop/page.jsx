@@ -533,12 +533,18 @@ function ShopContent() {
                     {allAvailableColors.map(color => (
                       <button
                         key={color}
-                        className={`${styles.filterColorBtn} ${activeColor === color ? styles.active : ''}`}
+                        className={`${styles.filterColorItem} ${activeColor === color ? styles.activeColorItem : ''}`}
                         onClick={() => setActiveColor(activeColor === color ? null : color)}
-                        style={{ backgroundColor: getColorHex(color) }}
                         title={color}
-                        aria-label={`Filter by color ${color}`}
-                      />
+                        aria-label={`Filter by ${color}`}
+                        aria-pressed={activeColor === color}
+                      >
+                        <span
+                          className={styles.filterColorCircle}
+                          style={{ background: getColorHex(color) }}
+                        />
+                        <span className={styles.filterColorName}>{color}</span>
+                      </button>
                     ))}
                   </div>
                 )}
