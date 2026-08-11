@@ -30,7 +30,7 @@ public class ColorController {
 
     /** Returns all colors sorted alphabetically — used to populate the swatch grid. */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<Color>> listColors() {
         return ResponseEntity.ok(colorRepository.findAllByOrderByNameAsc());
     }

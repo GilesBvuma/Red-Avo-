@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
-import { fetchProducts, fetchCategories, API_URL } from '@/lib/api';
+import { fetchProducts, fetchCategories, fetchColors, API_URL } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -11,20 +11,6 @@ import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
 import ShopByCategory from '@/components/ShopByCategory/ShopByCategory';
 import styles from './shop.module.css';
-
-/* ─── Colour map for swatches ─── */
-const COLOR_MAP = {
-  'Crimson Red': '#C0392B', 'Matte Black': '#1A1A1A', 'Soft White': '#FAFAF5',
-  'Blush Pink': '#F4A0A0', 'Forest Green': '#2D6A4F', 'Navy Blue': '#1B3A6B',
-  'Teal': '#0D9488', 'Burgundy': '#800020', 'Mustard': '#FFDB58',
-  'Olive': '#808000', 'Charcoal': '#36454F', 'Peach': '#FFE5B4',
-  'Mint Green': '#98FF98', 'Coral': '#FF7F50', 'Lilac': '#C8A2C8',
-  'Slate Blue': '#6A5ACD', 'Rose Gold': '#B76E79', 'Taupe': '#483C32',
-  'Chocolate': '#7B3F00', 'Plum': '#8E4585', 'Rust': '#B7410E',
-  'Sand': '#C2B280', 'Hot Pink': '#FF10F0', 'Neon Green': '#39FF14',
-  'Electric Blue': '#7DF9FF', 'Red': '#ff1010',
-};
-const getColorHex = (name) => COLOR_MAP[name] || '#9ca3af';
 
 /* ─── Footer features data ─── */
 const FEATURES = [
@@ -182,6 +168,8 @@ function ShopContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [activeColor,     setActiveColor]     = useState(null);
   const [activeSize,      setActiveSize]      = useState(null);
+  // colorMap: name -> hexCode, built from /api/colors (public endpoint)
+  const [colorMap,        setColorMap]        = useState({});
 
   const shopHeroRef = useRef(null);
   const titleWordsRef = useRef([]);
@@ -197,9 +185,19 @@ function ShopContent() {
   useEffect(() => {
     async function load() {
       try {
-        const [prodData, catData] = await Promise.all([fetchProducts(), fetchCategories()]);
+        const [prodData, catData, colorData] = await Promise.all([
+          fetchProducts(),
+          fetchCategories(),
+          fetchColors(),
+        ]);
         setProducts(prodData);
         setCategories(catData);
+        // Build name->hex lookup from DB colors
+        const map = {};
+        if (Array.isArray(colorData)) {
+          colorData.forEach(c => { map[c.name] = c.hexCode; });
+        }
+        setColorMap(map);
         /* Pre-select category from ?q= param */
         if (searchQuery) {
           if (searchQuery.toLowerCase() === 'new-arrivals') {
@@ -322,7 +320,16 @@ function ShopContent() {
   };
   const gridItems = buildGridItems();
 
-  const allAvailableColors = Object.keys(COLOR_MAP);
+  // Colors that actually appear on at least one product — sourced from DB hex map
+  const allAvailableColors = Array.from(new Set(products.flatMap(p => {
+    let cs = [];
+    if (p.colors) cs = cs.concat(p.colors.split(',').map(s => s.trim()));
+    if (p.variants) cs = cs.concat(p.variants.map(v => v.color).filter(Boolean));
+    return cs;
+  }))).filter(name => name && colorMap[name]).sort();
+
+  // Helper: resolve hex from DB map, fall back to neutral grey
+  const getColorHex = (name) => colorMap[name] || '#9ca3af';
 
   const allAvailableSizes = Array.from(new Set(products.flatMap(p => {
     let s = [];

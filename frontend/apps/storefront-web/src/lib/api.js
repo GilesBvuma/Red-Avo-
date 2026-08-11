@@ -33,3 +33,10 @@ export async function fetchCommunityPosts() {
   if (!res.ok) throw new Error('Failed to fetch community posts');
   return res.json();
 }
+
+/** Fetches the full colour palette from the database (public endpoint, no auth needed). */
+export async function fetchColors() {
+  const res = await fetch(`${API_URL}/colors`);
+  if (!res.ok) return []; // non-critical — fall back silently
+  return res.json();
+}
