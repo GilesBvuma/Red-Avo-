@@ -31,48 +31,16 @@ const SORT_OPTIONS = [
 /* ============================================================
    Color Resolver
    ============================================================ */
-const FALLBACK_COLORS = {
-  'bottle green': '#006A4E',
-  'wine red': '#722F37',
-  'beige': '#F5F5DC',
-  'black': '#000000',
-  'black stripes': '#333333',
-  'blue': '#0000FF',
-  'cream': '#FFFDD0',
-  'dark blue': '#00008B',
-  'dusty mauve': '#B38B8B',
-  'green': '#008000',
-  'grey': '#808080',
-  'grey stripes': '#A9A9A9',
-  'light grey': '#D3D3D3',
-  'maroon': '#800000',
-  'mustard': '#FFDB58',
-  'orange': '#FFA500',
-  'pink': '#FFC0CB',
-  'red': '#FF0000',
-  'sage': '#9DC183',
-  'white': '#FFFFFF',
-};
-
 function resolveHex(name, colorMap) {
-  if (!name) return '#9ca3af';
+  if (!name || !colorMap) return '#9ca3af';
   const lowerName = name.toLowerCase().trim();
   
-  // 1. Try DB colorMap (case-insensitive search if keys aren't lowercase)
-  if (colorMap) {
-    const exactMatch = colorMap[name];
-    if (exactMatch) return exactMatch;
-    
-    const dbMatch = Object.entries(colorMap).find(([k]) => k.toLowerCase() === lowerName);
-    if (dbMatch) return dbMatch[1];
-  }
+  const exactMatch = colorMap[name];
+  if (exactMatch) return exactMatch;
   
-  // 2. Try Fallbacks
-  if (FALLBACK_COLORS[lowerName]) {
-    return FALLBACK_COLORS[lowerName];
-  }
+  const dbMatch = Object.entries(colorMap).find(([k]) => k.toLowerCase() === lowerName);
+  if (dbMatch) return dbMatch[1];
   
-  // 3. Last resort
   return '#9ca3af';
 }
 
