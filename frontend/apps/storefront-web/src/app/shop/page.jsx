@@ -29,10 +29,58 @@ const SORT_OPTIONS = [
 ];
 
 /* ============================================================
+   Color Resolver
+   ============================================================ */
+const FALLBACK_COLORS = {
+  'bottle green': '#006A4E',
+  'wine red': '#722F37',
+  'beige': '#F5F5DC',
+  'black': '#000000',
+  'black stripes': '#333333',
+  'blue': '#0000FF',
+  'cream': '#FFFDD0',
+  'dark blue': '#00008B',
+  'dusty mauve': '#B38B8B',
+  'green': '#008000',
+  'grey': '#808080',
+  'grey stripes': '#A9A9A9',
+  'light grey': '#D3D3D3',
+  'maroon': '#800000',
+  'mustard': '#FFDB58',
+  'orange': '#FFA500',
+  'pink': '#FFC0CB',
+  'red': '#FF0000',
+  'sage': '#9DC183',
+  'white': '#FFFFFF',
+};
+
+function resolveHex(name, colorMap) {
+  if (!name) return '#9ca3af';
+  const lowerName = name.toLowerCase().trim();
+  
+  // 1. Try DB colorMap (case-insensitive search if keys aren't lowercase)
+  if (colorMap) {
+    const exactMatch = colorMap[name];
+    if (exactMatch) return exactMatch;
+    
+    const dbMatch = Object.entries(colorMap).find(([k]) => k.toLowerCase() === lowerName);
+    if (dbMatch) return dbMatch[1];
+  }
+  
+  // 2. Try Fallbacks
+  if (FALLBACK_COLORS[lowerName]) {
+    return FALLBACK_COLORS[lowerName];
+  }
+  
+  // 3. Last resort
+  return '#9ca3af';
+}
+
+/* ============================================================
    ProductCard
    ============================================================ */
 function ProductCard({ product, onClick, listView, colorMap }) {
-  const getColorHex = (name) => (colorMap && colorMap[name]) || '#9ca3af';
+  const getColorHex = (name) => resolveHex(name, colorMap);
   const [imgIndex, setImgIndex] = useState(0);
   const [reviewSummary, setReviewSummary] = useState(null);
 
@@ -333,7 +381,7 @@ function ShopContent() {
   }))).filter(Boolean).sort();
 
   // Helper: resolve hex from DB map, fall back to neutral grey
-  const getColorHex = (name) => colorMap[name] || '#9ca3af';
+  const getColorHex = (name) => resolveHex(name, colorMap);
 
   // Whitelist of recognised size tokens — anything else (e.g. colour names that
   // leaked into a sizes field) is silently excluded.
