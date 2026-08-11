@@ -31,7 +31,8 @@ const SORT_OPTIONS = [
 /* ============================================================
    ProductCard
    ============================================================ */
-function ProductCard({ product, onClick, listView }) {
+function ProductCard({ product, onClick, listView, colorMap }) {
+  const getColorHex = (name) => (colorMap && colorMap[name]) || '#9ca3af';
   const [imgIndex, setImgIndex] = useState(0);
   const [reviewSummary, setReviewSummary] = useState(null);
 
@@ -670,6 +671,7 @@ function ShopContent() {
                       product={item.product}
                       onClick={openProduct}
                       listView={listView}
+                      colorMap={colorMap}
                     />
                   )
                 )}
