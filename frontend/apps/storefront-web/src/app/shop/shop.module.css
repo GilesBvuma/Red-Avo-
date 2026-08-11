@@ -291,67 +291,40 @@
   color: var(--navy);
 }
 
-/* Color Filters — labeled rows: circle + name */
+/* Color Filters — wrapping swatch circles (no text, tooltip only) */
 .filterColorGrid {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px 0 10px;
-}
-
-/* Full-width row button */
-.filterColorItem {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 5px 6px;
-  border-radius: 8px;
-  transition: background 0.15s;
-  text-align: left;
-  width: 100%;
+  padding: 8px 0 12px;
 }
 
-.filterColorItem:hover {
-  background: rgba(26, 43, 74, 0.05);
-}
-
-/* The colour circle */
-.filterColorCircle {
-  width: 22px;
-  height: 22px;
+/* Each swatch: a plain circle button */
+.filterColorCircleBtn {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  padding: 0;
   flex-shrink: 0;
-  display: block;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  outline: none;
 }
 
-.filterColorItem:hover .filterColorCircle {
-  border-color: rgba(0, 0, 0, 0.28);
+.filterColorCircleBtn:hover {
+  transform: scale(1.18);
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Active state — red ring like the POS */
-.activeColorItem .filterColorCircle {
+/* Active — red ring identical to POS selected swatch */
+.activeColorCircleBtn {
   border: 2.5px solid #C0392B;
-  box-shadow: 0 0 0 2px #fff inset, 0 0 0 4px rgba(192, 57, 43, 0.2);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px #fff inset, 0 0 0 4px rgba(192, 57, 43, 0.25);
 }
 
-/* The colour name */
-.filterColorName {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--navy);
-  line-height: 1.2;
-  transition: color 0.15s, font-weight 0.15s;
-}
-
-.activeColorItem .filterColorName {
-  font-weight: 700;
-  color: #C0392B;
-}
 
 /* Size Filters */
 .filterSizeGrid {

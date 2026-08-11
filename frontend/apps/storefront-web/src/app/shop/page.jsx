@@ -322,22 +322,31 @@ function ShopContent() {
   const gridItems = buildGridItems();
 
   // Colors that actually appear on at least one product — sourced from DB hex map
+  // All unique color names from products — no DB-match required so all product
+  // colours appear even if the name differs slightly from the seeded palette.
+  // getColorHex falls back to #9ca3af for unrecognised names.
   const allAvailableColors = Array.from(new Set(products.flatMap(p => {
     let cs = [];
     if (p.colors) cs = cs.concat(p.colors.split(',').map(s => s.trim()));
     if (p.variants) cs = cs.concat(p.variants.map(v => v.color).filter(Boolean));
     return cs;
-  }))).filter(name => name && colorMap[name]).sort();
+  }))).filter(Boolean).sort();
 
   // Helper: resolve hex from DB map, fall back to neutral grey
   const getColorHex = (name) => colorMap[name] || '#9ca3af';
 
+  // Whitelist of recognised size tokens — anything else (e.g. colour names that
+  // leaked into a sizes field) is silently excluded.
+  const KNOWN_SIZE_TOKENS = new Set([
+    'XS','S','M','L','XL','XXL','2XL','3XL','4XL','XXXL',
+    'ONE SIZE','ONESIZE','STANDARD','FREE SIZE','FREESIZE',
+  ]);
   const allAvailableSizes = Array.from(new Set(products.flatMap(p => {
     let s = [];
     if (p.sizes) s = s.concat(p.sizes.split(',').map(str => str.trim()));
     if (p.variants) s = s.concat(p.variants.map(v => v.size).filter(Boolean));
     return s;
-  }))).filter(Boolean).sort();
+  }))).filter(s => s && KNOWN_SIZE_TOKENS.has(s.trim().toUpperCase())).sort();
 
   /* ── Active filter label & Title Words ── */
   const activeCategoryObj = categories.find(c => c.name === activeCategory);
@@ -533,18 +542,13 @@ function ShopContent() {
                     {allAvailableColors.map(color => (
                       <button
                         key={color}
-                        className={`${styles.filterColorItem} ${activeColor === color ? styles.activeColorItem : ''}`}
+                        className={`${styles.filterColorCircleBtn} ${activeColor === color ? styles.activeColorCircleBtn : ''}`}
                         onClick={() => setActiveColor(activeColor === color ? null : color)}
                         title={color}
                         aria-label={`Filter by ${color}`}
                         aria-pressed={activeColor === color}
-                      >
-                        <span
-                          className={styles.filterColorCircle}
-                          style={{ background: getColorHex(color) }}
-                        />
-                        <span className={styles.filterColorName}>{color}</span>
-                      </button>
+                        style={{ background: getColorHex(color) }}
+                      />
                     ))}
                   </div>
                 )}
