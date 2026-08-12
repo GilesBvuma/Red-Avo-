@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
-import { fetchProducts, fetchCategories, API_URL } from '@/lib/api';
+import { fetchProducts, fetchCategories, fetchColors, API_URL } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -11,20 +11,6 @@ import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
 import ShopByCategory from '@/components/ShopByCategory/ShopByCategory';
 import styles from './shop.module.css';
-
-/* ─── Colour map for swatches ─── */
-const COLOR_MAP = {
-  'Crimson Red': '#C0392B', 'Matte Black': '#1A1A1A', 'Soft White': '#FAFAF5',
-  'Blush Pink': '#F4A0A0', 'Forest Green': '#2D6A4F', 'Navy Blue': '#1B3A6B',
-  'Teal': '#0D9488', 'Burgundy': '#800020', 'Mustard': '#FFDB58',
-  'Olive': '#808000', 'Charcoal': '#36454F', 'Peach': '#FFE5B4',
-  'Mint Green': '#98FF98', 'Coral': '#FF7F50', 'Lilac': '#C8A2C8',
-  'Slate Blue': '#6A5ACD', 'Rose Gold': '#B76E79', 'Taupe': '#483C32',
-  'Chocolate': '#7B3F00', 'Plum': '#8E4585', 'Rust': '#B7410E',
-  'Sand': '#C2B280', 'Hot Pink': '#FF10F0', 'Neon Green': '#39FF14',
-  'Electric Blue': '#7DF9FF', 'Red': '#ff1010',
-};
-const getColorHex = (name) => COLOR_MAP[name] || '#9ca3af';
 
 /* ─── Footer features data ─── */
 const FEATURES = [
@@ -43,9 +29,26 @@ const SORT_OPTIONS = [
 ];
 
 /* ============================================================
+   Color Resolver
+   ============================================================ */
+function resolveHex(name, colorMap) {
+  if (!name || !colorMap) return '#9ca3af';
+  const lowerName = name.toLowerCase().trim();
+  
+  const exactMatch = colorMap[name];
+  if (exactMatch) return exactMatch;
+  
+  const dbMatch = Object.entries(colorMap).find(([k]) => k.toLowerCase() === lowerName);
+  if (dbMatch) return dbMatch[1];
+  
+  return '#9ca3af';
+}
+
+/* ============================================================
    ProductCard
    ============================================================ */
-function ProductCard({ product, onClick, listView }) {
+function ProductCard({ product, onClick, listView, colorMap }) {
+  const getColorHex = (name) => resolveHex(name, colorMap);
   const [imgIndex, setImgIndex] = useState(0);
   const [reviewSummary, setReviewSummary] = useState(null);
 
@@ -182,6 +185,8 @@ function ShopContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [activeColor,     setActiveColor]     = useState(null);
   const [activeSize,      setActiveSize]      = useState(null);
+  // colorMap: name -> hexCode, built from /api/colors (public endpoint)
+  const [colorMap,        setColorMap]        = useState({});
 
   const shopHeroRef = useRef(null);
   const titleWordsRef = useRef([]);
@@ -197,9 +202,19 @@ function ShopContent() {
   useEffect(() => {
     async function load() {
       try {
-        const [prodData, catData] = await Promise.all([fetchProducts(), fetchCategories()]);
+        const [prodData, catData, colorData] = await Promise.all([
+          fetchProducts(),
+          fetchCategories(),
+          fetchColors(),
+        ]);
         setProducts(prodData);
         setCategories(catData);
+        // Build name->hex lookup from DB colors
+        const map = {};
+        if (Array.isArray(colorData)) {
+          colorData.forEach(c => { map[c.name] = c.hexCode; });
+        }
+        setColorMap(map);
         /* Pre-select category from ?q= param */
         if (searchQuery) {
           if (searchQuery.toLowerCase() === 'new-arrivals') {
@@ -322,14 +337,32 @@ function ShopContent() {
   };
   const gridItems = buildGridItems();
 
-  const allAvailableColors = Object.keys(COLOR_MAP);
+  // Colors that actually appear on at least one product — sourced from DB hex map
+  // All unique color names from products — no DB-match required so all product
+  // colours appear even if the name differs slightly from the seeded palette.
+  // getColorHex falls back to #9ca3af for unrecognised names.
+  const allAvailableColors = Array.from(new Set(products.flatMap(p => {
+    let cs = [];
+    if (p.colors) cs = cs.concat(p.colors.split(',').map(s => s.trim()));
+    if (p.variants) cs = cs.concat(p.variants.map(v => v.color).filter(Boolean));
+    return cs;
+  }))).filter(Boolean).sort();
 
+  // Helper: resolve hex from DB map, fall back to neutral grey
+  const getColorHex = (name) => resolveHex(name, colorMap);
+
+  // Whitelist of recognised size tokens — anything else (e.g. colour names that
+  // leaked into a sizes field) is silently excluded.
+  const KNOWN_SIZE_TOKENS = new Set([
+    'XS','S','M','L','XL','XXL','2XL','3XL','4XL','XXXL',
+    'ONE SIZE','ONESIZE','STANDARD','FREE SIZE','FREESIZE',
+  ]);
   const allAvailableSizes = Array.from(new Set(products.flatMap(p => {
     let s = [];
     if (p.sizes) s = s.concat(p.sizes.split(',').map(str => str.trim()));
     if (p.variants) s = s.concat(p.variants.map(v => v.size).filter(Boolean));
     return s;
-  }))).filter(Boolean).sort();
+  }))).filter(s => s && KNOWN_SIZE_TOKENS.has(s.trim().toUpperCase())).sort();
 
   /* ── Active filter label & Title Words ── */
   const activeCategoryObj = categories.find(c => c.name === activeCategory);
@@ -525,11 +558,12 @@ function ShopContent() {
                     {allAvailableColors.map(color => (
                       <button
                         key={color}
-                        className={`${styles.filterColorBtn} ${activeColor === color ? styles.active : ''}`}
+                        className={`${styles.filterColorCircleBtn} ${activeColor === color ? styles.activeColorCircleBtn : ''}`}
                         onClick={() => setActiveColor(activeColor === color ? null : color)}
-                        style={{ backgroundColor: getColorHex(color) }}
                         title={color}
-                        aria-label={`Filter by color ${color}`}
+                        aria-label={`Filter by ${color}`}
+                        aria-pressed={activeColor === color}
+                        style={{ background: getColorHex(color) }}
                       />
                     ))}
                   </div>
@@ -663,6 +697,7 @@ function ShopContent() {
                       product={item.product}
                       onClick={openProduct}
                       listView={listView}
+                      colorMap={colorMap}
                     />
                   )
                 )}

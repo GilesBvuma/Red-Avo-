@@ -71,6 +71,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/gift-cards/purchase", "/api/gift-cards/redeem").permitAll() // Gift card storefront
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/gift-cards/validate/**").permitAll() // Gift card balance check
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/gift-cards/tiers").permitAll() // Gift card tiers
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/colors").permitAll() // Public color palette for storefront
 
                 // ── Admin-only endpoints — enforced at HTTP level ───────────────────────────────
                 .requestMatchers("/api/auth/register/employee").hasRole("ADMIN")

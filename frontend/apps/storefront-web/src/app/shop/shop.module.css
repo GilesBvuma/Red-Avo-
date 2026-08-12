@@ -291,34 +291,40 @@
   color: var(--navy);
 }
 
-/* Color Filters */
+/* Color Filters — wrapping swatch circles (no text, tooltip only) */
 .filterColorGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 10px;
+  padding: 8px 0 12px;
 }
 
-.filterColorBtn {
+/* Each swatch: a plain circle button */
+.filterColorCircleBtn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(0, 0, 0, 0.12);
   cursor: pointer;
   padding: 0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  outline: none;
 }
 
-.filterColorBtn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.filterColorCircleBtn:hover {
+  transform: scale(1.18);
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
-.filterColorBtn.active {
-  border: 2px solid var(--navy);
+/* Active — red ring identical to POS selected swatch */
+.activeColorCircleBtn {
+  border: 2.5px solid #C0392B;
   transform: scale(1.15);
-  box-shadow: 0 0 0 2px #fff inset, 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 0 0 2px #fff inset, 0 0 0 4px rgba(192, 57, 43, 0.25);
 }
+
 
 /* Size Filters */
 .filterSizeGrid {
@@ -330,27 +336,30 @@
 
 .filterSizeBtn {
   background: #fff;
-  border: 1px solid rgba(26, 43, 74, 0.12);
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
+  border: 1.5px solid rgba(26, 43, 74, 0.14);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--navy);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   font-family: var(--font-montserrat), sans-serif;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .filterSizeBtn:hover {
-  border-color: var(--navy);
+  border-color: #C0392B;
+  color: #C0392B;
 }
 
 .filterSizeBtn.active {
-  background: var(--navy);
+  background: #C0392B;
   color: #fff;
-  border-color: var(--navy);
+  border-color: #C0392B;
 }
+
 
 /* Active filter chips */
 .activeFilters {
