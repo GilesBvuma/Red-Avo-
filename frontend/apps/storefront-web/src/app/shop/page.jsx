@@ -342,6 +342,13 @@ function ShopContent() {
   // colours appear even if the name differs slightly from the seeded palette.
   // getColorHex falls back to #9ca3af for unrecognised names.
   const allAvailableColors = Array.from(new Set(products.flatMap(p => {
+    // Exclude Gift Card products since their colors are actually price denominations ($20, $50, etc)
+    const isGiftCard = 
+      (p.name && p.name.toLowerCase().includes('gift card')) || 
+      (p.category && p.category.toLowerCase().includes('gift card'));
+      
+    if (isGiftCard) return [];
+
     let cs = [];
     if (p.colors) cs = cs.concat(p.colors.split(',').map(s => s.trim()));
     if (p.variants) cs = cs.concat(p.variants.map(v => v.color).filter(Boolean));
