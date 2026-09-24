@@ -1,86 +1,145 @@
-.section {
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 120px 0 100px;
   position: relative;
+  overflow: hidden;
+  background: var(--cream);
+}
+
+.heroContainer {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 6vw;
+  position: relative;
+  z-index: 10;
 }
 
-.bg {
-  width: 100%;
+.left {
+  max-width: 600px;
+  /* Prevent the button inside from bleeding outside this panel */
+  overflow: visible;
 }
 
-.video {
-  width: 100%;
-  height: auto;
-  display: block;
+/* Button wrapper — gives top spacing and contains the MotionButton */
+.btnWrapper {
+  margin-top: 24px;
+  /* Ensure the wrapper itself never overflows its parent */
+  overflow: visible;
 }
 
-.placeholder {
-  width: 100%;
-  height: 100%;
-  background: var(--navy);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 3px dashed rgba(255, 255, 255, 0.15);
-}
-
-.placeholderLabel {
-  font-family: 'Inter', sans-serif;
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.placeholderSub {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-.swapLabel {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 3;
-  background: rgba(26, 43, 74, 0.6);
-  color: rgba(255, 255, 255, 0.5);
-  font-family: 'Inter', sans-serif;
+.eyebrow {
+  display: inline-block;
+  color: #fff;
   font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  padding: 6px 16px;
-  border-radius: 999px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.25);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
-.overlayText {
-  position: relative;
-  z-index: 2;
+.heading {
   font-family: var(--font-montserrat), sans-serif;
   font-weight: 600;
-  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: #fff;
-  letter-spacing: 0.14em;
-  text-shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.22em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.desc {
+  margin-top: 24px;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 440px;
+  line-height: 1.6;
   will-change: transform, opacity;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.15);
+}
+
+
+
+/* Right side — the full background banner */
+.right {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Gradient overlay so the white text is readable */
+.right::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  z-index: 2;
+}
+
+.imageWrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 900px) {
-  .section::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 24px;
-    background: #F7F7F5;
-    z-index: 2;
-    pointer-events: none;
+  .hero {
+    align-items: flex-end;
+    padding-bottom: 70px;
+  }
+
+  .left {
+    margin-top: 0;
+    /* On mobile full width but with safe inner padding applied by heroContainer */
+    max-width: 100%;
+  }
+
+  .btnWrapper {
+    /* Extra bottom breathing room on small screens */
+    margin-bottom: 4px;
+  }
+
+  .eyebrow {
+    font-size: 0.55rem;
+    padding: 3px 10px;
+    margin-bottom: 20px;
+  }
+
+  .heading {
+    font-size: 1.8rem;
+  }
+
+  .desc {
+    font-size: 0.9rem;
+    max-width: 100%;
+  }
+
+  .cta {
+    margin-top: 24px;
+    padding: 12px 28px;
+    font-size: 0.8rem;
+  }
+}
+
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .desktopOnly {
+    display: none !important;
+  }
+  .mobileOnly {
+    display: block !important;
   }
 }

@@ -1,0 +1,87 @@
+/* ──────────────────────────────────────────────────────────────────
+ * MotionButton — animated pill CTA
+ * Width is driven by content, never hard-coded.
+ * ────────────────────────────────────────────────────────────────── */
+
+.cta {
+  /* Use flex so the button grows to fit whatever label is passed */
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  height: 56px;
+  /* Horizontal padding: left accommodates icon circle, right gives breathing room */
+  padding: 3px 24px 3px 3px;
+  /* Safety: never bleed past the container edge */
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  cursor: pointer;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-decoration: none;
+  overflow: hidden; /* clip the expanding circle inside the pill */
+  transition: transform 0.25s ease;
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Animated red pill (fills button on hover / always on mobile) ── */
+.ctaCircle {
+  /* Sits at the left edge — starts as a 48px dot */
+  position: absolute;
+  left: 3px;
+  top: 4px;
+  height: 48px;
+  width: 48px;
+  background: var(--red);
+  border-radius: 999px;
+  transition: width 0.5s var(--ease-out, cubic-bezier(0.25, 1, 0.5, 1));
+  z-index: 0;
+}
+
+.cta:hover .ctaCircle,
+.ctaCircle.expanded {
+  /* Expand to fill the full button interior */
+  width: calc(100% - 6px);
+}
+
+/* ── Arrow icon ────────────────────────────────────────────────────── */
+.ctaIcon {
+  position: relative;
+  z-index: 1;
+  /* Fixed left offset so it sits inside the circle dot */
+  margin-left: 12px;
+  margin-right: 16px;
+  flex-shrink: 0;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s var(--ease-out, cubic-bezier(0.25, 1, 0.5, 1));
+}
+
+.cta:hover .ctaIcon {
+  transform: translateX(4px);
+}
+
+/* ── Label text ──────────────────────────────────────────────────── */
+.ctaText {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: color 0.5s ease;
+}
+
+/* ── Mobile: circle is always expanded (no hover state needed) ──── */
+@media (max-width: 900px) {
+  .ctaCircle {
+    width: calc(100% - 6px);
+  }
+}

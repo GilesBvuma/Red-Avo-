@@ -84,6 +84,14 @@ public class Order {
     // ── Timestamps ─────────────────────────────────────────────
     private LocalDateTime createdAt;
 
+    // ── UTM Attribution ────────────────────────────────────────
+    // Captured from URL params on the storefront and stored at checkout.
+    // Allows revenue-by-channel reporting in the dashboard.
+    private String utmSource;   // e.g. "facebook", "instagram", "google"
+    private String utmMedium;   // e.g. "cpc", "email", "social"
+    private String utmCampaign; // e.g. "aug-drop-2026"
+    private String utmContent;  // e.g. "hero-banner-v1"
+
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();

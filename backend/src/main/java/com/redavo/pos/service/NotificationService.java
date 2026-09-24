@@ -160,6 +160,177 @@ public class NotificationService {
         sendEmail(null, "User", email, body, subject, "AUTH_OTP", null);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🎉 WELCOME EMAIL — first-purchase customers only
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Sends a branded welcome email to a first-time buyer.
+     * Called from OrderService when customer.totalPurchases == 1.
+     * Includes: brand story, size guide CTA, social links, invoice PDF.
+     */
+    public void sendWelcomeEmail(Long customerId, String firstName,
+            String email, String orderRef, byte[] invoicePdf) {
+
+        String subject = "Welcome to RedAvo 🥑❤️ — Your first order is confirmed";
+
+        String plainText = "Hi " + firstName + "!\n\n"
+                + "Thank you for your first order with RedAvo — ORD-" + orderRef + " is confirmed.\n\n"
+                + "We exist for the bold, the fearless, and the ones who move with purpose.\n"
+                + "Authentic. Fearless. That's RedAvo.\n\n"
+                + "A few things to know:\n"
+                + "• Your invoice is attached to this email.\n"
+                + "• Check our size guide: https://redavo.co.zw/size-chart\n"
+                + "• Got questions? Reply to this email or WhatsApp us.\n\n"
+                + "Move with confidence.\n— The RedAvo Team";
+
+        String html = "<html><body style=\"margin:0;padding:0;background:#0d0d0d;font-family:'Helvetica Neue',Arial,sans-serif;\">"
+                + "<div style=\"max-width:600px;margin:0 auto;background:#141414;border-radius:12px;overflow:hidden;\">"
+                + "<!-- Header -->"
+                + "<div style=\"background:linear-gradient(135deg,#8F0D13 0%,#C0392B 100%);padding:40px 32px;\">"
+                + "<h1 style=\"margin:0;color:#fff;font-size:28px;font-weight:700;letter-spacing:-0.5px;\">Welcome to RedAvo 🥑❤️</h1>"
+                + "<p style=\"margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;\">Authentic. Fearless.</p>"
+                + "</div>"
+                + "<!-- Body -->"
+                + "<div style=\"padding:36px 32px;\">"
+                + "<p style=\"color:#e0e0e0;font-size:16px;line-height:1.6;margin:0 0 20px;\">Hi <strong>" + firstName + "</strong>,</p>"
+                + "<p style=\"color:#e0e0e0;font-size:15px;line-height:1.6;margin:0 0 24px;\">"
+                + "Your first order <strong style=\"color:#fff;\">" + orderRef + "</strong> is confirmed. "
+                + "We're already getting it ready for you. 🔥"
+                + "</p>"
+                + "<div style=\"background:#1f1f1f;border-left:4px solid #C0392B;border-radius:0 8px 8px 0;padding:20px 24px;margin:0 0 28px;\">"
+                + "<p style=\"margin:0;color:#aaa;font-size:13px;text-transform:uppercase;letter-spacing:1px;\">About Us</p>"
+                + "<p style=\"margin:8px 0 0;color:#e0e0e0;font-size:14px;line-height:1.6;\">"
+                + "RedAvo exists for the bold and the fearless — women who move with purpose. "
+                + "Every piece we make is crafted to perform and built to make you feel unstoppable."
+                + "</p>"
+                + "</div>"
+                + "<p style=\"color:#e0e0e0;font-size:15px;margin:0 0 12px;\"><strong>A few things to know:</strong></p>"
+                + "<ul style=\"color:#ccc;font-size:14px;line-height:1.8;padding-left:20px;margin:0 0 28px;\">"
+                + "<li>Your invoice is attached to this email</li>"
+                + "<li>For sizing help → <a href=\"https://redavo.co.zw/size-chart\" style=\"color:#e87878;\">Size Guide</a></li>"
+                + "<li>Questions? Simply reply to this email or WhatsApp us</li>"
+                + "</ul>"
+                + "<a href=\"https://redavo.co.zw/shop\" "
+                + "style=\"display:inline-block;background:#C0392B;color:#fff;text-decoration:none;"
+                + "padding:14px 28px;border-radius:8px;font-weight:600;font-size:14px;letter-spacing:0.5px;\">"
+                + "Continue Shopping →"
+                + "</a>"
+                + "</div>"
+                + "<!-- Footer -->"
+                + "<div style=\"padding:20px 32px;border-top:1px solid #2a2a2a;\">"
+                + "<p style=\"margin:0;color:#555;font-size:12px;\">"
+                + "RedAvo Sportswear &mdash; Authentic &middot; Fearless<br/>"
+                + "You're receiving this because you made a purchase at redavo.co.zw"
+                + "</p>"
+                + "</div>"
+                + "</div>"
+                + "</body></html>";
+
+        if (demoMode) {
+            printDemo("WELCOME_EMAIL", email, subject, plainText);
+            saveLog(customerId, firstName, email, "EMAIL", plainText, "DEMO", orderRef);
+            return;
+        }
+        if (email == null || email.isBlank()) return;
+        try {
+            boolean hasAttachment = (invoicePdf != null && invoicePdf.length > 0);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("RedAvo <" + fromAddress + ">");
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(plainText, html);
+            if (hasAttachment) {
+                helper.addAttachment("Invoice_" + orderRef + ".pdf",
+                        new org.springframework.core.io.ByteArrayResource(invoicePdf),
+                        "application/pdf");
+            }
+            mailSender.send(message);
+            System.out.println("[WELCOME EMAIL ✅] Sent → " + email);
+            saveLog(customerId, firstName, email, "EMAIL", plainText, "SENT", orderRef);
+        } catch (Exception e) {
+            System.err.println("[WELCOME EMAIL ❌] " + email + " — " + e.getMessage());
+            saveLog(customerId, firstName, email, "EMAIL", plainText, "FAILED", orderRef);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🛒 ABANDONED CART EMAIL
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Sends a "you left something behind" recovery email.
+     * Called from AbandonedCartController when the storefront detects
+     * a cart has been idle for ≥ 1 hour with a captured email.
+     *
+     * @param name        customer first name (or "there" if unknown)
+     * @param email       customer email address
+     * @param cartSummary brief text summary of items, e.g. "2 items"
+     * @param cartValue   total cart value as formatted string, e.g. "$42.00"
+     */
+    public void sendAbandonedCartEmail(String name, String email,
+            String cartSummary, String cartValue) {
+
+        if (email == null || email.isBlank()) return;
+
+        String firstName = (name != null && !name.isBlank()) ? name.split(" ")[0] : "there";
+        String subject = "You left something behind, " + firstName + " 👀";
+
+        String plainText = "Hi " + firstName + ",\n\n"
+                + "You added " + cartSummary + " (worth " + cartValue + ") to your RedAvo cart "
+                + "but didn't complete your order.\n\n"
+                + "Your cart is still saved — complete your purchase here: https://redavo.co.zw/cart\n\n"
+                + "Move with confidence.\n— The RedAvo Team";
+
+        String html = "<html><body style=\"margin:0;padding:0;background:#0d0d0d;font-family:'Helvetica Neue',Arial,sans-serif;\">"
+                + "<div style=\"max-width:600px;margin:0 auto;background:#141414;border-radius:12px;overflow:hidden;\">"
+                + "<div style=\"background:linear-gradient(135deg,#1a1a1a 0%,#2a0a0a 100%);padding:40px 32px;\">"
+                + "<h1 style=\"margin:0;color:#fff;font-size:24px;font-weight:700;\">You left something behind 👀</h1>"
+                + "<p style=\"margin:8px 0 0;color:rgba(255,255,255,0.6);font-size:14px;\">RedAvo Activewear</p>"
+                + "</div>"
+                + "<div style=\"padding:36px 32px;\">"
+                + "<p style=\"color:#e0e0e0;font-size:15px;line-height:1.6;margin:0 0 20px;\">Hi <strong>" + firstName + "</strong>,</p>"
+                + "<p style=\"color:#e0e0e0;font-size:15px;line-height:1.6;margin:0 0 24px;\">"
+                + "You added <strong style=\"color:#fff;\">" + cartSummary + "</strong> worth "
+                + "<strong style=\"color:#C0392B;\">" + cartValue + "</strong> to your cart "
+                + "but didn't complete your order. Your cart is still saved for you."
+                + "</p>"
+                + "<a href=\"https://redavo.co.zw/cart\" "
+                + "style=\"display:inline-block;background:#C0392B;color:#fff;text-decoration:none;"
+                + "padding:16px 32px;border-radius:8px;font-weight:700;font-size:15px;letter-spacing:0.5px;\">"
+                + "Complete My Order →"
+                + "</a>"
+                + "<p style=\"color:#666;font-size:13px;margin:24px 0 0;\">Stock is limited — secure yours before it sells out.</p>"
+                + "</div>"
+                + "<div style=\"padding:20px 32px;border-top:1px solid #2a2a2a;\">"
+                + "<p style=\"margin:0;color:#555;font-size:12px;\">"
+                + "RedAvo Sportswear &mdash; Authentic &middot; Fearless<br/>"
+                + "To stop receiving these reminders, simply complete or clear your cart."
+                + "</p>"
+                + "</div>"
+                + "</div>"
+                + "</body></html>";
+
+        if (demoMode) {
+            printDemo("ABANDONED_CART_EMAIL", email, subject, plainText);
+            saveLog(null, firstName, email, "EMAIL", plainText, "DEMO", "ABANDONED_CART");
+            return;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setFrom("RedAvo <" + fromAddress + ">");
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(plainText, html);
+            mailSender.send(message);
+            System.out.println("[ABANDONED CART EMAIL ✅] Sent → " + email);
+            saveLog(null, firstName, email, "EMAIL", plainText, "SENT", "ABANDONED_CART");
+        } catch (Exception e) {
+            System.err.println("[ABANDONED CART EMAIL ❌] " + email + " — " + e.getMessage());
+            saveLog(null, firstName, email, "EMAIL", plainText, "FAILED", "ABANDONED_CART");
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════
     // 💬 WHATSAPP — Meta Cloud API (graph.facebook.com)
     // ═══════════════════════════════════════════════════════════

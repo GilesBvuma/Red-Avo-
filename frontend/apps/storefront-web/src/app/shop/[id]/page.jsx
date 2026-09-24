@@ -228,6 +228,18 @@ export default function ProductPage({ params }) {
               {selectedVariant ? 'Add to Bag' : 'Select Size & Color'}
             </button>
 
+            <div className={styles.guaranteeBadge}>
+              <div className={styles.badgeItem}>
+                <span>🛡️</span> 30-Day Quality Guarantee
+              </div>
+              <div className={styles.badgeItem}>
+                <span>🚚</span> Secure Local Delivery
+              </div>
+              <div className={styles.badgeItem}>
+                <span>💳</span> Safe & Secure Payments (PayNow / Cash)
+              </div>
+            </div>
+
 
           </div>
         </div>

@@ -6,7 +6,7 @@
 /* ── Section wrapper ── */
 .section {
   background: var(--cream);
-  padding: 110px 6vw 100px;
+  padding: 90px 6vw;
   overflow: hidden;
 }
 
@@ -29,10 +29,10 @@
 .heading {
   font-family: var(--font-montserrat), sans-serif;
   font-weight: 600;
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
   color: var(--navy);
-  line-height: 1;
-  margin-bottom: 56px;
+  line-height: 1.2;
+  margin-bottom: 40px;
 }
 
 /* ── Grid ── */
@@ -45,7 +45,7 @@
 /* ── Card ── */
 .card {
   position: relative;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   background: #111;
   cursor: pointer;

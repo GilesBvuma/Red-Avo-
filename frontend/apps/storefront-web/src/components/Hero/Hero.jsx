@@ -5,6 +5,7 @@ import { useGSAP } from '@gsap/react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import Placeholder from '@/components/Placeholder/Placeholder';
 import Link from 'next/link';
+import MotionButton from '@/components/ui/MotionButton/MotionButton';
 import styles from './Hero.module.css';
 
 const WORDS = ['Own', 'your', 'story.', 'Move', 'with', 'confidence'];
@@ -62,8 +63,10 @@ export default function Hero() {
       {/* Soft light bloom behind text */}
       <div className={styles.lightBloom} aria-hidden="true" />
 
-      {/* ── Left column ── */}
-      <div className={styles.left}>
+      {/* ── Container for alignment ── */}
+      <div className={styles.heroContainer}>
+        {/* ── Left column ── */}
+        <div className={styles.left}>
         <span id="hero-badge" className={styles.eyebrow}>New Drop·Spring 2026</span>
 
         <h1 className={styles.heading} aria-label="Own your story. Move with confidence">
@@ -79,9 +82,10 @@ export default function Hero() {
           ))}
         </h1>
 
-        <Link id="hero-cta" href="/shop" className={styles.cta}>
-          Shop the Collection <span className={styles.ctaArrow}>&rarr;</span>
-        </Link>
+        <div style={{ marginTop: '48px' }}>
+          <MotionButton id="hero-cta" href="/shop" label="Shop now" />
+        </div>
+      </div>
       </div>
 
       {/* ── Right column — 3D image ── */}

@@ -9,15 +9,17 @@ import Placeholder from '@/components/Placeholder/Placeholder';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import styles from './Nav.module.css';
 
 export default function Nav() {
   const navRef = useRef(null);
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const router = useRouter();
   const pathname = usePathname();
-  const isLightNav = pathname === '/our-story';
-  
+  const DARK_NAV_PAGES = ['/', '/shop', '/collections', '/cart', '/our-story'];
+  const isLightNav = !DARK_NAV_PAGES.includes(pathname);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -87,6 +89,10 @@ export default function Nav() {
                 <SearchIcon />
               </button>
             )}
+            <Link href="/wishlist" className={styles.iconBtn} aria-label="Wishlist" id="nav-wishlist" style={{ position: 'relative' }}>
+              <WishlistIcon />
+              {wishlistCount > 0 && <span className={styles.cartBadge}>{wishlistCount}</span>}
+            </Link>
             <Link href="/account" className={styles.iconBtn} aria-label="Account" id="nav-account">
               <UserIcon />
             </Link>
@@ -130,6 +136,14 @@ export default function Nav() {
         </div>
       )}
     </>
+  );
+}
+
+function WishlistIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
   );
 }
 

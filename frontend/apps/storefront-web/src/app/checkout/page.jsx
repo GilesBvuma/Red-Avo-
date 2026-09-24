@@ -1,25 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import { useCart } from '@/context/CartContext';
-import { initiatePaynowCheckout } from '@/lib/api';
+import { initiatePaynowCheckout, createOrder } from '@/lib/api';
 import { DELIVERY_ZONES } from '@/lib/deliveryZones';
 import PaymentMethods from '@/components/PaymentMethods/PaymentMethods';
 import FloatingLines from '@/components/FloatingLines/FloatingLines';
+import { getStoredUtm } from '@/hooks/useUtm';
+import { usePixel } from '@/hooks/usePixel';
+import { saveAbandonedCartSnapshot, clearAbandonedCart } from '@/hooks/useAbandonedCart';
 import styles from './checkout.module.css';
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
+  const { track } = usePixel();
+
+  // Fire InitiateCheckout once when checkout page mounts with items
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      track('InitiateCheckout', {
+        num_items: cartItems.reduce((s, i) => s + i.quantity, 0),
+        value:     parseFloat(cartTotal.toFixed(2)),
+        currency:  'USD',
+        content_ids: cartItems
+          .filter(i => !i.isGiftCard)
+          .map(i => String(i.product.id)),
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     deliveryMethod: 'DELIVERY', // or 'COLLECTION'
+    paymentMethod: 'PAYNOW', // or 'COD'
     country: 'Zimbabwe',
     firstName: '',
     lastName: '',
@@ -33,6 +53,7 @@ export default function CheckoutPage() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Gift card state
   const [gcCode, setGcCode] = useState('');
@@ -70,7 +91,12 @@ export default function CheckoutPage() {
   };
 
   const handleChange = (e) => {
+    const updated = { ...formData, [e.target.name]: e.target.value };
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    // Snapshot for abandoned-cart recovery whenever email is filled
+    if (e.target.name === 'email' && e.target.value.includes('@')) {
+      saveAbandonedCartSnapshot(e.target.value, formData.name, cartItems);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -102,29 +128,58 @@ export default function CheckoutPage() {
         recipientBirthday: gc.recipientBirthday
       }));
 
+      // ── Attach UTM attribution captured on landing ─────────────────
+      const utm = getStoredUtm();
+
       const payload = {
         amount: total,
         email: formData.email,
         customerName: formData.name,
         phone: formData.phone,
         deliveryMethod: formData.deliveryMethod,
+        paymentMethod: formData.paymentMethod,
         deliveryAddress: formData.deliveryMethod === 'DELIVERY' 
           ? `[Zone: ${selectedZone.name}] ${formData.firstName} ${formData.lastName}, ${formData.company ? formData.company + ', ' : ''}${formData.address}, ${formData.apartment ? formData.apartment + ', ' : ''}${formData.city}, ${formData.country}, ${formData.postalCode}` 
           : null,
         deliveryFee: deliveryFee,
         items: orderItems,
-        giftCards: giftCards
+        giftCards: giftCards,
+        // UTM fields — null-safe; only present if captured
+        utmSource:   utm?.utm_source   ?? null,
+        utmMedium:   utm?.utm_medium   ?? null,
+        utmCampaign: utm?.utm_campaign ?? null,
+        utmContent:  utm?.utm_content  ?? null,
       };
 
-      const res = await initiatePaynowCheckout(payload);
-      
-      if (res.redirectUrl) {
-        // Clear cart since order is placed (PENDING_PAYMENT in backend)
+      if (formData.paymentMethod === 'COD' || total === 0) {
+        const result = await createOrder(payload);
         clearCart();
-        // Redirect to PayNow
-        window.location.href = res.redirectUrl;
+        clearAbandonedCart(); // purchase complete — cancel any pending recovery
+        // ── Pixel: Purchase ────────────────────────────────
+        track('Purchase', {
+          value:       parseFloat(total.toFixed(2)),
+          currency:    'USD',
+          content_ids: orderItems.map(i => String(i.productId)),
+          content_type: 'product',
+          order_id:    result?.id ? String(result.id) : undefined,
+        });
+        setSuccessMessage('Order placed successfully! We will contact you soon for delivery/collection.');
       } else {
-        setError('Payment initiation failed. Please try again.');
+        const res = await initiatePaynowCheckout(payload);
+        if (res.redirectUrl) {
+          clearCart();
+          clearAbandonedCart(); // purchase complete — cancel any pending recovery
+          // ── Pixel: Purchase fires before redirect (PayNow handles redirect)
+          track('Purchase', {
+            value:       parseFloat(total.toFixed(2)),
+            currency:    'USD',
+            content_ids: orderItems.map(i => String(i.productId)),
+            content_type: 'product',
+          });
+          window.location.href = res.redirectUrl;
+        } else {
+          setError('Payment initiation failed. Please try again.');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -168,6 +223,12 @@ export default function CheckoutPage() {
       <main className={styles.main}>
         <h1>Checkout</h1>
         
+        {successMessage ? (
+          <div className={styles.empty}>
+            <h2>{successMessage}</h2>
+            <button onClick={() => router.push('/shop')} className={styles.btn} style={{marginTop: '24px'}}>Continue Shopping</button>
+          </div>
+        ) : (
         <div className={styles.layout}>
           <form className={styles.form} onSubmit={handleSubmit}>
             <h2>Customer Details</h2>
@@ -187,6 +248,30 @@ export default function CheckoutPage() {
             <div className={styles.inputGroup}>
               <label>Phone Number</label>
               <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} />
+            </div>
+
+            <h2>Payment Method</h2>
+            <div className={styles.radioGroup} style={{marginBottom: '32px'}}>
+              <label className={styles.radioLabel}>
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  value="PAYNOW" 
+                  checked={formData.paymentMethod === 'PAYNOW'}
+                  onChange={handleChange}
+                />
+                PayNow (EcoCash / InnBucks / Cards)
+              </label>
+              <label className={styles.radioLabel}>
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  value="COD" 
+                  checked={formData.paymentMethod === 'COD'}
+                  onChange={handleChange}
+                />
+                Cash on Delivery (COD) / Pay on Collection
+              </label>
             </div>
 
             <h2>Delivery Method</h2>
@@ -308,6 +393,10 @@ export default function CheckoutPage() {
               <button type="submit" className={styles.submitBtn} disabled={loading}>
                 {loading ? 'Completing Order...' : 'Complete Order (No payment needed)'}
               </button>
+            ) : formData.paymentMethod === 'COD' ? (
+              <button type="submit" className={styles.submitBtn} disabled={loading}>
+                {loading ? 'Processing...' : `Place Order • Pay $${total.toFixed(2)} Later`}
+              </button>
             ) : (
               <button type="submit" className={styles.submitBtn} disabled={loading}>
                 {loading ? 'Processing...' : `Pay $${total.toFixed(2)} with PayNow`}
@@ -359,6 +448,7 @@ export default function CheckoutPage() {
               </div>
           </div>
         </div>
+        )}
       </main>
       <Footer />
     </div>

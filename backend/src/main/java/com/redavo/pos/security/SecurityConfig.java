@@ -72,6 +72,9 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/gift-cards/validate/**").permitAll() // Gift card balance check
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/gift-cards/tiers").permitAll() // Gift card tiers
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/colors").permitAll() // Public color palette for storefront
+                .requestMatchers("/api/wishlist/**").permitAll() // Wishlist — customer JWT validated inside WishlistController
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/abandoned-cart/notify").permitAll() // Storefront abandoned-cart recovery
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/waitlist").permitAll() // Founding-member waitlist
 
                 // ── Admin-only endpoints — enforced at HTTP level ───────────────────────────────
                 .requestMatchers("/api/auth/register/employee").hasRole("ADMIN")

@@ -10,7 +10,7 @@
 /* ── CSS Custom Properties (Design Tokens) ── */
 :root {
   /* Brand colours */
-  --red:   #C0392B;
+  --red:   #8F0D13;
   --green: #5D8A3C;
   --cream: #FAFAF5;
   --pink:  #E91E8C;
@@ -120,7 +120,7 @@ ul, ol { list-style: none; }
 /* ── Shared pill button ── */
 .btn-pill {
   display: inline-block;
-  background: linear-gradient(135deg, #ff416c 0%, var(--red) 100%);
+  background: var(--red);
   color: #fff;
   font-weight: 700;
   font-size: 0.85rem;
@@ -131,7 +131,7 @@ ul, ol { list-style: none; }
   text-decoration: none;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.25);
+  box-shadow: 0 4px 16px rgba(143, 13, 19, 0.25);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
@@ -142,7 +142,7 @@ ul, ol { list-style: none; }
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, #ff4b2b 0%, #a93226 100%);
+  background: #6a090e;
   z-index: -1;
   transition: opacity 0.3s ease;
   opacity: 0;
@@ -154,7 +154,7 @@ ul, ol { list-style: none; }
 
 .btn-pill:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(192, 57, 43, 0.4);
+  box-shadow: 0 8px 24px rgba(143, 13, 19, 0.4);
 }
 
 /* ── Section label ── */
@@ -178,13 +178,13 @@ ul, ol { list-style: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--cream); }
 ::-webkit-scrollbar-thumb {
-  background: rgba(192, 57, 43, 0.35);
+  background: rgba(143, 13, 19, 0.35);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--red); }
 
 /* ── Selection highlight ── */
 ::selection {
-  background: rgba(192, 57, 43, 0.18);
+  background: rgba(143, 13, 19, 0.18);
   color: var(--navy);
 }

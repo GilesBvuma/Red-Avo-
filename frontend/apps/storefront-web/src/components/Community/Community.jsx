@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
 import { fetchCommunityPosts } from '@/lib/api';
+import Image from 'next/image';
 import styles from './Community.module.css';
 
 const MEDIA_URL = process.env.NEXT_PUBLIC_MEDIA_URL || '';
@@ -29,31 +30,33 @@ function GridCardMedia({ post }) {
 
   return (
     <>
-      <img
+      <Image
         src={`${MEDIA_URL}${post.coverImageUrl}`}
         alt=""
         className={styles.cardImg}
-        loading="lazy"
-        style={{ position: 'absolute', inset: 0, opacity: showMedia ? 0 : 1, transition: 'opacity 0.8s ease' }}
+        fill
+        sizes="(max-width: 768px) 50vw, 33vw"
+        style={{ objectFit: 'cover', opacity: showMedia ? 0 : 1, transition: 'opacity 0.8s ease' }}
       />
       {showMedia && (
         post.mediaType === 'VIDEO' ? (
           <video
             src={`${MEDIA_URL}${post.mediaUrl}`}
             className={styles.cardImg}
-            style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.8s ease forwards' }}
+            style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.8s ease forwards', objectFit: 'cover' }}
             autoPlay
             muted
             loop
             playsInline
           />
         ) : (
-          <img
+          <Image
             src={`${MEDIA_URL}${post.mediaUrl}`}
             alt=""
             className={styles.cardImg}
-            loading="lazy"
-            style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.8s ease forwards' }}
+            fill
+            sizes="(max-width: 768px) 50vw, 33vw"
+            style={{ objectFit: 'cover', animation: 'fadeIn 0.8s ease forwards' }}
           />
         )
       )}
@@ -111,12 +114,17 @@ function CommunityViewer({ posts, activeIndex, onClose, onPrev, onNext }) {
               playsInline
             />
           ) : (
-            <img
-              key={post.mediaUrl}
-              src={`${MEDIA_URL}${post.mediaUrl}`}
-              alt={`@${post.instagramHandle}`}
-              className={styles.viewerImage}
-            />
+            <div className={styles.viewerImageWrapper}>
+              <Image
+                key={post.mediaUrl}
+                src={`${MEDIA_URL}${post.mediaUrl}`}
+                alt={`@${post.instagramHandle}`}
+                className={styles.viewerImage}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
           )}
 
           {/* Header bar with handle + close */}

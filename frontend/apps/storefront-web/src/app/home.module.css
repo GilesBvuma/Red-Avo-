@@ -1,0 +1,63 @@
+.homeWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Watermark layer — sits behind all content ── */
+.watermarkLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.wm {
+  position: absolute;
+  opacity: 0.045;
+  filter: grayscale(100%);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Scattered placements */
+.wm1 {
+  width: clamp(300px, 28vw, 480px);
+  top: 4%;
+  right: -4%;
+  transform: rotate(18deg);
+}
+
+.wm2 {
+  width: clamp(220px, 20vw, 360px);
+  top: 38%;
+  left: -5%;
+  transform: rotate(-22deg);
+}
+
+.wm3 {
+  width: clamp(260px, 24vw, 420px);
+  top: 68%;
+  right: 8%;
+  transform: rotate(10deg);
+}
+
+.wm4 {
+  width: clamp(180px, 16vw, 300px);
+  top: 20%;
+  left: 38%;
+  transform: rotate(-8deg);
+}
+
+.wm5 {
+  width: clamp(240px, 22vw, 380px);
+  top: 85%;
+  left: 20%;
+  transform: rotate(30deg);
+}
+
+/* main sits above watermarks */
+.homeWrapper > main {
+  position: relative;
+  z-index: 1;
+}

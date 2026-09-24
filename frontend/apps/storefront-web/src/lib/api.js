@@ -28,6 +28,16 @@ export async function initiatePaynowCheckout(payload) {
   return res.json();
 }
 
+export async function createOrder(payload) {
+  const res = await fetch(`${API_URL}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to create order');
+  return res.json();
+}
+
 export async function fetchCommunityPosts() {
   const res = await fetch(`${API_URL}/community`);
   if (!res.ok) throw new Error('Failed to fetch community posts');
