@@ -199,10 +199,12 @@
 }
 
 .filterGroupChevron {
-  font-size: 10px;
-  color: #9ca3af;
-  transition: transform 0.25s ease;
-}
+    display: flex;
+    align-items: center;
+    color: #9ca3af;
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
 
 .filterGroupChevron.open {
   transform: rotate(180deg);

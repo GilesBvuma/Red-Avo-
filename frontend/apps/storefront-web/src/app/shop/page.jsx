@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Nav from '@/components/Nav/Nav';
@@ -17,20 +17,20 @@ import MotionButton from '@/components/ui/MotionButton/MotionButton';
 import ShopByCategory from '@/components/ShopByCategory/ShopByCategory';
 import styles from './shop.module.css';
 
-/* â”€â”€â”€ Footer features data â”€â”€â”€ */
+/* --- Footer features data --- */
 const FEATURES = [
-  { icon: 'ðŸšš', title: 'Fast Shipping', sub: 'Orders dispatched within 24h' },
-  { icon: 'âœ¦',  title: 'Premium Materials', sub: 'Crafted for performance & feel' },
-  { icon: 'â†©',  title: 'Easy Returns', sub: '30-day hassle-free returns' },
-  { icon: 'ðŸ”’', title: 'Secure Checkout', sub: 'End-to-end encrypted payments' },
+  { icon: '\u{1F69A}', title: 'Fast Shipping', sub: 'Orders dispatched within 24h' },
+  { icon: '\u2728', title: 'Premium Materials', sub: 'Crafted for performance & feel' },
+  { icon: '\u21A9', title: 'Easy Returns', sub: '30-day hassle-free returns' },
+  { icon: '\u{1F512}', title: 'Secure Checkout', sub: 'End-to-end encrypted payments' },
 ];
 
-/* â”€â”€â”€ Sort options â”€â”€â”€ */
+/* --- Sort options --- */
 const SORT_OPTIONS = [
   { value: 'default',   label: 'Featured' },
-  { value: 'price-asc', label: 'Price: Low â†’ High' },
-  { value: 'price-desc', label: 'Price: High â†’ Low' },
-  { value: 'name-asc',  label: 'Name Aâ€“Z' },
+  { value: 'price-asc', label: 'Price: Low → High' },
+  { value: 'price-desc', label: 'Price: High → Low' },
+  { value: 'name-asc',  label: 'Name A→Z' },
 ];
 
 /* ============================================================
@@ -182,14 +182,14 @@ function ShopContent() {
   const shopHeroRef = useRef(null);
   const titleWordsRef = useRef([]);
 
-  /* â”€â”€ Modal helpers removed â”€â”€ */
+  /* -- Modal helpers removed -- */
 
   const { addToCart } = useCart();
   const router = useRouter();
   const searchParams  = useSearchParams();
   const searchQuery   = searchParams.get('q') || '';
 
-  /* â”€â”€ Load data â”€â”€ */
+  /* -- Load data -- */
   useEffect(() => {
     async function load() {
       try {
@@ -224,7 +224,7 @@ function ShopContent() {
     load();
   }, [searchQuery]);
 
-  /* â”€â”€ Hero Slideshow â”€â”€ */
+  /* -- Hero Slideshow -- */
   useEffect(() => {
     const interval = setInterval(() => {
       setHeroImgIndex(prev => (prev + 1) % SHOP_HERO_IMAGES.length);
@@ -232,7 +232,7 @@ function ShopContent() {
     return () => clearInterval(interval);
   }, []);
 
-  /* â”€â”€ Hero Animation â”€â”€ */
+  /* -- Hero Animation -- */
   useGSAP(() => {
     const tl = gsap.timeline({ delay: 0.2 });
 
@@ -255,7 +255,7 @@ function ShopContent() {
     );
   }, { scope: shopHeroRef, dependencies: [activeCategory] });
 
-  /* â”€â”€ Filter + Sort â”€â”€ */
+  /* -- Filter + Sort -- */
   let filtered = products;
   
   if (activeCategory === 'New Arrivals') {
@@ -297,7 +297,7 @@ function ShopContent() {
     return 0;
   });
 
-  /* â”€â”€ Product helpers â”€â”€ */
+  /* -- Product helpers -- */
 
   const openProduct = (product) => {
     router.push(`/shop/${product.id}`);
@@ -315,7 +315,7 @@ function ShopContent() {
     setTimeout(() => setSubDone(false), 4000);
   };
 
-  /* â”€â”€ Inline promo every 8 cards â”€â”€ */
+  /* -- Inline promo every 8 cards -- */
   const buildGridItems = () => {
     const items = [];
     sorted.forEach((product, i) => {
@@ -328,8 +328,8 @@ function ShopContent() {
   };
   const gridItems = buildGridItems();
 
-  // Colors that actually appear on at least one product â€” sourced from DB hex map
-  // All unique color names from products â€” no DB-match required so all product
+  // Colors that actually appear on at least one product — sourced from DB hex map
+  // All unique color names from products — no DB-match required so all product
   // colours appear even if the name differs slightly from the seeded palette.
   // getColorHex falls back to #9ca3af for unrecognised names.
   const allAvailableColors = Array.from(new Set(products.flatMap(p => {
@@ -349,7 +349,7 @@ function ShopContent() {
   // Helper: resolve hex from DB map, fall back to neutral grey
   const getColorHex = (name) => resolveHex(name, colorMap);
 
-  // Whitelist of recognised size tokens â€” anything else (e.g. colour names that
+  // Whitelist of recognised size tokens — anything else (e.g. colour names that
   // leaked into a sizes field) is silently excluded.
   const KNOWN_SIZE_TOKENS = new Set([
     'XS','S','M','L','XL','XXL','2XL','3XL','4XL','XXXL',
@@ -362,7 +362,7 @@ function ShopContent() {
     return s;
   }))).filter(s => s && KNOWN_SIZE_TOKENS.has(s.trim().toUpperCase())).sort();
 
-  /* â”€â”€ Active filter label & Title Words â”€â”€ */
+  /* -- Active filter label & Title Words -- */
   const activeCategoryObj = categories.find(c => c.name === activeCategory);
   
   titleWordsRef.current = [];
@@ -388,7 +388,7 @@ function ShopContent() {
     <div className={styles.page}>
       <Nav />
 
-      {/* â”€â”€ HERO â”€â”€ */}
+      {/* -- HERO -- */}
       <section ref={shopHeroRef} className={styles.shopHero} aria-label="Shop hero">
         {/* Full-bleed background slideshow */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -411,7 +411,7 @@ function ShopContent() {
           {/* Breadcrumb */}
           <nav className={`shop-hero-breadcrumb ${styles.shopHeroBreadcrumb}`} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.shopHeroSep} aria-hidden="true">â€º</span>
+            <span className={styles.shopHeroSep} aria-hidden="true">/</span>
             <span>{activeCategory || 'Shop'}</span>
           </nav>
 
@@ -442,18 +442,18 @@ function ShopContent() {
         </div>
       </section>
 
-      {/* â”€â”€ SHOP BY CATEGORY â”€â”€ */}
+      {/* -- SHOP BY CATEGORY -- */}
       <ShopByCategory categories={categories} products={products} />
 
       <main style={{ flex: 1 }}>
-        {/* â”€â”€ SIDEBAR + GRID LAYOUT â”€â”€ */}
+        {/* -- SIDEBAR + GRID LAYOUT -- */}
         <div className={styles.shopLayout}>
 
-          {/* â”€â”€ SIDEBAR â”€â”€ */}
+          {/* -- SIDEBAR -- */}
           <aside className={`${styles.sidebar} ${isMobileFilterOpen ? styles.sidebarOpen : ''}`} aria-label="Filter products">
             <div className={styles.sidebarHeader}>
               <p className={styles.sidebarTitle}>FILTERS</p>
-              <button className={styles.closeSidebarBtn} onClick={() => setIsMobileFilterOpen(false)}>âœ•</button>
+              <button className={styles.closeSidebarBtn} onClick={() => setIsMobileFilterOpen(false)}>✕</button>
             </div>
 
             {/* Active chips */}
@@ -463,17 +463,17 @@ function ShopContent() {
                 <div className={styles.filterChips}>
                   {activeCategory && (
                     <button className={styles.filterChip} onClick={() => setActiveCategory(null)}>
-                      {activeCategory} âœ•
+                      {activeCategory} ✕
                     </button>
                   )}
                   {activeColor && (
                     <button className={styles.filterChip} onClick={() => setActiveColor(null)}>
-                      {activeColor} âœ•
+                      {activeColor} ✕
                     </button>
                   )}
                   {activeSize && (
                     <button className={styles.filterChip} onClick={() => setActiveSize(null)}>
-                      {activeSize} âœ•
+                      {activeSize} ✕
                     </button>
                   )}
                 </div>
@@ -498,7 +498,7 @@ function ShopContent() {
                 onKeyDown={e => e.key === 'Enter' && toggleGroup('categories')}
               >
                 <span className={styles.filterGroupLabel}>Categories</span>
-                <span className={`${styles.filterGroupChevron} ${openGroups.categories ? styles.open : ''}`}>â–¼</span>
+                <span className={`${styles.filterGroupChevron} ${openGroups.categories ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
               </div>
 
               {openGroups.categories && (
@@ -549,7 +549,7 @@ function ShopContent() {
                   onKeyDown={e => e.key === 'Enter' && toggleGroup('colors')}
                 >
                   <span className={styles.filterGroupLabel}>Colors</span>
-                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}>â–¼</span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
                 </div>
                 {openGroups.colors && (
                   <div className={styles.filterColorGrid}>
@@ -581,7 +581,7 @@ function ShopContent() {
                   onKeyDown={e => e.key === 'Enter' && toggleGroup('sizes')}
                 >
                   <span className={styles.filterGroupLabel}>Sizes</span>
-                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}>â–¼</span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
                 </div>
                 {openGroups.sizes && (
                   <div className={styles.filterSizeGrid}>
@@ -600,10 +600,10 @@ function ShopContent() {
             )}
           </aside>
 
-          {/* â”€â”€ CONTENT AREA â”€â”€ */}
+          {/* -- CONTENT AREA -- */}
           <div className={styles.contentArea} id="product-grid">
 
-            {/* â”€â”€ TOOLBAR â”€â”€ */}
+            {/* -- TOOLBAR -- */}
             <div className={styles.toolbar} role="toolbar" aria-label="Product sorting and display options">
               <div className={styles.toolbarLeft}>
                 <p className={styles.toolbarCount}>
@@ -657,10 +657,10 @@ function ShopContent() {
               </div>
             </div>
 
-            {/* â”€â”€ GRID â”€â”€ */}
+            {/* -- GRID -- */}
             {loading ? (
               <div className={styles.grid}>
-                <p className={styles.loading}>Loading collectionâ€¦</p>
+                <p className={styles.loading}>Loading collection…</p>
               </div>
             ) : sorted.length === 0 ? (
               <div className={styles.grid}>
@@ -679,7 +679,7 @@ function ShopContent() {
                     <div key={item.key} className={styles.inlinePromo} aria-label="Promotional banner">
                       <div className={styles.inlinePromoBlob} aria-hidden="true" />
                       <div className={styles.inlinePromoText}>
-                        <p className={styles.inlinePromoEyebrow}>RedAvo Activewear Â· Limited Drop</p>
+                        <p className={styles.inlinePromoEyebrow}>RedAvo Activewear · Limited Drop</p>
                         <p className={styles.inlinePromoTitle}>New Season Arrivals</p>
                       </div>
                       <button className={styles.inlinePromoBtn} onClick={() => {
@@ -704,7 +704,7 @@ function ShopContent() {
           </div>
         </div>
 
-        {/* â”€â”€ NEWSLETTER â”€â”€ */}
+        {/* -- NEWSLETTER -- */}
         <section className={styles.newsletter} aria-labelledby="newsletter-heading">
           <span className={`section-label ${styles.newsletterLabel}`}>Stay Connected</span>
           <h2 id="newsletter-heading" className={styles.newsletterTitle}>
@@ -735,7 +735,7 @@ function ShopContent() {
           </div>
         </section>
 
-        {/* â”€â”€ FOOTER FEATURES â”€â”€ */}
+        {/* -- FOOTER FEATURES -- */}
         <div className={styles.footerFeatures} aria-label="Shopping benefits">
           {FEATURES.map(f => (
             <div key={f.title} className={styles.footerFeature}>
@@ -761,7 +761,7 @@ export default function ShopPage() {
   return (
     <Suspense fallback={
       <div className={styles.page}>
-        <div className={styles.loading}>Loadingâ€¦</div>
+        <div className={styles.loading}>Loading…</div>
       </div>
     }>
       <ShopContent />

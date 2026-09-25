@@ -7,7 +7,14 @@ import { fetchCommunityPosts } from '@/lib/api';
 import Image from 'next/image';
 import styles from './Community.module.css';
 
-const MEDIA_URL = process.env.NEXT_PUBLIC_MEDIA_URL || '';
+// Always resolve to a relative /uploads path so Next.js Image works
+function resolveMediaUrl(url) {
+  if (!url) return 'https://placehold.co/400x400?text=RedAvo';
+  if (url.startsWith('/uploads/')) return url;
+  const idx = url.indexOf('/uploads/');
+  if (idx !== -1) return url.slice(idx);
+  return url;
+}
 
 // ── Auto-playing Media Component ─────────────────────────────────────
 function GridCardMedia({ post }) {
@@ -31,7 +38,7 @@ function GridCardMedia({ post }) {
   return (
     <>
       <Image
-        src={`${MEDIA_URL}${post.coverImageUrl}`}
+        src={resolveMediaUrl(post.coverImageUrl)}
         alt=""
         className={styles.cardImg}
         fill
@@ -41,7 +48,7 @@ function GridCardMedia({ post }) {
       {showMedia && (
         post.mediaType === 'VIDEO' ? (
           <video
-            src={`${MEDIA_URL}${post.mediaUrl}`}
+            src={resolveMediaUrl(post.mediaUrl)}
             className={styles.cardImg}
             style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.8s ease forwards', objectFit: 'cover' }}
             autoPlay
@@ -51,7 +58,7 @@ function GridCardMedia({ post }) {
           />
         ) : (
           <Image
-            src={`${MEDIA_URL}${post.mediaUrl}`}
+            src={resolveMediaUrl(post.mediaUrl)}
             alt=""
             className={styles.cardImg}
             fill
@@ -105,7 +112,7 @@ function CommunityViewer({ posts, activeIndex, onClose, onPrev, onNext }) {
           {post.mediaType === 'VIDEO' ? (
             <video
               key={post.mediaUrl}
-              src={`${MEDIA_URL}${post.mediaUrl}`}
+              src={resolveMediaUrl(post.mediaUrl)}
               className={styles.viewerVideo}
               autoPlay
               muted
@@ -117,7 +124,7 @@ function CommunityViewer({ posts, activeIndex, onClose, onPrev, onNext }) {
             <div className={styles.viewerImageWrapper}>
               <Image
                 key={post.mediaUrl}
-                src={`${MEDIA_URL}${post.mediaUrl}`}
+                src={resolveMediaUrl(post.mediaUrl)}
                 alt={`@${post.instagramHandle}`}
                 className={styles.viewerImage}
                 fill

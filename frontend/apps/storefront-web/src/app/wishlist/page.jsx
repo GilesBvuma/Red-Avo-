@@ -54,22 +54,24 @@ export default function WishlistPage() {
   };
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const MEDIA_BASE = process.env.NEXT_PUBLIC_MEDIA_URL || '';
-
-  const prefixMedia = (url) => {
+  // Always resolve to relative /uploads/ path so Next.js rewrite handles the proxy.
+  // This bypasses Next.js 15's private-IP SSRF protection for localhost.
+  const toRelative = (url) => {
     if (!url) return null;
-    // Already absolute (http/https or data URI)
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `${MEDIA_BASE}${url}`;
+    if (url.startsWith('data:')) return url;
+    if (url.startsWith('/uploads/')) return url;
+    const idx = url.indexOf('/uploads/');
+    if (idx !== -1) return url.slice(idx);
+    return url;
   };
 
   const getImgSrc = (p, index = 0) => {
     if (index === 1) {
       const raw = p.hoverImage || (p.imageUrls && p.imageUrls[1]) || p.image || p.imageUrl;
-      return prefixMedia(raw) || 'https://placehold.co/400x500?text=No+Image';
+      return toRelative(raw) || 'https://placehold.co/400x500?text=No+Image';
     }
     const raw = p.image || p.imageUrl || (p.imageUrls && p.imageUrls[0]);
-    return prefixMedia(raw) || 'https://placehold.co/400x500?text=No+Image';
+    return toRelative(raw) || 'https://placehold.co/400x500?text=No+Image';
   };
 
   const formatPrice = (p) => {
