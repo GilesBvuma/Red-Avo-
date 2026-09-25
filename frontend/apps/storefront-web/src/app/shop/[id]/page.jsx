@@ -145,9 +145,7 @@ export default function ProductPage({ params }) {
           {/* ── Right side: Sticky Info ── */}
           <div className={styles.infoSection}>
             <nav className={styles.breadcrumb}>
-              <a href="/">Home</a> › 
-              <a href="/shop">Shop</a> › 
-              <span>{product.name}</span>
+              <a href="/">Home</a> / <a href="/shop">Shop</a> / <span>{product.name}</span>
             </nav>
 
             <h1 className={styles.title}>{product.name}</h1>
@@ -240,17 +238,15 @@ export default function ProductPage({ params }) {
 
             <div className={styles.guaranteeBadge}>
               <div className={styles.badgeItem}>
-                <span>🛡️</span> 30-Day Quality Guarantee
+                30-Day Quality Guarantee
               </div>
               <div className={styles.badgeItem}>
-                <span>🚚</span> Secure Local Delivery
+                Secure Local Delivery
               </div>
               <div className={styles.badgeItem}>
-                <span>💳</span> Safe & Secure Payments (PayNow / Cash)
+                Safe & Secure Payments (PayNow / Cash)
               </div>
             </div>
-
-
           </div>
         </div>
 
