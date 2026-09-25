@@ -9,6 +9,16 @@ import PaymentMethods from '@/components/PaymentMethods/PaymentMethods';
 import FloatingLines from '@/components/FloatingLines/FloatingLines';
 import styles from './cart.module.css';
 
+
+// Always use relative /uploads/ path to bypass Next.js private-IP protection
+function toRelative(url) {
+  if (!url) return null;
+  if (url.startsWith('data:')) return url;
+  if (url.startsWith('/uploads/')) return url;
+  const idx = url.indexOf('/uploads/');
+  if (idx !== -1) return url.slice(idx);
+  return url;
+}
 const CART_VIDEOS = [
   '/videos/cart1.mp4',
   '/videos/cart2.mp4',
@@ -85,7 +95,7 @@ export default function CartPage() {
                   return (
                     <div key={item.variant.id} className={styles.cartItem}>
                       <img 
-                        src={item.product.imageUrl ? `${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${item.product.imageUrl}` : 'https://placehold.co/100x100?text=No+Image'} 
+                        src={toRelative(item.product.imageUrl) || 'https://placehold.co/100x100?text=No+Image'} 
                         alt={item.product.name} 
                         className={styles.itemImage}
                       />

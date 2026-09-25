@@ -3,32 +3,48 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Image hosts derive from the same env vars the app is built with, so a
-// deployment never needs to edit this file — set NEXT_PUBLIC_API_URL /
-// NEXT_PUBLIC_MEDIA_URL and the allowed hosts follow. Defaults match local dev.
-const imageOrigins = [
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-  process.env.NEXT_PUBLIC_MEDIA_URL || 'http://localhost:3000',
-];
+// Build remotePatterns from env vars with a safe fallback.
+// We also hardcode localhost ports so local dev always works
+// regardless of what NEXT_PUBLIC_MEDIA_URL is set to.
+function safeOriginToPattern(origin) {
+  try {
+    const { protocol, hostname, port } = new URL(origin);
+    return { protocol: protocol.replace(':', ''), hostname, ...(port && { port }) };
+  } catch {
+    return null;
+  }
+}
 
-const remotePatterns = imageOrigins.map((origin) => {
-  const { protocol, hostname, port } = new URL(origin);
-  return { protocol: protocol.replace(':', ''), hostname, ...(port && { port }) };
-});
+const envPatterns = [
+  process.env.NEXT_PUBLIC_API_URL   || 'http://localhost:8080',
+  process.env.NEXT_PUBLIC_MEDIA_URL || 'http://localhost:3000',
+]
+  .map(safeOriginToPattern)
+  .filter(Boolean);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Minimal self-contained server for Docker; traces from the workspace root
-  // so shared packages/* are included. `next dev` is unaffected.
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   images: {
+    // In dev, bypass the image optimizer entirely so localhost images
+    // aren't blocked by Next.js 15's private-IP SSRF protection.
+    unoptimized: process.env.NODE_ENV === 'development',
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
-      ...remotePatterns,
+      // Always allow local dev hosts so images work regardless of env vars
+      { protocol: 'http', hostname: 'localhost', port: '3000' },
+      { protocol: 'http', hostname: 'localhost', port: '3001' },
+      { protocol: 'http', hostname: 'localhost', port: '8080' },
+      // Production hosts from env vars
+      ...envPatterns,
+      // Named production hosts
       { protocol: 'https', hostname: 'pos.redavo.co.zw' },
+      { protocol: 'https', hostname: 'redavowear.com' },
+      { protocol: 'https', hostname: 'pos.redavowear.com' },
+      { protocol: 'https', hostname: 'storefront.redavowear.com' },
       { protocol: 'https', hostname: 'placehold.co' },
     ],
   },

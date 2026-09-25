@@ -113,7 +113,7 @@ export default function OurStoryPage() {
 
         </section>
 
-        {/* â”€â”€ Sticky Note Section â”€â”€ */}
+        {/* -- Sticky Note Section -- */}
         <section style={{
           background: '#5E080C',
           padding: '80px 24px',

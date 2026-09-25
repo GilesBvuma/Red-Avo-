@@ -8,6 +8,16 @@ import { useCart } from '@/context/CartContext';
 import ProductReviews from '@/components/Reviews/ProductReviews';
 import styles from './product.module.css';
 
+
+// Always use relative /uploads/ path to bypass Next.js private-IP protection
+function toRelative(url) {
+  if (!url) return null;
+  if (url.startsWith('data:')) return url;
+  if (url.startsWith('/uploads/')) return url;
+  const idx = url.indexOf('/uploads/');
+  if (idx !== -1) return url.slice(idx);
+  return url;
+}
 /* ─── Colour map for swatches ─── */
 const COLOR_MAP = {
   'Crimson Red': '#C0392B', 'Matte Black': '#1A1A1A', 'Soft White': '#FAFAF5',
@@ -123,7 +133,7 @@ export default function ProductPage({ params }) {
             {uniqueImages.map((src, i) => (
               <div key={i} className={styles.imageWrap}>
                 <img
-                  src={`${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${src}`}
+                  src={toRelative(src) || 'https://placehold.co/400x500?text=No+Image'}
                   alt={`${product.name} - view ${i + 1}`}
                   className={styles.image}
                   loading={i === 0 ? "eager" : "lazy"}

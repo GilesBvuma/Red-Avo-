@@ -58,9 +58,16 @@ export default function PopularPicks() {
           if (p.variants) cs = cs.concat(p.variants.map(v => v.color).filter(Boolean));
           const uniqueColors = Array.from(new Set(cs)).filter(Boolean).sort();
 
-          const mediaBase = process.env.NEXT_PUBLIC_MEDIA_URL || '';
-          const resolvedImg = img ? `${mediaBase}${img}` : 'https://placehold.co/400x500?text=No+Image';
-          const resolvedHover = hoverImg ? `${mediaBase}${hoverImg}` : resolvedImg;
+          // Use relative /uploads/ paths so Next.js rewrite handles the proxy.
+          // This avoids remotePatterns issues with absolute localhost URLs.
+          const toRelative = (u) => {
+            if (!u) return null;
+            if (u.startsWith('/uploads/')) return u;
+            const idx = u.indexOf('/uploads/');
+            return idx !== -1 ? u.slice(idx) : u;
+          };
+          const resolvedImg = toRelative(img) || 'https://placehold.co/400x500?text=No+Image';
+          const resolvedHover = toRelative(hoverImg) || resolvedImg;
 
           return {
             id: p.id,
