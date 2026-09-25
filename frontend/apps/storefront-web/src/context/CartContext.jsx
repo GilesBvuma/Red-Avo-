@@ -1,11 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { trackPixelEvent } from '@/hooks/usePixel';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     const savedCart = localStorage.getItem('storefront_cart');
@@ -16,11 +18,16 @@ export function CartProvider({ children }) {
         console.error('Failed to parse cart', e);
       }
     }
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('storefront_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (isMounted) {
+      localStorage.setItem('storefront_cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isMounted]);
+
+  if (!isMounted) return null;
 
   // ── Standard product item ──────────────────────────────────────────────────
   const addToCart = (product, variant, qty = 1) => {
@@ -35,7 +42,18 @@ export function CartProvider({ children }) {
       }
       return [...prev, { product, variant, quantity: qty }];
     });
+
+    // ── Meta Pixel: AddToCart ─────────────────────────────────────
+    const price = variant.sellPrice > 0 ? variant.sellPrice : (product.price || 0);
+    trackPixelEvent('AddToCart', {
+      content_ids:  [String(product.id)],
+      content_name: product.name,
+      content_type: 'product',
+      value:        parseFloat((price * qty).toFixed(2)),
+      currency:     'USD',
+    });
   };
+
 
   // ── Gift card item ─────────────────────────────────────────────────────────
   // Gift cards are unique per recipient email — each is a separate line item.

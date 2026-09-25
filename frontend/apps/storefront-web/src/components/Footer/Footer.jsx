@@ -62,9 +62,10 @@ export default function Footer() {
               <li><a href="/faq" className={styles.navLink}>FAQ</a></li>
               <li><a href="/size-chart" className={styles.navLink}>Sizes Chart</a></li>
               <li><a href="/gift-card" className={styles.navLink}>Gift Cards</a></li>
-              <li><a href="/returns" className={styles.navLink}>Returns & Exchanges</a></li>
+              <li><a href="/returns" className={styles.navLink}>Returns &amp; Exchanges</a></li>
               <li><a href="/shipping" className={styles.navLink}>Shipping</a></li>
               <li><a href="/contact" className={styles.navLink}>Contact Us</a></li>
+              <li><a href="/waitlist" className={styles.navLink}>Join Waitlist 🥑</a></li>
             </ul>
           </nav>
 

@@ -5,6 +5,7 @@ import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
 import Link from 'next/link';
 import Image from 'next/image';
+import MotionButton from '@/components/ui/MotionButton/MotionButton';
 import styles from './CollectionPage.module.css';
 
 export default function CollectionHero() {
@@ -61,9 +62,9 @@ export default function CollectionHero() {
           Designed for every body.
         </p>
 
-        <Link href="/shop" className={`${styles.heroCta} hero-text-anim`} id="hero-shop-now">
-          SHOP NOW <span className={styles.ctaArrow}>&rarr;</span>
-        </Link>
+        <div className="hero-text-anim" style={{ marginTop: '32px' }}>
+          <MotionButton href="/shop" label="SHOP NOW" id="hero-shop-now" />
+        </div>
       </div>
     </section>
   );

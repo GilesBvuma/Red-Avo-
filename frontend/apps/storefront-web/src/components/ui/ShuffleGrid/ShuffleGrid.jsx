@@ -126,9 +126,7 @@ export default function ShuffleHero() {
         <span className={`hero-text-anim ${styles.eyebrow}`} style={{ color: '#fff' }}>
           Authentic. Fearless. African.
         </span>
-        <a href="#our-story-content" className={`hero-text-anim ${styles.cta}`}>
-          Read our story
-        </a>
+
       </div>
 
       {/* Right - shuffle grid */}

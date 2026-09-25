@@ -13,15 +13,15 @@
               backdrop-filter 0.4s ease;
 }
 
-/* Light nav variants for specific pages */
-.navLight:not(.scrolled) .link {
-  color: #ffffff;
+/* Default to white, revert to navy on scroll */
+.scrolled .link {
+  color: var(--navy);
 }
-.navLight:not(.scrolled) .iconBtn {
-  color: #ffffff;
+.scrolled .iconBtn {
+  color: var(--navy);
 }
-.navLight:not(.scrolled) .hamburger span {
-  background: #ffffff;
+.scrolled .hamburger span {
+  background: var(--navy);
 }
 
 .scrolled {
@@ -32,6 +32,16 @@
   box-shadow: 0 4px 32px rgba(26, 43, 74, 0.12);
 }
 
+.navLight .link {
+  color: var(--navy);
+}
+.navLight .iconBtn {
+  color: var(--navy);
+}
+.navLight .hamburger span {
+  background: var(--navy);
+}
+
 .scrolled .inner {
   padding-block: 8px;
 }
@@ -39,7 +49,7 @@
 .inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 14px 32px;
+  padding: 14px 6vw;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -98,19 +108,35 @@
 .link {
   display: block;
   padding: 8px 18px;
-  border-radius: 999px;
   text-decoration: none;
-  color: var(--navy);
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
   font-size: 0.88rem;
   letter-spacing: 0.03em;
-  transition: background 0.22s ease, color 0.22s ease, transform 0.22s ease;
+  position: relative;
+  transition: color 0.22s ease, transform 0.22s ease;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 18px;
+  right: 18px;
+  height: 2px;
+  background-color: var(--red);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .link:hover {
-  background: var(--red);
-  color: #fff;
+  color: var(--red) !important;
   transform: translateY(-1px);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
 }
 
 .icons {
@@ -123,7 +149,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--navy);
+  color: #ffffff;
   padding: 8px;
   border-radius: 50%;
   display: flex;
@@ -167,7 +193,7 @@
   display: block;
   width: 26px;
   height: 2.5px;
-  background: var(--navy);
+  background: #ffffff;
   border-radius: 4px;
   transition: all 0.3s;
 }

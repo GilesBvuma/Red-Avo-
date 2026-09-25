@@ -21,6 +21,7 @@ export async function POST(request) {
       customerPhone: phone,
       deliveryAddress: deliveryAddress,
       deliveryMethod: deliveryMethod,
+      paymentMethod: 'PAYNOW',
       deliveryFee: deliveryFee || 0.0,
       total: amount,
       subtotal: amount - (deliveryFee || 0.0),

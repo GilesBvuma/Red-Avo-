@@ -48,12 +48,12 @@
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   margin-bottom: 8px;
 }
 
 .heroTitle {
-  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
   font-weight: 800;
   color: #ffffff;
   margin: 0 0 16px;
@@ -62,7 +62,7 @@
 }
 
 .heroSub {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: rgba(255,255,255,0.8);
   margin: 0;
   line-height: 1.6;
@@ -517,6 +517,14 @@
 @media (max-width: 640px) {
   .hero {
     padding: 120px 16px 60px;
+  }
+
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
+  .heroSub {
+    font-size: 0.85rem;
   }
 
   .formGrid {

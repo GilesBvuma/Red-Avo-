@@ -139,6 +139,7 @@ public class OrderService {
 
         // ── Auto-upsert customer from order details ───────────────────────────
         Order notifyOrder = savedOrder;
+        Customer savedCustomer = null; // hoisted — used in first-purchase detection below
 
         if (savedOrder.getCustomerEmail() != null && !savedOrder.getCustomerEmail().isBlank()) {
             String email = savedOrder.getCustomerEmail().trim().toLowerCase();
@@ -167,7 +168,7 @@ public class OrderService {
                 customer.setPhoneNumber(savedOrder.getCustomerPhone());
             }
 
-            Customer savedCustomer = customerRepository.save(customer);
+            savedCustomer = customerRepository.save(customer);
             savedOrder.setCustomerId(savedCustomer.getId());
             notifyOrder = orderRepository.save(savedOrder);
 
@@ -181,59 +182,76 @@ public class OrderService {
                 c.setLifetimeValue(
                         (c.getLifetimeValue() == null ? 0.0 : c.getLifetimeValue()) + total);
                 c.setLastPurchaseAt(LocalDateTime.now());
-                customerRepository.save(c);
+                savedCustomer = customerRepository.save(c);
             }
         }
 
+
         // ── Trigger notifications ─────────────────────────────────────────────
-        String orderRef     = "ORD-" + notifyOrder.getId();
-        String customerName = notifyOrder.getCustomerName() != null
-                ? notifyOrder.getCustomerName() : "Valued Customer";
-        String firstName    = customerName.contains(" ")
-                ? customerName.split(" ")[0] : customerName;
-        double total        = notifyOrder.getTotal() != null ? notifyOrder.getTotal() : 0.0;
+        boolean isPendingPaynow = "PAYNOW".equalsIgnoreCase(notifyOrder.getPaymentMethod()) 
+                               && "PENDING_PAYMENT".equalsIgnoreCase(notifyOrder.getStatus());
+                               
+        if (!isPendingPaynow) {
+            String orderRef     = "ORD-" + notifyOrder.getId();
+            String customerName = notifyOrder.getCustomerName() != null
+                    ? notifyOrder.getCustomerName() : "Valued Customer";
+            String firstName    = customerName.contains(" ")
+                    ? customerName.split(" ")[0] : customerName;
+            double total        = notifyOrder.getTotal() != null ? notifyOrder.getTotal() : 0.0;
 
-        String emailBody = "Hi " + firstName + "! 🥑❤️\n\n"
-                + "Thank you for your Red Avo purchase!\n"
-                + "Order " + orderRef + " — Total: $" + String.format("%.2f", total) + "\n\n"
-                + "Your order is confirmed. Move with confidence!\n\n"
-                + "— The Red Avo Team";
+            String emailBody = "Hi " + firstName + "! 🥑❤️\n\n"
+                    + "Thank you for your Red Avo purchase!\n"
+                    + "Order " + orderRef + " — Total: $" + String.format("%.2f", total) + "\n\n"
+                    + "Your order is confirmed. Move with confidence!\n\n"
+                    + "— The Red Avo Team";
 
-        if (notifyOrder.getCustomerEmail() != null && !notifyOrder.getCustomerEmail().isBlank()) {
-            byte[] pdf = invoiceService.generateInvoice(notifyOrder);
-            notificationService.sendEmail(
-                    notifyOrder.getCustomerId(), customerName,
-                    notifyOrder.getCustomerEmail(), emailBody,
-                    "Red Avo Order Confirmation — " + orderRef, orderRef, pdf);
-        }
+            if (notifyOrder.getCustomerEmail() != null && !notifyOrder.getCustomerEmail().isBlank()) {
+                byte[] pdf = invoiceService.generateInvoice(notifyOrder);
+                boolean isFirstPurchase = savedCustomer.getTotalPurchases() != null
+                        && savedCustomer.getTotalPurchases() == 1;
 
-        if (notifyOrder.getCustomerPhone() != null && !notifyOrder.getCustomerPhone().isBlank()) {
-            notificationService.sendSms(
-                    notifyOrder.getCustomerId(), customerName,
-                    notifyOrder.getCustomerPhone(),
-                    "Hi " + firstName + "! Your Red Avo order " + orderRef
-                            + " ($" + String.format("%.2f", total) + ") is confirmed. Thanks!",
-                    orderRef);
-        }
+                if (isFirstPurchase) {
+                    // 🎉 First-time buyer — send branded Welcome email
+                    notificationService.sendWelcomeEmail(
+                            notifyOrder.getCustomerId(), firstName,
+                            notifyOrder.getCustomerEmail(), orderRef, pdf);
+                } else {
+                    // Repeat buyer — standard order confirmation
+                    notificationService.sendEmail(
+                            notifyOrder.getCustomerId(), customerName,
+                            notifyOrder.getCustomerEmail(), emailBody,
+                            "Red Avo Order Confirmation — " + orderRef, orderRef, pdf);
+                }
+            }
 
-        // ── Admin Alerts — only sent if configured in application.properties ────────────────────────
-        // Set ADMIN_NOTIFY_EMAIL / ADMIN_NOTIFY_PHONE env vars to enable.
-        // Bug #3 FIX: removed hardcoded dummy admin@redavo.com / +263700000000.
-        double cogs = notifyOrder.getCostOfSale() != null ? notifyOrder.getCostOfSale() : 0.0;
-        double profit = total - cogs;
-        Long adminStoreId = notifyOrder.getStoreId() != null ? notifyOrder.getStoreId() : DEFAULT_STORE_ID;
-        String adminEmailBody = String.format(
-                "New Order: %s\nTotal: $%.2f\nCOGS: $%.2f\nGross Profit: $%.2f\nStore ID: %d\nCustomer: %s",
-                orderRef, total, cogs, profit, adminStoreId, customerName);
+            if (notifyOrder.getCustomerPhone() != null && !notifyOrder.getCustomerPhone().isBlank()) {
+                notificationService.sendSms(
+                        notifyOrder.getCustomerId(), customerName,
+                        notifyOrder.getCustomerPhone(),
+                        "Hi " + firstName + "! Your Red Avo order " + orderRef
+                                + " ($" + String.format("%.2f", total) + ") is confirmed. Thanks!",
+                        orderRef);
+            }
 
-        if (adminNotifyEmail != null && !adminNotifyEmail.isBlank()) {
-            notificationService.sendEmail(
-                    null, "Admin", adminNotifyEmail,
-                    adminEmailBody, "New Order Alert — " + orderRef, orderRef, null);
-        }
-        if (adminNotifyPhone != null && !adminNotifyPhone.isBlank()) {
-            notificationService.sendSms(
-                    null, "Admin", adminNotifyPhone, adminEmailBody, orderRef);
+            // ── Admin Alerts — only sent if configured in application.properties ────────────────────────
+            // Set ADMIN_NOTIFY_EMAIL / ADMIN_NOTIFY_PHONE env vars to enable.
+            // Bug #3 FIX: removed hardcoded dummy admin@redavo.com / +263700000000.
+            double cogs = notifyOrder.getCostOfSale() != null ? notifyOrder.getCostOfSale() : 0.0;
+            double profit = total - cogs;
+            Long adminStoreId = notifyOrder.getStoreId() != null ? notifyOrder.getStoreId() : DEFAULT_STORE_ID;
+            String adminEmailBody = String.format(
+                    "New Order: %s\nTotal: $%.2f\nCOGS: $%.2f\nGross Profit: $%.2f\nStore ID: %d\nCustomer: %s",
+                    orderRef, total, cogs, profit, adminStoreId, customerName);
+
+            if (adminNotifyEmail != null && !adminNotifyEmail.isBlank()) {
+                notificationService.sendEmail(
+                        null, "Admin", adminNotifyEmail,
+                        adminEmailBody, "New Order Alert — " + orderRef, orderRef, null);
+            }
+            if (adminNotifyPhone != null && !adminNotifyPhone.isBlank()) {
+                notificationService.sendSms(
+                        null, "Admin", adminNotifyPhone, adminEmailBody, orderRef);
+            }
         }
 
         // ── Process Gift Cards ──────────────────────────────────────────────────
@@ -371,7 +389,50 @@ public class OrderService {
     public Order confirmOrder(Long id) {
         Order order = orderRepository.findById(id).orElseThrow();
         order.setStatus("CONFIRMED");
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        // --- Trigger confirmations for paid/confirmed orders ---
+        String orderRef     = "ORD-" + savedOrder.getId();
+        String customerName = savedOrder.getCustomerName() != null ? savedOrder.getCustomerName() : "Valued Customer";
+        String firstName    = customerName.contains(" ") ? customerName.split(" ")[0] : customerName;
+        double total        = savedOrder.getTotal() != null ? savedOrder.getTotal() : 0.0;
+
+        String emailBody = "Hi " + firstName + "! 🥑❤️\n\n"
+                + "Thank you for your Red Avo purchase!\n"
+                + "Order " + orderRef + " — Total: $" + String.format("%.2f", total) + "\n\n"
+                + "Your payment is confirmed and we are processing your order. Move with confidence!\n\n"
+                + "— The Red Avo Team";
+
+        if (savedOrder.getCustomerEmail() != null && !savedOrder.getCustomerEmail().isBlank()) {
+            byte[] pdf = invoiceService.generateInvoice(savedOrder);
+            notificationService.sendEmail(
+                    savedOrder.getCustomerId(), customerName,
+                    savedOrder.getCustomerEmail(), emailBody,
+                    "Red Avo Order Confirmed — " + orderRef, orderRef, pdf);
+        }
+
+        if (savedOrder.getCustomerPhone() != null && !savedOrder.getCustomerPhone().isBlank()) {
+            notificationService.sendSms(
+                    savedOrder.getCustomerId(), customerName,
+                    savedOrder.getCustomerPhone(),
+                    "Hi " + firstName + "! Your Red Avo order " + orderRef
+                            + " ($" + String.format("%.2f", total) + ") is confirmed. Thanks!",
+                    orderRef);
+        }
+
+        // Admin alerts
+        double cogs = savedOrder.getCostOfSale() != null ? savedOrder.getCostOfSale() : 0.0;
+        double profit = total - cogs;
+        Long adminStoreId = savedOrder.getStoreId() != null ? savedOrder.getStoreId() : DEFAULT_STORE_ID;
+        String adminEmailBody = String.format(
+                "New Order Confirmed: %s\nTotal: $%.2f\nCOGS: $%.2f\nGross Profit: $%.2f\nStore ID: %d\nCustomer: %s",
+                orderRef, total, cogs, profit, adminStoreId, customerName);
+
+        if (adminNotifyEmail != null && !adminNotifyEmail.isBlank()) {
+            notificationService.sendEmail(null, "Admin", adminNotifyEmail, adminEmailBody, "New Order Paid — " + orderRef, orderRef, null);
+        }
+
+        return savedOrder;
     }
 
     @Transactional

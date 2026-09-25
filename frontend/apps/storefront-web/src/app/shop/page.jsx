@@ -1,31 +1,36 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import { fetchProducts, fetchCategories, fetchColors, API_URL } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap } from '@/lib/gsap';
+import Image from 'next/image';
+import Link from 'next/link';
+import cardStyles from '@/components/NewArrivals/NewArrivals.module.css';
+import MotionButton from '@/components/ui/MotionButton/MotionButton';
 import ShopByCategory from '@/components/ShopByCategory/ShopByCategory';
 import styles from './shop.module.css';
 
-/* ─── Footer features data ─── */
+/* â”€â”€â”€ Footer features data â”€â”€â”€ */
 const FEATURES = [
-  { icon: '🚚', title: 'Fast Shipping', sub: 'Orders dispatched within 24h' },
-  { icon: '✦',  title: 'Premium Materials', sub: 'Crafted for performance & feel' },
-  { icon: '↩',  title: 'Easy Returns', sub: '30-day hassle-free returns' },
-  { icon: '🔒', title: 'Secure Checkout', sub: 'End-to-end encrypted payments' },
+  { icon: 'ðŸšš', title: 'Fast Shipping', sub: 'Orders dispatched within 24h' },
+  { icon: 'âœ¦',  title: 'Premium Materials', sub: 'Crafted for performance & feel' },
+  { icon: 'â†©',  title: 'Easy Returns', sub: '30-day hassle-free returns' },
+  { icon: 'ðŸ”’', title: 'Secure Checkout', sub: 'End-to-end encrypted payments' },
 ];
 
-/* ─── Sort options ─── */
+/* â”€â”€â”€ Sort options â”€â”€â”€ */
 const SORT_OPTIONS = [
   { value: 'default',   label: 'Featured' },
-  { value: 'price-asc', label: 'Price: Low → High' },
-  { value: 'price-desc', label: 'Price: High → Low' },
-  { value: 'name-asc',  label: 'Name A–Z' },
+  { value: 'price-asc', label: 'Price: Low â†’ High' },
+  { value: 'price-desc', label: 'Price: High â†’ Low' },
+  { value: 'name-asc',  label: 'Name Aâ€“Z' },
 ];
 
 /* ============================================================
@@ -48,121 +53,107 @@ function resolveHex(name, colorMap) {
    ProductCard
    ============================================================ */
 function ProductCard({ product, onClick, listView, colorMap }) {
-  const getColorHex = (name) => resolveHex(name, colorMap);
-  const [imgIndex, setImgIndex] = useState(0);
-  const [reviewSummary, setReviewSummary] = useState(null);
+  const { toggleWishlist, isWishlisted } = useWishlist();
+  const router = useRouter();
 
-  useEffect(() => {
-    fetch(`${API_URL}/products/${product.id}/reviews/summary`)
-      .then(res => {
-        if (!res.ok) throw new Error('Reviews not found');
-        return res.json();
-      })
-      .then(data => setReviewSummary(data))
-      .catch(() => setReviewSummary(null));
-  }, [product.id]);
+  const img = product.imageUrl || (product.imageUrls && product.imageUrls[0]) || '';
+  const hoverImg = (product.imageUrls && product.imageUrls.length > 1) ? product.imageUrls[1] : img;
 
-  const images = [];
-  if (product.imageUrl)  images.push(product.imageUrl);
-  if (product.imageUrls) images.push(...product.imageUrls);
-  const uniqueImages = Array.from(new Set(images));
+  let cs = [];
+  if (product.colors && typeof product.colors === 'string') {
+    cs = cs.concat(product.colors.split(',').map(s => s.trim()));
+  } else if (Array.isArray(product.colors)) {
+    cs = cs.concat(product.colors);
+  }
+  if (product.variants) cs = cs.concat(product.variants.map(v => v.color).filter(Boolean));
+  const uniqueColors = Array.from(new Set(cs)).filter(Boolean).sort();
 
-  const variants  = product.variants || [];
-  const colors    = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
+  // Build image URLs - use relative /uploads path to hit Next.js rewrites
+  const toRelative = (url) => {
+    if (!url) return null;
+    if (url.startsWith('/uploads/')) return url;
+    const idx = url.indexOf('/uploads/');
+    if (idx !== -1) return url.slice(idx);
+    return url;
+  };
+
+  const resolvedImg   = toRelative(img)   || 'https://placehold.co/400x500?text=No+Image';
+  const resolvedHover = toRelative(hoverImg) || resolvedImg;
+
   const isSoldOut = product.stockQuantity <= 0;
-
-  const imgSrc = (i) =>
-    uniqueImages.length > 0
-      ? `${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${uniqueImages[i]}`
-      : 'https://placehold.co/400x500?text=No+Image';
+  const displayPrice = '$' + (product.price || 0).toFixed(2);
 
   return (
-    <div
-      className={`${styles.card} ${listView ? styles.cardList : ''}`}
-      onClick={() => onClick(product)}
-      role="button"
-      tabIndex={0}
-      aria-label={`View ${product.name}`}
-      onKeyDown={e => e.key === 'Enter' && onClick(product)}
-    >
-      <div className={styles.imageWrap}>
-        <div className={styles.swipeCarousel}>
-          {uniqueImages.length > 0 ? (
-            uniqueImages.map((src, i) => (
-              <img
-                key={i}
-                src={`${process.env.NEXT_PUBLIC_MEDIA_URL || ''}${src}`}
-                alt={`${product.name} - view ${i + 1}`}
-                className={styles.image}
-                loading="lazy"
-              />
-            ))
-          ) : (
-            <img src="https://placehold.co/400x500?text=No+Image" alt={product.name} className={styles.image} />
-          )}
+    <article className={`${cardStyles.card} ${listView ? styles.cardList : ''}`}>
+      <Link href={`/shop/${product.id}`} className={cardStyles.cardLink}>
+        <div className={cardStyles.cardImg}>
+          <Image
+            src={resolvedImg}
+            alt={product.name}
+            className={`${cardStyles.productImg} ${cardStyles.imgPrimary}`}
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            style={{ objectFit: 'cover' }}
+          />
+          <Image
+            src={resolvedHover}
+            alt={`${product.name} hover`}
+            className={`${cardStyles.productImg} ${cardStyles.imgHover}`}
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            style={{ objectFit: 'cover' }}
+          />
+          {/* Badges */}
+          {isSoldOut
+            ? <span className={`${styles.badge} ${styles.badgeSoldOut}`}>Sold Out</span>
+            : product.onSale && <span className={`${styles.badge} ${styles.badgeSale}`}>Sale</span>
+          }
+          {/* Wishlist heart - same as home page */}
+          <button
+            className={`${cardStyles.wishlistBtn} ${isWishlisted(product.id) ? cardStyles.wishlistBtnActive : ''}`}
+            onClick={e => { e.preventDefault(); toggleWishlist(product.id, product); }}
+            aria-label={isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={isWishlisted(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+          {/* Floating cart icon - navigates to product */}
+          <button
+            className={cardStyles.floatingCartBtn}
+            onClick={e => { e.preventDefault(); router.push(`/shop/${product.id}`); }}
+            aria-label={`View ${product.name}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 01-8 0" />
+            </svg>
+          </button>
         </div>
-
-        {/* Badges */}
-        {isSoldOut
-          ? <span className={`${styles.badge} ${styles.badgeSoldOut}`}>Sold Out</span>
-          : product.onSale && <span className={`${styles.badge} ${styles.badgeSale}`}>Sale</span>
-        }
-
-        {/* Wishlist */}
-        <button
-          className={styles.wishlistBtn}
-          onClick={e => e.stopPropagation()}
-          aria-label="Add to wishlist"
-        >♡</button>
-
-        {/* Quick view */}
-        <div className={styles.quickViewOverlay}>
-          <button className={styles.quickViewBtn} aria-label="Quick view">Quick View</button>
+      </Link>
+      <div className={cardStyles.cardBody}>
+        <h3 className={cardStyles.productName}>{product.name}</h3>
+        <div className={cardStyles.priceRow}>
+          <p className={cardStyles.productPrice}>{displayPrice}</p>
         </div>
-      </div>
-
-      <div className={styles.info}>
-        <h3>{product.name}</h3>
-        
-        <div className={styles.priceRow}>
-          <p className={styles.price}>
-            ${product.price?.toFixed(2) || '0.00'}
-          </p>
-          {reviewSummary && reviewSummary.totalReviews > 0 && (
-            <div className={styles.reviewSummary}>
-              <span className={styles.star}>★</span>
-              <span>{reviewSummary.averageRating}</span>
-              <span className={styles.reviewCount}>({reviewSummary.totalReviews})</span>
-            </div>
-          )}
-        </div>
-
-        {/* Color dots */}
-        {colors.length > 0 && (
-          <div className={styles.colorDots}>
-            {colors.slice(0, 5).map(c => (
+        {uniqueColors.length > 0 && (
+          <div className={cardStyles.colorDots}>
+            {uniqueColors.slice(0, 5).map(c => (
               <span
                 key={c}
-                className={styles.colorDot}
-                style={{ background: getColorHex(c) }}
+                className={cardStyles.colorDot}
+                style={{ background: resolveHex(c, colorMap) }}
                 title={c}
               />
             ))}
-            {colors.length > 5 && (
-              <span className={styles.moreColors}>+{colors.length - 5}</span>
+            {uniqueColors.length > 5 && (
+              <span className={cardStyles.moreColors}>+{uniqueColors.length - 5}</span>
             )}
           </div>
         )}
-
-        <button
-          className={styles.cardAddBtn}
-          onClick={e => { e.stopPropagation(); onClick(product); }}
-          aria-label={`Add ${product.name} to cart`}
-        >
-          {isSoldOut ? 'Sold Out' : 'Add to Cart'}
-        </button>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -191,14 +182,14 @@ function ShopContent() {
   const shopHeroRef = useRef(null);
   const titleWordsRef = useRef([]);
 
-  /* ── Modal helpers removed ── */
+  /* â”€â”€ Modal helpers removed â”€â”€ */
 
   const { addToCart } = useCart();
   const router = useRouter();
   const searchParams  = useSearchParams();
   const searchQuery   = searchParams.get('q') || '';
 
-  /* ── Load data ── */
+  /* â”€â”€ Load data â”€â”€ */
   useEffect(() => {
     async function load() {
       try {
@@ -233,7 +224,7 @@ function ShopContent() {
     load();
   }, [searchQuery]);
 
-  /* ── Hero Slideshow ── */
+  /* â”€â”€ Hero Slideshow â”€â”€ */
   useEffect(() => {
     const interval = setInterval(() => {
       setHeroImgIndex(prev => (prev + 1) % SHOP_HERO_IMAGES.length);
@@ -241,7 +232,7 @@ function ShopContent() {
     return () => clearInterval(interval);
   }, []);
 
-  /* ── Hero Animation ── */
+  /* â”€â”€ Hero Animation â”€â”€ */
   useGSAP(() => {
     const tl = gsap.timeline({ delay: 0.2 });
 
@@ -264,7 +255,7 @@ function ShopContent() {
     );
   }, { scope: shopHeroRef, dependencies: [activeCategory] });
 
-  /* ── Filter + Sort ── */
+  /* â”€â”€ Filter + Sort â”€â”€ */
   let filtered = products;
   
   if (activeCategory === 'New Arrivals') {
@@ -306,7 +297,7 @@ function ShopContent() {
     return 0;
   });
 
-  /* ── Product helpers ── */
+  /* â”€â”€ Product helpers â”€â”€ */
 
   const openProduct = (product) => {
     router.push(`/shop/${product.id}`);
@@ -324,7 +315,7 @@ function ShopContent() {
     setTimeout(() => setSubDone(false), 4000);
   };
 
-  /* ── Inline promo every 8 cards ── */
+  /* â”€â”€ Inline promo every 8 cards â”€â”€ */
   const buildGridItems = () => {
     const items = [];
     sorted.forEach((product, i) => {
@@ -337,11 +328,18 @@ function ShopContent() {
   };
   const gridItems = buildGridItems();
 
-  // Colors that actually appear on at least one product — sourced from DB hex map
-  // All unique color names from products — no DB-match required so all product
+  // Colors that actually appear on at least one product â€” sourced from DB hex map
+  // All unique color names from products â€” no DB-match required so all product
   // colours appear even if the name differs slightly from the seeded palette.
   // getColorHex falls back to #9ca3af for unrecognised names.
   const allAvailableColors = Array.from(new Set(products.flatMap(p => {
+    // Exclude Gift Card products since their colors are actually price denominations ($20, $50, etc)
+    const isGiftCard = 
+      (p.name && p.name.toLowerCase().includes('gift card')) || 
+      (p.category && p.category.toLowerCase().includes('gift card'));
+      
+    if (isGiftCard) return [];
+
     let cs = [];
     if (p.colors) cs = cs.concat(p.colors.split(',').map(s => s.trim()));
     if (p.variants) cs = cs.concat(p.variants.map(v => v.color).filter(Boolean));
@@ -351,7 +349,7 @@ function ShopContent() {
   // Helper: resolve hex from DB map, fall back to neutral grey
   const getColorHex = (name) => resolveHex(name, colorMap);
 
-  // Whitelist of recognised size tokens — anything else (e.g. colour names that
+  // Whitelist of recognised size tokens â€” anything else (e.g. colour names that
   // leaked into a sizes field) is silently excluded.
   const KNOWN_SIZE_TOKENS = new Set([
     'XS','S','M','L','XL','XXL','2XL','3XL','4XL','XXXL',
@@ -364,7 +362,7 @@ function ShopContent() {
     return s;
   }))).filter(s => s && KNOWN_SIZE_TOKENS.has(s.trim().toUpperCase())).sort();
 
-  /* ── Active filter label & Title Words ── */
+  /* â”€â”€ Active filter label & Title Words â”€â”€ */
   const activeCategoryObj = categories.find(c => c.name === activeCategory);
   
   titleWordsRef.current = [];
@@ -390,7 +388,7 @@ function ShopContent() {
     <div className={styles.page}>
       <Nav />
 
-      {/* ── HERO ── */}
+      {/* â”€â”€ HERO â”€â”€ */}
       <section ref={shopHeroRef} className={styles.shopHero} aria-label="Shop hero">
         {/* Full-bleed background slideshow */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -413,7 +411,7 @@ function ShopContent() {
           {/* Breadcrumb */}
           <nav className={`shop-hero-breadcrumb ${styles.shopHeroBreadcrumb}`} aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span className={styles.shopHeroSep} aria-hidden="true">›</span>
+            <span className={styles.shopHeroSep} aria-hidden="true">â€º</span>
             <span>{activeCategory || 'Shop'}</span>
           </nav>
 
@@ -438,24 +436,24 @@ function ShopContent() {
               </React.Fragment>
             ))}
           </h1>
-          <a href="#product-grid" className={styles.shopHeroCta} id="hero-shop-btn">
-            Shop Now <span className={styles.ctaArrow}>&rarr;</span>
-          </a>
+          <div style={{ marginTop: '24px' }}>
+            <MotionButton href="#product-grid" label="Explore the Collection" id="hero-shop-btn" />
+          </div>
         </div>
       </section>
 
-      {/* ── SHOP BY CATEGORY ── */}
+      {/* â”€â”€ SHOP BY CATEGORY â”€â”€ */}
       <ShopByCategory categories={categories} products={products} />
 
       <main style={{ flex: 1 }}>
-        {/* ── SIDEBAR + GRID LAYOUT ── */}
+        {/* â”€â”€ SIDEBAR + GRID LAYOUT â”€â”€ */}
         <div className={styles.shopLayout}>
 
-          {/* ── SIDEBAR ── */}
+          {/* â”€â”€ SIDEBAR â”€â”€ */}
           <aside className={`${styles.sidebar} ${isMobileFilterOpen ? styles.sidebarOpen : ''}`} aria-label="Filter products">
             <div className={styles.sidebarHeader}>
               <p className={styles.sidebarTitle}>FILTERS</p>
-              <button className={styles.closeSidebarBtn} onClick={() => setIsMobileFilterOpen(false)}>✕</button>
+              <button className={styles.closeSidebarBtn} onClick={() => setIsMobileFilterOpen(false)}>âœ•</button>
             </div>
 
             {/* Active chips */}
@@ -465,17 +463,17 @@ function ShopContent() {
                 <div className={styles.filterChips}>
                   {activeCategory && (
                     <button className={styles.filterChip} onClick={() => setActiveCategory(null)}>
-                      {activeCategory} ✕
+                      {activeCategory} âœ•
                     </button>
                   )}
                   {activeColor && (
                     <button className={styles.filterChip} onClick={() => setActiveColor(null)}>
-                      {activeColor} ✕
+                      {activeColor} âœ•
                     </button>
                   )}
                   {activeSize && (
                     <button className={styles.filterChip} onClick={() => setActiveSize(null)}>
-                      {activeSize} ✕
+                      {activeSize} âœ•
                     </button>
                   )}
                 </div>
@@ -500,7 +498,7 @@ function ShopContent() {
                 onKeyDown={e => e.key === 'Enter' && toggleGroup('categories')}
               >
                 <span className={styles.filterGroupLabel}>Categories</span>
-                <span className={`${styles.filterGroupChevron} ${openGroups.categories ? styles.open : ''}`}>▼</span>
+                <span className={`${styles.filterGroupChevron} ${openGroups.categories ? styles.open : ''}`}>â–¼</span>
               </div>
 
               {openGroups.categories && (
@@ -551,7 +549,7 @@ function ShopContent() {
                   onKeyDown={e => e.key === 'Enter' && toggleGroup('colors')}
                 >
                   <span className={styles.filterGroupLabel}>Colors</span>
-                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}>▼</span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}>â–¼</span>
                 </div>
                 {openGroups.colors && (
                   <div className={styles.filterColorGrid}>
@@ -583,7 +581,7 @@ function ShopContent() {
                   onKeyDown={e => e.key === 'Enter' && toggleGroup('sizes')}
                 >
                   <span className={styles.filterGroupLabel}>Sizes</span>
-                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}>▼</span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}>â–¼</span>
                 </div>
                 {openGroups.sizes && (
                   <div className={styles.filterSizeGrid}>
@@ -602,10 +600,10 @@ function ShopContent() {
             )}
           </aside>
 
-          {/* ── CONTENT AREA ── */}
+          {/* â”€â”€ CONTENT AREA â”€â”€ */}
           <div className={styles.contentArea} id="product-grid">
 
-            {/* ── TOOLBAR ── */}
+            {/* â”€â”€ TOOLBAR â”€â”€ */}
             <div className={styles.toolbar} role="toolbar" aria-label="Product sorting and display options">
               <div className={styles.toolbarLeft}>
                 <p className={styles.toolbarCount}>
@@ -659,10 +657,10 @@ function ShopContent() {
               </div>
             </div>
 
-            {/* ── GRID ── */}
+            {/* â”€â”€ GRID â”€â”€ */}
             {loading ? (
               <div className={styles.grid}>
-                <p className={styles.loading}>Loading collection…</p>
+                <p className={styles.loading}>Loading collectionâ€¦</p>
               </div>
             ) : sorted.length === 0 ? (
               <div className={styles.grid}>
@@ -681,7 +679,7 @@ function ShopContent() {
                     <div key={item.key} className={styles.inlinePromo} aria-label="Promotional banner">
                       <div className={styles.inlinePromoBlob} aria-hidden="true" />
                       <div className={styles.inlinePromoText}>
-                        <p className={styles.inlinePromoEyebrow}>RedAvo Activewear · Limited Drop</p>
+                        <p className={styles.inlinePromoEyebrow}>RedAvo Activewear Â· Limited Drop</p>
                         <p className={styles.inlinePromoTitle}>New Season Arrivals</p>
                       </div>
                       <button className={styles.inlinePromoBtn} onClick={() => {
@@ -706,7 +704,7 @@ function ShopContent() {
           </div>
         </div>
 
-        {/* ── NEWSLETTER ── */}
+        {/* â”€â”€ NEWSLETTER â”€â”€ */}
         <section className={styles.newsletter} aria-labelledby="newsletter-heading">
           <span className={`section-label ${styles.newsletterLabel}`}>Stay Connected</span>
           <h2 id="newsletter-heading" className={styles.newsletterTitle}>
@@ -737,7 +735,7 @@ function ShopContent() {
           </div>
         </section>
 
-        {/* ── FOOTER FEATURES ── */}
+        {/* â”€â”€ FOOTER FEATURES â”€â”€ */}
         <div className={styles.footerFeatures} aria-label="Shopping benefits">
           {FEATURES.map(f => (
             <div key={f.title} className={styles.footerFeature}>
@@ -763,7 +761,7 @@ export default function ShopPage() {
   return (
     <Suspense fallback={
       <div className={styles.page}>
-        <div className={styles.loading}>Loading…</div>
+        <div className={styles.loading}>Loadingâ€¦</div>
       </div>
     }>
       <ShopContent />

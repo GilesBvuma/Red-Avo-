@@ -85,7 +85,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: #fff;
   margin-bottom: 12px;
 }
@@ -108,7 +108,7 @@
 .heroHeading {
   font-family: var(--font-montserrat), sans-serif;
   font-weight: 600;
-  font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: #fff;
@@ -123,40 +123,6 @@
   line-height: 1.6;
   text-shadow: 0 1px 6px rgba(0,0,0,0.15);
   margin-bottom: 40px;
-}
-
-.heroCta {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 24px;
-  background: var(--red);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.88rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 16px 36px;
-  border-radius: 999px;
-  text-decoration: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.heroCta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-.ctaArrow {
-  margin-left: 8px;
-  font-weight: 400;
-  font-size: 1.2em;
-  transition: transform 0.25s ease;
-  line-height: 1;
-}
-
-.heroCta:hover .ctaArrow {
-  transform: translateX(3px);
 }
 
 @media (max-width: 768px) {
@@ -177,7 +143,7 @@
     padding-bottom: 40px;
   }
   .heroHeading {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     margin-bottom: 16px;
   }
   .heroBody {

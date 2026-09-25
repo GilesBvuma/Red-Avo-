@@ -1,6 +1,5 @@
-// ─── Brand Color Tokens ───────────────────────────────────────────
 export const COLORS = {
-  red:   '#C0392B',
+  red:   '#8F0D13',
   green: '#5D8A3C',
   cream: '#FAFAF5',
   pink:  '#E91E8C',

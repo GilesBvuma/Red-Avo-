@@ -3,6 +3,7 @@ package com.redavo.pos.controller;
 import com.redavo.pos.dto.ImportResultDTO;
 import com.redavo.pos.model.Customer;
 import com.redavo.pos.repository.CustomerRepository;
+import com.redavo.pos.security.CustomerJwtTokenProvider;
 import com.redavo.pos.service.CustomerExcelImportService;
 import com.redavo.pos.service.NotificationService;
 import com.redavo.pos.service.OtpService;
@@ -22,6 +23,7 @@ public class CustomerController {
     @Autowired private NotificationService notificationService;
     @Autowired private CustomerExcelImportService customerExcelImportService;
     @Autowired private OtpService otpService;
+    @Autowired private CustomerJwtTokenProvider customerJwtTokenProvider;
 
     // ── IMPORT from Excel ──────────────────────────────────────────
     @PostMapping(value = "/import", consumes = "multipart/form-data")
@@ -72,12 +74,27 @@ public class CustomerController {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired OTP"));
         }
         
-        // OTP is valid. Check if customer exists.
+        // OTP is valid. Find or create customer.
         var existingCustomer = customerRepository.findByEmail(email);
         if (existingCustomer.isPresent()) {
-            return ResponseEntity.ok(Map.of("exists", true, "customer", existingCustomer.get()));
+            Customer customer = existingCustomer.get();
+            String token = customerJwtTokenProvider.generateToken(customer.getId(), customer.getEmail());
+            return ResponseEntity.ok(Map.of(
+                "exists", true,
+                "customer", customer,
+                "token", token
+            ));
         } else {
-            return ResponseEntity.ok(Map.of("exists", false));
+            // New customer — auto-create a minimal record so we can issue a token
+            Customer newCustomer = new Customer();
+            newCustomer.setEmail(email);
+            Customer saved = customerRepository.save(newCustomer);
+            String token = customerJwtTokenProvider.generateToken(saved.getId(), saved.getEmail());
+            return ResponseEntity.ok(Map.of(
+                "exists", false,
+                "customer", saved,
+                "token", token
+            ));
         }
     }
 

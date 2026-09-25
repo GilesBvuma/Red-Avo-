@@ -29,7 +29,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin-bottom: 32px;
+  margin-bottom: 14px;
 }
 
 .heading {
@@ -80,42 +80,9 @@
   text-shadow: 0 1px 6px rgba(0,0,0,0.15);
 }
 
-.cta {
-  display: inline-block;
-  margin-top: 48px;
-  background: var(--red);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.88rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 16px 36px;
-  border-radius: 999px;
-  text-decoration: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-  will-change: transform, opacity;
-  display: inline-flex;
-  align-items: center;
-}
 
-.cta:hover {
-  background: #a93226;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
 
-.ctaArrow {
-  margin-left: 8px;
-  font-weight: 400;
-  font-size: 1.2em;
-  transition: transform 0.25s ease;
-  line-height: 1;
-}
 
-.cta:hover .ctaArrow {
-  transform: translateX(3px);
-}
 
 /* Right side — now the full background banner */
 .right {
@@ -161,19 +128,7 @@
   z-index: 1;
 }
 
-/* Diagonal cut into ticker */
-.hero::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: #5E080C;
-  clip-path: polygon(0 80px, 100% 0, 100% 80px);
-  z-index: 2;
-  pointer-events: none;
-}
+
 
 /* Scroll indicator */
 .scrollIndicator {
@@ -254,7 +209,5 @@
     background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
   }
 
-  .hero::after {
-    height: 48px;
-  }
+
 }

@@ -23,9 +23,13 @@ const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       ...remotePatterns,
       { protocol: 'https', hostname: 'pos.redavo.co.zw' },
+      { protocol: 'https', hostname: 'placehold.co' },
     ],
   },
   async rewrites() {

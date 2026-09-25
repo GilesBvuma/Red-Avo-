@@ -1,0 +1,85 @@
+/* ================================================================
+   CategoryStrip — RedAvo Activewear Storefront
+   Minimal horizontal category navigation between Hero and Ticker.
+   Uses only existing design tokens from globals.css.
+================================================================ */
+
+.strip {
+  background: var(--cream);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 18px 6vw;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+}
+
+.link {
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--navy);
+  text-decoration: none;
+  padding: 6px 20px;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+/* Underline slide-in on hover */
+.link::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 0;
+  height: 1.5px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.link:hover {
+  color: var(--red);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
+}
+
+.sep {
+  color: var(--red);
+  font-size: 0.85rem;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .strip {
+    padding: 14px 5vw;
+  }
+
+  .link {
+    font-size: 0.72rem;
+    padding: 4px 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .link::after {
+    left: 12px;
+    right: 12px;
+  }
+}
