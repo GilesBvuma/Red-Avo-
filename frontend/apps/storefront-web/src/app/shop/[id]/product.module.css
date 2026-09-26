@@ -7,7 +7,7 @@
 
 .main {
   flex: 1;
-  padding-top: 92px; /* Exact height of navbar */
+  padding-top: 128px; /* Exact height of navbar */
 }
 
 .container {

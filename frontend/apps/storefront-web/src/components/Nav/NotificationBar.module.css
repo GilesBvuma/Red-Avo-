@@ -1,0 +1,144 @@
+.bar {
+  background-color: #FAF8F4;
+  color: var(--navy, #1A2B4A);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6vw;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  z-index: 1002;
+  border-bottom: 1px solid rgba(26, 43, 74, 0.08);
+}
+
+.left, .right {
+  flex: 1;
+  display: flex;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.center {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+  align-items: center;
+  overflow: hidden;
+}
+
+.messageWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  text-align: center;
+  width: 100%;
+  color: var(--navy, #1A2B4A);
+  text-decoration: none;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+.message:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.message.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown {
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--navy, #1A2B4A);
+  font-weight: 400;
+}
+
+.supportLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #ffffff;
+  color: var(--navy, #1A2B4A);
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(26, 43, 74, 0.12);
+  border-radius: 6px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(26, 43, 74, 0.08);
+}
+
+.dropdownMenu a {
+  padding: 10px 16px;
+  text-decoration: none;
+  color: var(--navy, #1A2B4A);
+  transition: background 0.2s;
+  text-transform: none;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.dropdownMenu a:hover {
+  background: rgba(26, 43, 74, 0.05);
+}
+
+@media (max-width: 900px) {
+  .bar {
+    padding: 0 16px;
+    height: 32px;
+    font-size: 0.7rem;
+  }
+  .left {
+    display: none;
+  }
+  .center {
+    flex: 3;
+    justify-content: flex-start;
+  }
+  .right {
+    flex: 1;
+  }
+  .messageWrap {
+    justify-content: flex-start;
+  }
+  .message {
+    text-align: left;
+  }
+}
+
+@media (min-width: 901px) {
+  .bar {
+    display: none;
+  }
+}

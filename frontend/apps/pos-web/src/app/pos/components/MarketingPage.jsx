@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import BulkNotifyPanel from './BulkNotifyPanel'; // Re-use the existing component for now
 import CommunityTab from './CommunityTab';
-import { fetchPendingReviews, approveReview, deleteReview, fetchContactMessages, markContactMessageRead } from '../lib/api';
+import { fetchPendingReviews, approveReview, deleteReview, fetchContactMessages, markContactMessageRead, deleteContactMessage } from '../lib/api';
 
 export default function MarketingPage() {
   const [activeTab, setActiveTab] = useState('campaigns');
@@ -22,6 +22,8 @@ export default function MarketingPage() {
 
   const [inquiries, setInquiries] = useState([]);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
+  const [inquiryPage, setInquiryPage] = useState(1);
+  const inquiriesPerPage = 10;
 
   const loadReviews = async () => {
     setLoadingReviews(true);
@@ -61,6 +63,16 @@ export default function MarketingPage() {
     try {
       await markContactMessageRead(id);
       setInquiries(prev => prev.map(msg => msg.id === id ? { ...msg, isRead: true } : msg));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteInquiry = async (id) => {
+    if (!confirm('Are you sure you want to delete this message?')) return;
+    try {
+      await deleteContactMessage(id);
+      setInquiries(prev => prev.filter(msg => msg.id !== id));
     } catch (err) {
       console.error(err);
     }
@@ -224,7 +236,12 @@ export default function MarketingPage() {
                   No customer messages found.
                 </div>
               ) : (
-                inquiries.map(msg => (
+                (() => {
+                  const paginatedInquiries = inquiries.slice((inquiryPage - 1) * inquiriesPerPage, inquiryPage * inquiriesPerPage);
+                  const totalPages = Math.ceil(inquiries.length / inquiriesPerPage);
+                  return (
+                    <>
+                      {paginatedInquiries.map(msg => (
                   <div key={msg.id} style={{ 
                     border: '1px solid #E5E7EB', 
                     borderRadius: '8px', 
@@ -247,7 +264,8 @@ export default function MarketingPage() {
                         {msg.message}
                       </p>
                     </div>
-                    {!msg.isRead && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {!msg.isRead && (
                       <button 
                         onClick={() => handleMarkInquiryRead(msg.id)}
                         style={{ background: '#F3F4F6', color: '#4B5563', border: '1px solid #D1D5DB', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
@@ -255,8 +273,37 @@ export default function MarketingPage() {
                         Mark as Read
                       </button>
                     )}
+                      <button 
+                        onClick={() => handleDeleteInquiry(msg.id)}
+                        style={{ background: '#FEE2E2', color: '#DC2626', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                ))
+                ))}
+                      {totalPages > 1 && (
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                          <button 
+                            onClick={() => setInquiryPage(p => Math.max(1, p - 1))}
+                            disabled={inquiryPage === 1}
+                            style={{ padding: '8px 16px', border: '1px solid #D1D5DB', background: inquiryPage === 1 ? '#F3F4F6' : '#fff', borderRadius: '6px', cursor: inquiryPage === 1 ? 'not-allowed' : 'pointer' }}
+                          >
+                            Previous
+                          </button>
+                          <span style={{ color: '#374151', fontSize: '14px' }}>Page {inquiryPage} of {totalPages}</span>
+                          <button 
+                            onClick={() => setInquiryPage(p => Math.min(totalPages, p + 1))}
+                            disabled={inquiryPage === totalPages}
+                            style={{ padding: '8px 16px', border: '1px solid #D1D5DB', background: inquiryPage === totalPages ? '#F3F4F6' : '#fff', borderRadius: '6px', cursor: inquiryPage === totalPages ? 'not-allowed' : 'pointer' }}
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()
               )}
             </div>
           </div>

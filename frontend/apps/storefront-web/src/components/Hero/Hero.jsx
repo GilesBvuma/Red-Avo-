@@ -37,21 +37,7 @@ export default function Hero() {
     // CTA
     .fromTo('#hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5');
 
-    // Subtle parallax effect on scroll
-    ScrollTrigger.create({
-      trigger: sectionRef.current,
-      start:   'top top',
-      end:     'bottom top',
-      scrub:   1,
-      onUpdate: (self) => {
-        const p = self.progress;
-        if (imageRef.current) {
-          gsap.set(imageRef.current, {
-            y: p * 50,
-          });
-        }
-      },
-    });
+
 
   }, { scope: sectionRef });
 

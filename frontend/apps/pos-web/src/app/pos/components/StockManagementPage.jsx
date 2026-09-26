@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as api from '../lib/api';
 import { Red_Rose } from 'next/font/google';
 import { useAuth } from '../../AuthProvider';
@@ -275,20 +275,56 @@ function MultipleImageDropZone({ previews, onFiles, onRemove }) {
 // ─── Modal form ──────────────────────────────────────────────────────
 function ProductModal({ product, categories, onClose, onSaved }) {
   const isEdit = !!product;
-  const [form, setForm] = useState(isEdit ? {
-    ...EMPTY_FORM,
-    ...product,
-    price: product.price ?? '',
-    salePrice: product.salePrice ?? '',
-    stockQuantity: product.stockQuantity ?? '',
-    lowStockThreshold: product.lowStockThreshold ?? '5',
-    vatRate: product.vatRate ?? '0',
-    discount: product.discount ?? '0',
-    colors: parseCsv(product.colors),
-    sizes: parseCsv(product.sizes),
-    imageUrls: (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
-    supplierInvoices: product.supplierInvoices || [],
-  } : { ...EMPTY_FORM, sku: `RA-${Math.floor(1000 + Math.random() * 9000)}` });
+
+  const normalizedVariants = useMemo(() => {
+    if (!isEdit || !product?.variants) return null;
+    return product.variants.map(v => {
+      let nColor = v.color;
+      if (nColor && nColor !== 'Default') {
+        nColor = nColor.charAt(0).toUpperCase() + nColor.slice(1).toLowerCase();
+      }
+      let nSize = v.size;
+      if (nSize && nSize !== 'Default') {
+        nSize = nSize.toUpperCase();
+      }
+      return { ...v, color: nColor, size: nSize };
+    });
+  }, [isEdit, product]);
+
+  const [form, setForm] = useState(() => {
+    let initialColors = isEdit ? parseCsv(product.colors) : [];
+    let initialSizes = isEdit ? parseCsv(product.sizes) : [];
+
+    if (normalizedVariants) {
+      normalizedVariants.forEach(v => {
+        if (v.color && v.color !== 'Default') {
+          if (!initialColors.includes(v.color) && !initialColors.find(c => c.toLowerCase() === v.color.toLowerCase())) {
+            initialColors.push(v.color);
+          }
+        }
+        if (v.size && v.size !== 'Default') {
+          if (!initialSizes.includes(v.size) && !initialSizes.find(s => s.toLowerCase() === v.size.toLowerCase())) {
+            initialSizes.push(v.size);
+          }
+        }
+      });
+    }
+
+    return isEdit ? {
+      ...EMPTY_FORM,
+      ...product,
+      price: product.price ?? '',
+      salePrice: product.salePrice ?? '',
+      stockQuantity: product.stockQuantity ?? '',
+      lowStockThreshold: product.lowStockThreshold ?? '5',
+      vatRate: product.vatRate ?? '0',
+      discount: product.discount ?? '0',
+      colors: initialColors,
+      sizes: initialSizes,
+      imageUrls: (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : []),
+      supplierInvoices: product.supplierInvoices || [],
+    } : { ...EMPTY_FORM, sku: `RA-${Math.floor(1000 + Math.random() * 9000)}` };
+  });
   
   const [imageFiles, setImageFiles] = useState([]);
   const [previews, setPreviews]     = useState(form.imageUrls || []);
@@ -334,15 +370,15 @@ function ProductModal({ product, categories, onClose, onSaved }) {
   const [variantStockGrid, setVariantStockGrid] = useState({});
 
   useEffect(() => {
-    if (isEdit && product.variants) {
+    if (normalizedVariants) {
       const initialGrid = {};
-      product.variants.forEach(v => {
+      normalizedVariants.forEach(v => {
         const key = `${v.color || 'Default'}-${v.size || 'Default'}`;
         initialGrid[key] = { id: v.id, stockQuantity: v.stockQuantity, sku: v.sku };
       });
       setVariantStockGrid(initialGrid);
     }
-  }, [isEdit, product]);
+  }, [normalizedVariants]);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -392,7 +428,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
     const hasColors = form.colors.length > 0;
     const hasSizes = form.sizes.length > 0;
     
-    if (!hasColors && !hasSizes && (!isEdit || !product.variants)) return [];
+    if (!hasColors && !hasSizes && !normalizedVariants) return [];
     
     const cs = hasColors ? form.colors : ['Default'];
     const ss = hasSizes ? form.sizes : ['Default'];
@@ -409,8 +445,8 @@ function ProductModal({ product, categories, onClose, onSaved }) {
     });
 
     // Recover orphaned variants that still hold stock so they aren't permanently hidden
-    if (isEdit && product.variants) {
-      product.variants.forEach(v => {
+    if (normalizedVariants) {
+      normalizedVariants.forEach(v => {
         const c = v.color || 'Default';
         const s = v.size || 'Default';
         const key = `${c}-${s}`;
@@ -716,9 +752,10 @@ function Field({ label, children, fullWidth }) {
     </div>
   );
 }
-function Input({ onChange, ...props }) {
+function Input({ onChange, value, ...props }) {
   return (
     <input {...props}
+      value={value ?? ''}
       onChange={e => onChange(e.target.value)}
       style={{ width: '100%', height: 36, padding: '0 12px', border: '1.5px solid #E8E8E8', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s', background: '#FAFAFA' }}
       onFocus={e => e.target.style.borderColor = '#C0392B'}

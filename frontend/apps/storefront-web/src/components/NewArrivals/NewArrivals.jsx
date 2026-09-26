@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { useGSAP } from '@gsap/react';
-import { gsap, ScrollTrigger } from '@/lib/gsap';
+
+import { gsap } from 'gsap'; // ScrollTrigger removed — not used in this component
 import { fetchProducts, fetchColors } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -96,20 +96,7 @@ export default function NewArrivals() {
     load();
   }, []);
 
-  useGSAP(() => {
-    if (loading) return;
 
-    // Heading slides up
-    gsap.fromTo(
-      ['.new-arrivals-label', '.new-arrivals-heading', '.new-arrivals-link'],
-      { yPercent: 40, opacity: 0 },
-      {
-        yPercent: 0, opacity: 1, duration: 0.7, ease: 'power3.out', stagger: 0.1,
-        scrollTrigger: { trigger: '.new-arrivals-heading', start: 'top 85%' },
-      }
-    );
-
-  }, { scope: sectionRef, dependencies: [loading, products] });
 
   const handleAddToCart = (id, btnId) => {
     setCartMsg((prev) => ({ ...prev, [id]: true }));
