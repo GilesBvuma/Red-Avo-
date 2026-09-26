@@ -311,6 +311,10 @@ export async function markContactMessageRead(id) {
   return apiFetch(`/admin/contact/${id}/read`, { method: 'POST' });
 }
 
+export async function deleteContactMessage(id) {
+  return apiFetch(`/admin/contact/${id}`, { method: 'DELETE' });
+}
+
 // ── Transfers & Stores & Stock ────────────────────────────────────────────
 export async function fetchStockLevels(storeId) {
   const query = storeId ? `?storeId=${storeId}` : '';

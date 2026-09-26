@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { useGSAP } from '@gsap/react';
+
 import { gsap } from '@/lib/gsap';
 import { fetchCommunityPosts } from '@/lib/api';
 import Image from 'next/image';
@@ -43,29 +43,47 @@ function GridCardMedia({ post }) {
         className={styles.cardImg}
         fill
         sizes="(max-width: 768px) 50vw, 33vw"
-        style={{ objectFit: 'cover', opacity: showMedia ? 0 : 1, transition: 'opacity 0.8s ease' }}
+        style={{
+          objectFit: 'cover',
+          opacity: showMedia ? 0 : 1,
+          transition: 'opacity 0.8s ease',
+          pointerEvents: showMedia ? 'none' : 'auto',
+        }}
       />
-      {showMedia && (
-        post.mediaType === 'VIDEO' ? (
-          <video
-            src={resolveMediaUrl(post.mediaUrl)}
-            className={styles.cardImg}
-            style={{ position: 'absolute', inset: 0, animation: 'fadeIn 0.8s ease forwards', objectFit: 'cover' }}
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
-        ) : (
-          <Image
-            src={resolveMediaUrl(post.mediaUrl)}
-            alt=""
-            className={styles.cardImg}
-            fill
-            sizes="(max-width: 768px) 50vw, 33vw"
-            style={{ objectFit: 'cover', animation: 'fadeIn 0.8s ease forwards' }}
-          />
-        )
+      {/* Media (video or image) — always in DOM, fades in/out via opacity only */}
+      {post.mediaType === 'VIDEO' ? (
+        <video
+          src={resolveMediaUrl(post.mediaUrl)}
+          className={styles.cardImg}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: showMedia ? 1 : 0,
+            transition: 'opacity 0.8s ease',
+            pointerEvents: showMedia ? 'auto' : 'none',
+          }}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+      ) : (
+        <Image
+          src={resolveMediaUrl(post.mediaUrl)}
+          alt=""
+          className={styles.cardImg}
+          fill
+          sizes="(max-width: 768px) 50vw, 33vw"
+          style={{
+            objectFit: 'cover',
+            opacity: showMedia ? 1 : 0,
+            transition: 'opacity 0.8s ease',
+            pointerEvents: showMedia ? 'auto' : 'none',
+          }}
+        />
       )}
     </>
   );
@@ -205,25 +223,7 @@ export default function Community() {
   }, []);
 
   // ── GSAP entrance animation ─────────────────────────────────────
-  useGSAP(() => {
-    if (posts.length === 0) return;
-    gsap.fromTo(
-      ['.community-label', '.community-heading'],
-      { yPercent: 60, opacity: 0 },
-      {
-        yPercent: 0, opacity: 1, stagger: 0.15, duration: 0.7, ease: 'power3.out',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top 80%' },
-      }
-    );
-    gsap.fromTo(
-      '.community-card',
-      { yPercent: 60, opacity: 0 },
-      {
-        yPercent: 0, opacity: 1, stagger: 0.1, duration: 0.75, ease: 'power3.out',
-        scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
-      }
-    );
-  }, { scope: sectionRef, dependencies: [posts] });
+  
 
   // ── Viewer handlers ─────────────────────────────────────────────
   const openViewer  = (idx)  => setActiveIndex(idx);

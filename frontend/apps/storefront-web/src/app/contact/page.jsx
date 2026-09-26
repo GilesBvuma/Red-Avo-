@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
@@ -24,6 +25,53 @@ const TikTokIcon = () => (
 );
 
 export default function ContactPage() {
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleChange = (e) => {
+    setForm(prev => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) {
+      setErrorMsg('Please fill in all required fields.');
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const payload = {
+        name: form.name,
+        email: form.email,
+        message: form.subject ? `[Subject: ${form.subject}]\n\n${form.message}` : form.message
+      };
+
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setForm({ name: '', email: '', subject: '', message: '' });
+      }, 4000);
+    } catch (err) {
+      setErrorMsg('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
   return (
     <>
       <Nav />
@@ -83,29 +131,30 @@ export default function ContactPage() {
               {/* Right Column – Form */}
               <div className={styles.formCol}>
                 <h2 className={styles.formTitle}>Get in Touch</h2>
-                <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+                <form className={styles.form} onSubmit={handleSubmit}>
+                  {errorMsg && <p style={{ color: 'red', marginBottom: '10px' }}>{errorMsg}</p>}
                   <div className={styles.inputGroup}>
                     <label htmlFor="name">Name</label>
-                    <input type="text" id="name" placeholder="Your name" required />
+                    <input type="text" id="name" placeholder="Your name" value={form.name} onChange={handleChange} required />
                   </div>
 
                   <div className={styles.inputGroup}>
                     <label htmlFor="email">Email</label>
-                    <input type="email" id="email" placeholder="you@example.com" required />
+                    <input type="email" id="email" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
                   </div>
 
                   <div className={styles.inputGroup}>
                     <label htmlFor="subject">Subject</label>
-                    <input type="text" id="subject" placeholder="How can we help?" required />
+                    <input type="text" id="subject" placeholder="How can we help?" value={form.subject} onChange={handleChange} />
                   </div>
 
                   <div className={styles.inputGroup}>
                     <label htmlFor="message">Message</label>
-                    <textarea id="message" rows="5" placeholder="Your message..." required></textarea>
+                    <textarea id="message" rows="5" placeholder="Your message..." value={form.message} onChange={handleChange} required></textarea>
                   </div>
 
-                  <button type="submit" className={styles.submitBtn}>
-                    Send Message
+                  <button type="submit" className={styles.submitBtn} disabled={submitting}>
+                    {submitting ? 'Sending...' : submitted ? 'Message Sent!' : 'Send Message'}
                   </button>
                 </form>
               </div>

@@ -60,4 +60,14 @@ public class ContactController {
             return ResponseEntity.ok(contactRepository.save(msg));
         }).orElse(ResponseEntity.notFound().build());
     }
+    // Delete message
+    @DeleteMapping("/admin/contact/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteContactMessage(@PathVariable Long id) {
+        if (!contactRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        contactRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
 }

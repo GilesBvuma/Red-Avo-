@@ -61,3 +61,10 @@
   position: relative;
   z-index: 1;
 }
+
+
+@media (max-width: 900px) {
+  .watermarkLayer {
+    display: none;
+  }
+}
