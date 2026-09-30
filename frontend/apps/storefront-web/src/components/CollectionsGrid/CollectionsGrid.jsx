@@ -65,15 +65,16 @@ export default function CollectionsGrid() {
         </div>
         <div className={styles.grid}>
           {collections.map((col, i) => {
-            // Use the /uploads path as a relative URL — next.config.mjs rewrites
-            // /uploads/* → NEXT_PUBLIC_MEDIA_URL/uploads/* at the edge, so this
-            // works correctly in both local dev and production without hardcoding
-            // any hostname here.
-            const imageUrl = col.coverImageUrl
-              ? (col.coverImageUrl.startsWith('/uploads')
-                  ? col.coverImageUrl          // already a clean relative path
-                  : col.coverImageUrl)          // absolute URL from elsewhere — use as-is
-              : null;
+            // Robust parsing identical to product images (NewArrivals.jsx)
+            // Strips any absolute domain prefix (like .redavowear.com/api) stored in the DB
+            const toRelative = (u) => {
+              if (!u) return null;
+              if (u.startsWith('/uploads/')) return u;
+              const idx = u.indexOf('/uploads/');
+              return idx !== -1 ? u.slice(idx) : u;
+            };
+            const imageUrl = toRelative(col.coverImageUrl);
+
             return (
               <Link
                 key={col.id}
@@ -84,10 +85,13 @@ export default function CollectionsGrid() {
                 {/* Background image */}
                 <div className={styles.cardImageWrap}>
                   {imageUrl ? (
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={col.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
                       className={styles.cardImage}
+                      style={{ objectFit: 'cover' }}
                     />
                   ) : (
                     <div className={styles.cardImagePlaceholder}>

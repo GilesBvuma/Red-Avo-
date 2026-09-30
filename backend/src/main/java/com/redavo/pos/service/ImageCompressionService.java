@@ -1,6 +1,7 @@
 package com.redavo.pos.service;
 
 import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.tasks.UnsupportedFormatException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,6 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.logging.Logger;
 
 /**
  * Centralised image compression service.
@@ -27,6 +29,8 @@ import java.nio.file.StandardCopyOption;
  */
 @Service
 public class ImageCompressionService {
+
+    private static final Logger log = Logger.getLogger(ImageCompressionService.class.getName());
 
     /**
      * Image-type hint that controls the max width applied during compression.
@@ -75,13 +79,22 @@ public class ImageCompressionService {
             return;
         }
 
-        // For JPEG / PNG / WebP: resize to maxWidth (keeping aspect ratio) + JPEG compression.
+        // For JPEG / PNG: resize to maxWidth (keeping aspect ratio) + JPEG compression.
         // outputFormat("jpg") normalises everything (including PNG) to JPEG on disk;
         // the caller is responsible for giving dest the ".jpg" extension in that case.
-        Thumbnails.of(file.getInputStream())
-                .width(role.maxWidth)          // shrinks if wider; no-op if already narrower
-                .outputFormat("jpg")
-                .outputQuality(role.quality)
-                .toFile(dest.toFile());
+        try {
+            Thumbnails.of(file.getInputStream())
+                    .width(role.maxWidth)          // shrinks if wider; no-op if already narrower
+                    .outputFormat("jpg")
+                    .outputQuality(role.quality)
+                    .toFile(dest.toFile());
+        } catch (UnsupportedFormatException e) {
+            // Thumbnailator does not natively support formats like WebP or HEIC without external plugins.
+            // If it fails to read the format, fallback to saving the file verbatim so we don't crash.
+            log.warning("Thumbnailator unsupported format (" + contentType + "), falling back to verbatim copy for: " + file.getOriginalFilename());
+            try (InputStream in = file.getInputStream()) {
+                Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
     }
 }

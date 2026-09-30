@@ -148,12 +148,12 @@ function ProductCard({ product, onClick, listView, colorMap }) {
 
 // Resolve /uploads paths as relative URLs — next.config.mjs rewrites
 // /uploads/* → NEXT_PUBLIC_MEDIA_URL/uploads/* so no hostname is needed.
+// This forcibly strips any absolute domain prefix (e.g. .redavowear.com/api) stored in the DB.
 function resolveImageUrl(url) {
   if (!url) return null;
-  if (url.startsWith('/uploads')) return url; // relative — rewrite handles it
+  if (url.startsWith('/uploads/')) return url;
   const idx = url.indexOf('/uploads/');
-  if (idx !== -1) return url.slice(idx);      // strip any accidental host prefix
-  return url;
+  return idx !== -1 ? url.slice(idx) : url;
 }
 
 export default function CollectionSlugPage() {
