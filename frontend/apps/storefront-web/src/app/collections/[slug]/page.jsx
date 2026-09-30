@@ -146,11 +146,13 @@ function ProductCard({ product, onClick, listView, colorMap }) {
 
 
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8080';
-
+// Resolve /uploads paths as relative URLs — next.config.mjs rewrites
+// /uploads/* → NEXT_PUBLIC_MEDIA_URL/uploads/* so no hostname is needed.
 function resolveImageUrl(url) {
   if (!url) return null;
-  if (url.startsWith('/uploads')) return `${API_BASE}${url}`;
+  if (url.startsWith('/uploads')) return url; // relative — rewrite handles it
+  const idx = url.indexOf('/uploads/');
+  if (idx !== -1) return url.slice(idx);      // strip any accidental host prefix
   return url;
 }
 
