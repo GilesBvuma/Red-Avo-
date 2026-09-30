@@ -3,6 +3,8 @@ package com.redavo.pos.controller;
 import com.redavo.pos.dto.CommunityPostDTO;
 import com.redavo.pos.dto.CommunityPostPublicDTO;
 import com.redavo.pos.service.CommunityPostService;
+import com.redavo.pos.service.ImageCompressionService;
+import com.redavo.pos.service.ImageCompressionService.ImageRole;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,9 @@ public class CommunityController {
 
     @Autowired
     private CommunityPostService service;
+
+    @Autowired
+    private ImageCompressionService imageCompressionService;
 
     // ── Public endpoint ────────────────────────────────────────────
 
@@ -99,15 +104,17 @@ public class CommunityController {
                     "Invalid file type '" + contentType + "'. Allowed: " + allowed);
         }
 
-        String originalName = file.getOriginalFilename();
-        String extension = (originalName != null && originalName.contains("."))
+        // For images: compress. For videos: ImageCompressionService passes through verbatim.
+        boolean isVideo = contentType.startsWith("video/");
+        String extension = isVideo
                 ? originalName.substring(originalName.lastIndexOf('.'))
-                : ".bin";
+                : ".jpg"; // normalise images to JPEG
 
         String filename = "community-" + UUID.randomUUID() + extension;
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
-        Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+        Path dest = uploadPath.resolve(filename);
+        imageCompressionService.saveCompressed(file, dest, ImageRole.COMMUNITY);
 
         return ResponseEntity.ok(Map.of("url", "/uploads/" + filename));
     }

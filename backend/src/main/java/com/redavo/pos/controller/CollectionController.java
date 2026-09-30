@@ -1,7 +1,7 @@
-package com.redavo.pos.controller;
-
 import com.redavo.pos.model.ProductCollection;
 import com.redavo.pos.service.CollectionService;
+import com.redavo.pos.service.ImageCompressionService;
+import com.redavo.pos.service.ImageCompressionService.ImageRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +25,9 @@ public class CollectionController {
 
     @Autowired
     private CollectionService collectionService;
+
+    @Autowired
+    private ImageCompressionService imageCompressionService;
 
     @Value("${app.upload.dir:../frontend/apps/pos-web/public/uploads}")
     private String uploadDir;
@@ -119,7 +122,7 @@ public class CollectionController {
     public ResponseEntity<?> uploadCoverImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) throws IOException {
-        String url = saveImage(file, "cover");
+        String url = saveImage(file, "cover", ImageRole.COVER);
         return ResponseEntity.ok(collectionService.updateCoverImage(id, url));
     }
 
@@ -127,13 +130,13 @@ public class CollectionController {
     public ResponseEntity<?> uploadHeroImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) throws IOException {
-        String url = saveImage(file, "hero");
+        String url = saveImage(file, "hero", ImageRole.HERO);
         return ResponseEntity.ok(collectionService.updateHeroImage(id, url));
     }
 
     // ── HELPERS ──────────────────────────────────────────────────────────
 
-    private String saveImage(MultipartFile file, String prefix) throws IOException {
+    private String saveImage(MultipartFile file, String prefix, ImageRole role) throws IOException {
         String contentType = file.getContentType();
         if (contentType == null || (!contentType.toLowerCase().startsWith("image/") && !contentType.toLowerCase().equals("application/octet-stream"))) {
             throw new IllegalArgumentException("Invalid file type: " + contentType);
@@ -141,12 +144,10 @@ public class CollectionController {
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
 
-        String originalName = file.getOriginalFilename();
-        String extension = (originalName != null && originalName.contains("."))
-                ? originalName.substring(originalName.lastIndexOf('.'))
-                : ".jpg";
-        String filename = "collection-" + prefix + "-" + UUID.randomUUID() + extension;
-        Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+        // Always store as .jpg (compression normalises to JPEG)
+        String filename = "collection-" + prefix + "-" + UUID.randomUUID() + ".jpg";
+        Path dest = uploadPath.resolve(filename);
+        imageCompressionService.saveCompressed(file, dest, role);
         return "/uploads/" + filename;
     }
 }
