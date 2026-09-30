@@ -28,7 +28,7 @@ export default function CollectionHero() {
     <section ref={heroRef} className={styles.fullHero} aria-label="Collections hero">
       {/* Desktop Image */}
       <Image
-        src="/images/Collection-banner2.png"
+        src="/images/Firefly (6).jpg"
         alt="RedAvo Activewear Collection"
         fill
         priority
@@ -38,7 +38,7 @@ export default function CollectionHero() {
       />
       {/* Mobile Image */}
       <Image
-        src="/images/Collection-banner2-mobile.png"
+        src="/images/Phoenix  (53).jpg"
         alt="RedAvo Activewear Collection Mobile"
         fill
         priority

@@ -4,16 +4,19 @@ import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import CollectionHero from '@/components/CollectionPage/CollectionHero';
 import Ticker from '@/components/Ticker/Ticker';
-import ShopByCategory from '@/components/CollectionPage/ShopByCategory';
-import CollectionBanner1 from '@/components/CollectionPage/CollectionBanner1';
+import CollectionsGrid from '@/components/CollectionsGrid/CollectionsGrid';
+
 export default function CollectionsPage() {
   return (
     <>
       <Nav />
       <main>
+        {/* Existing hero banner — unchanged */}
         <CollectionHero />
-        <Ticker 
-          text="EMPOWERING EVERY MOTION · ACTIVEWEAR THAT MOVES WITH YOU" 
+
+        {/* Marquee ticker strip */}
+        <Ticker
+          text="EMPOWERING EVERY MOTION · ACTIVEWEAR THAT MOVES WITH YOU"
           slant="ccw"
           style={{
             marginTop: '-14px',
@@ -22,8 +25,9 @@ export default function CollectionsPage() {
             zIndex: 10,
           }}
         />
-        <ShopByCategory />
-        <CollectionBanner1 />
+
+        {/* Dynamic curated collections grid */}
+        <CollectionsGrid />
       </main>
       <Footer />
     </>

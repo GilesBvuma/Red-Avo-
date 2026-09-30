@@ -61,7 +61,7 @@ export default function OurStoryPage() {
               </div>
             </div>
             <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-large-1.PNG" alt="Lookbook 1" fill style={{ objectFit: 'cover' }} unoptimized={true} />
+              <Image src="/images/DSC07746.jpg" alt="Lookbook 1" fill style={{ objectFit: 'cover' }} unoptimized={true} />
             </div>
           </div>
 
@@ -75,7 +75,7 @@ export default function OurStoryPage() {
               </div>
             </div>
             <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-small-1.PNG" alt="Lookbook 2" fill style={{ objectFit: 'cover' }} unoptimized={true} />
+              <Image src="/images/DSC07223.jpg" alt="Lookbook 2" fill style={{ objectFit: 'cover' }} unoptimized={true} />
             </div>
           </div>
 
@@ -107,7 +107,7 @@ export default function OurStoryPage() {
               </div>
             </div>
             <div className={styles.editorialImageWrap}>
-              <Image src="/images/lookbook-small-3.PNG" alt="Lookbook 4" fill style={{ objectFit: 'cover' }} unoptimized={true} />
+              <Image src="/images/DSC07208.jpg" alt="Lookbook 4" fill style={{ objectFit: 'cover' }} unoptimized={true} />
             </div>
           </div>
 

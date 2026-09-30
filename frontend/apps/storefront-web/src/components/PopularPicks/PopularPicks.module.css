@@ -225,6 +225,14 @@
     padding: 60px 0;
   }
 
+  .header {
+    margin-bottom: 8px;
+  }
+
+  .heading {
+    font-size: 1.4rem;
+  }
+
   .scrollGrid {
     gap: 10px;
     padding: 6px 5vw 20px;
