@@ -65,10 +65,14 @@ export default function CollectionsGrid() {
         </div>
         <div className={styles.grid}>
           {collections.map((col, i) => {
+            // Use the /uploads path as a relative URL — next.config.mjs rewrites
+            // /uploads/* → NEXT_PUBLIC_MEDIA_URL/uploads/* at the edge, so this
+            // works correctly in both local dev and production without hardcoding
+            // any hostname here.
             const imageUrl = col.coverImageUrl
               ? (col.coverImageUrl.startsWith('/uploads')
-                  ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8080'}${col.coverImageUrl}`
-                  : col.coverImageUrl)
+                  ? col.coverImageUrl          // already a clean relative path
+                  : col.coverImageUrl)          // absolute URL from elsewhere — use as-is
               : null;
             return (
               <Link
