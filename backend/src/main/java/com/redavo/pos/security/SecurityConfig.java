@@ -75,6 +75,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/wishlist/**").permitAll() // Wishlist — customer JWT validated inside WishlistController
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/abandoned-cart/notify").permitAll() // Storefront abandoned-cart recovery
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/waitlist").permitAll() // Founding-member waitlist
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/collections").permitAll()        // Storefront collections listing
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/collections/**").permitAll()    // Storefront single collection by slug
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/collections/**").permitAll()
+                .requestMatchers("/api/collections/**").authenticated()                                         // All admin collection writes require auth
 
                 // ── Admin-only endpoints — enforced at HTTP level ───────────────────────────────
                 .requestMatchers("/api/auth/register/employee").hasRole("ADMIN")

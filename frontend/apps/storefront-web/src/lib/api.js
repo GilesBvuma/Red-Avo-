@@ -50,3 +50,17 @@ export async function fetchColors() {
   if (!res.ok) return []; // non-critical — fall back silently
   return res.json();
 }
+
+/** Fetches all active collections for the storefront collections page. */
+export async function fetchCollections() {
+  const res = await fetch(`${API_URL}/collections`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+/** Fetches a single collection by slug — used on /collections/[slug] page. */
+export async function fetchCollectionBySlug(slug) {
+  const res = await fetch(`${API_URL}/collections/${slug}`);
+  if (!res.ok) throw new Error('Collection not found');
+  return res.json();
+}

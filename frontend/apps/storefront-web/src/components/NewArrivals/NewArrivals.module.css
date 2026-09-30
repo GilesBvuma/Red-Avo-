@@ -260,7 +260,15 @@
   }
 
   .header {
-    margin-bottom: 32px;
+    margin-bottom: 8px;
+  }
+
+  .heading {
+    font-size: 1.4rem;
+  }
+
+  .seeAll {
+    font-size: 0.8rem;
   }
 
   .scrollGrid {

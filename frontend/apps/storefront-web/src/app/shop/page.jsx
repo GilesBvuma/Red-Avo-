@@ -157,7 +157,14 @@ function ProductCard({ product, onClick, listView, colorMap }) {
   );
 }
 
-const SHOP_HERO_IMAGES = ['/images/shop14.png', '/images/shop15.png', '/images/shop16.png'];
+const SHOP_HERO_IMAGES = [
+
+  '/images/shop19.jpg',
+  '/images/Firefly (5).jpg',
+  '/images/Firefly (1).jpg',
+  '/images/Firefly (2).jpg',
+  '/images/Firefly (4).jpg'
+];
 
 /* ============================================================
    ShopContent
