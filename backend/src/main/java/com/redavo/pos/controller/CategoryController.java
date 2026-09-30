@@ -2,6 +2,8 @@ package com.redavo.pos.controller;
 
 import com.redavo.pos.model.Category;
 import com.redavo.pos.service.CategoryService;
+import com.redavo.pos.service.ImageCompressionService;
+import com.redavo.pos.service.ImageCompressionService.ImageRole;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,9 @@ import java.util.UUID;
 public class CategoryController {
 
     private final CategoryService categoryService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private ImageCompressionService imageCompressionService;
 
     @org.springframework.beans.factory.annotation.Value("${app.upload.dir:../frontend/apps/pos-web/public/uploads}")
     private String uploadDir;
@@ -56,13 +61,10 @@ public class CategoryController {
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
 
-        String originalName = file.getOriginalFilename();
-        String extension = (originalName != null && originalName.contains("."))
-                ? originalName.substring(originalName.lastIndexOf('.'))
-                : ".jpg";
-        String filename = "cat-" + UUID.randomUUID() + extension;
-
-        Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+        // Always store as .jpg — compression normalises to JPEG
+        String filename = "cat-" + UUID.randomUUID() + ".jpg";
+        Path dest = uploadPath.resolve(filename);
+        imageCompressionService.saveCompressed(file, dest, ImageRole.COVER);
         String imageUrl = "/uploads/" + filename;
 
         Category category = new Category();

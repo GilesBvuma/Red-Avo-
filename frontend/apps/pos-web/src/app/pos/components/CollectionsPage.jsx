@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// Strip the /api suffix to get the upload file server base (e.g. http://vps:8080)
+const MEDIA_BASE = API.replace(/\/api\/?$/, '');
 
 /** Returns auth headers from the POS session token */
 function authHeaders(extra = {}) {
@@ -248,7 +250,7 @@ export default function CollectionsPage() {
                   <td style={{ padding: '10px 14px' }}>
                     {col.coverImageUrl ? (
                       <img
-                        src={col.coverImageUrl.startsWith('/uploads') ? `http://localhost:8080${col.coverImageUrl}` : col.coverImageUrl}
+                        src={col.coverImageUrl.startsWith('/uploads') ? `${MEDIA_BASE}${col.coverImageUrl}` : col.coverImageUrl}
                         alt={col.name}
                         style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 6, display: 'block' }}
                       />
@@ -460,7 +462,7 @@ export default function CollectionsPage() {
                       </div>
                       {(p.imageUrl || (p.imageUrls && p.imageUrls.length > 0 ? p.imageUrls[0] : null)) && (
                         <img
-                          src={(p.imageUrl || p.imageUrls[0]).startsWith('/uploads') ? `http://localhost:8080${p.imageUrl || p.imageUrls[0]}` : (p.imageUrl || p.imageUrls[0])}
+                          src={(p.imageUrl || p.imageUrls[0]).startsWith('/uploads') ? `${MEDIA_BASE}${p.imageUrl || p.imageUrls[0]}` : (p.imageUrl || p.imageUrls[0])}
                           alt={p.name}
                           style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
                         />

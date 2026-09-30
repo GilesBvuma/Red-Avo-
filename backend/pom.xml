@@ -150,6 +150,13 @@
             <version>5.2.5</version>
         </dependency>
 
+        <!-- Thumbnailator — pure-Java image resize + JPEG compression (no native deps) -->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.20</version>
+        </dependency>
+
     </dependencies>
 
     <build>

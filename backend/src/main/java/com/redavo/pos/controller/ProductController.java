@@ -2,6 +2,8 @@ package com.redavo.pos.controller;
 
 import com.redavo.pos.dto.ImportResultDTO;
 import com.redavo.pos.model.Product;
+import com.redavo.pos.service.ImageCompressionService;
+import com.redavo.pos.service.ImageCompressionService.ImageRole;
 import com.redavo.pos.service.InventoryExcelImportService;
 import com.redavo.pos.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,9 @@ public class ProductController {
 
     @Autowired
     private InventoryExcelImportService inventoryExcelImportService;
+
+    @Autowired
+    private ImageCompressionService imageCompressionService;
 
     // ── IMPORT from Excel ──────────────────────────────────────────
     @PostMapping(value = "/import", consumes = "multipart/form-data")
@@ -142,14 +147,11 @@ public class ProductController {
         List<String> uploadedUrls = new java.util.ArrayList<>();
         for (MultipartFile file : files) {
             if (file.isEmpty()) continue;
-            
-            String originalName = file.getOriginalFilename();
-            String extension    = (originalName != null && originalName.contains("."))
-                    ? originalName.substring(originalName.lastIndexOf('.'))
-                    : ".jpg";
-            String filename = UUID.randomUUID() + extension;
-            
-            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+
+            // Always save as .jpg — compression normalises to JPEG
+            String filename = UUID.randomUUID() + ".jpg";
+            Path dest = uploadPath.resolve(filename);
+            imageCompressionService.saveCompressed(file, dest, ImageRole.PRODUCT);
             String imageUrl = "/uploads/" + filename;
             uploadedUrls.add(imageUrl);
         }
