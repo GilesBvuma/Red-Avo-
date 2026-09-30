@@ -106,8 +106,9 @@ public class CommunityController {
 
         // For images: compress. For videos: ImageCompressionService passes through verbatim.
         boolean isVideo = contentType.startsWith("video/");
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "";
         String extension = isVideo
-                ? originalName.substring(originalName.lastIndexOf('.'))
+                ? (originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : ".mp4")
                 : ".jpg"; // normalise images to JPEG
 
         String filename = "community-" + UUID.randomUUID() + extension;
