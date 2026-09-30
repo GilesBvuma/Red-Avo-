@@ -1,3 +1,5 @@
+package com.redavo.pos.controller;
+
 import com.redavo.pos.model.ProductCollection;
 import com.redavo.pos.service.CollectionService;
 import com.redavo.pos.service.ImageCompressionService;
