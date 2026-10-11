@@ -4,9 +4,9 @@
   grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 60px;
-  max-width: 1280px;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 80px 6vw 60px;
+  padding: 80px var(--gutter) 60px;
   min-height: 90vh;
   background: transparent;
 }
@@ -150,7 +150,7 @@
   .hero {
     grid-template-columns: 1fr;
     gap: 48px;
-    padding: 60px 5vw 40px;
+    padding: 60px var(--gutter) 40px;
     min-height: unset;
   }
 

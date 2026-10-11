@@ -471,7 +471,7 @@ export default function FinancialsPage() {
                   <div>
                     <p style={kpiLabelStyle}>Total Revenue</p>
                     <p style={kpiValueStyle}>
-                      ${(summary.revenue || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                      ${(summary.revenue || 0).toLocaleString('en-ZW', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div style={{ ...kpiBadgeStyle, background: '#ECFDF5', color: '#059669' }}>↑ 12%</div>
@@ -485,7 +485,7 @@ export default function FinancialsPage() {
                   <div>
                     <p style={kpiLabelStyle}>Total COGS</p>
                     <p style={kpiValueStyle}>
-                      ${(summary.totalCogs || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                      ${(summary.totalCogs || 0).toLocaleString('en-ZW', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div style={{ ...kpiBadgeStyle, background: '#FEE2E2', color: '#DC2626' }}>↑ 5%</div>
@@ -502,7 +502,7 @@ export default function FinancialsPage() {
                       ...kpiValueStyle,
                       color: (summary.grossProfit || 0) >= 0 ? '#111827' : '#EF4444',
                     }}>
-                      ${(summary.grossProfit || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                      ${(summary.grossProfit || 0).toLocaleString('en-ZW', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div style={{ ...kpiBadgeStyle, background: '#EFF6FF', color: '#2563EB' }}>↑ 18%</div>

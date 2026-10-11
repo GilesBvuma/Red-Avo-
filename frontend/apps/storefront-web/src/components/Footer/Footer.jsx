@@ -65,7 +65,7 @@ export default function Footer() {
               <li><a href="/returns" className={styles.navLink}>Returns &amp; Exchanges</a></li>
               <li><a href="/shipping" className={styles.navLink}>Shipping</a></li>
               <li><a href="/contact" className={styles.navLink}>Contact Us</a></li>
-              <li><a href="/waitlist" className={styles.navLink}>Join Waitlist 🥑</a></li>
+              <li><a href="/waitlist" className={styles.navLink}>Join Waitlist</a></li>
             </ul>
           </nav>
 

@@ -6,12 +6,13 @@
 /* ── Section wrapper ── */
 .section {
   background: var(--cream);
-  padding: 90px 6vw;
+  padding: 90px var(--gutter);
   overflow: hidden;
 }
 
 .container {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 1920px;
   margin: 0 auto;
 }
 
@@ -307,5 +308,5 @@
 
 @media (max-width: 540px) {
   .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .section { padding: 70px 5vw 60px; }
+  .section { padding: 70px var(--gutter) 60px; }
 }

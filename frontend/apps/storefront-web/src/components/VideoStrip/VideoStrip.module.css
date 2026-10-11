@@ -10,9 +10,9 @@
 
 .heroContainer {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 0 6vw;
+  padding: 0 var(--gutter);
   position: relative;
   z-index: 10;
 }

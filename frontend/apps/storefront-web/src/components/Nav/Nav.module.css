@@ -51,9 +51,10 @@
 }
 
 .inner {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 14px 6vw;
+  padding: 14px var(--gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -234,6 +235,18 @@
   cursor: pointer;
   font-size: 1rem;
   padding: 4px;
+}
+
+.nav:not(.navLight):not(.scrolled) .searchInput {
+  color: #ffffff;
+}
+
+.nav:not(.navLight):not(.scrolled) .searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nav:not(.navLight):not(.scrolled) .closeSearch {
+  color: #ffffff;
 }
 
 /* Mobile Layout Overrides */

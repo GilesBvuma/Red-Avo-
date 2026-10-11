@@ -8,6 +8,16 @@
 /*                     font-family: var(--font-playfair), serif        */
 
 /* ── CSS Custom Properties (Design Tokens) ── */
+/*
+  LAYOUT CONTRACT
+  ────────────────────────────────────────────────
+  All horizontal padding MUST use var(--gutter).
+  No component may use max-width < 1920px on its
+  outermost wrapper. Carousel grids use the
+  100vw / translateX(-50%) bleed pattern.
+  ────────────────────────────────────────────────
+*/
+
 :root {
   /* Brand colours */
   --red:   #8F0D13;
@@ -27,6 +37,13 @@
   /* Easing */
   --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /*
+    Shared horizontal gutter — single source of truth.
+    Every section's left/right padding uses this variable.
+    Grows gently from 16 px on mobile to ~80 px on 2560 px.
+  */
+  --gutter: clamp(16px, 4vw, 80px);
 }
 
 /* ── Reset ── */
@@ -112,9 +129,10 @@ ul, ol { list-style: none; }
 }
 
 .container {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 1920px;
   margin-inline: auto;
-  padding-inline: 6vw;
+  padding-inline: var(--gutter);
 }
 
 /* ── Shared pill button ── */

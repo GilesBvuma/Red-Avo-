@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from 'react';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
-import { fetchProduct, API_URL } from '@/lib/api';
+import { fetchProduct, fetchColors, API_URL } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
 import ProductReviews from '@/components/Reviews/ProductReviews';
 import styles from './product.module.css';
@@ -18,25 +18,30 @@ function toRelative(url) {
   if (idx !== -1) return url.slice(idx);
   return url;
 }
-/* ─── Colour map for swatches ─── */
-const COLOR_MAP = {
-  'Crimson Red': '#C0392B', 'Matte Black': '#1A1A1A', 'Soft White': '#FAFAF5',
-  'Blush Pink': '#F4A0A0', 'Forest Green': '#2D6A4F', 'Navy Blue': '#1B3A6B',
-  'Teal': '#0D9488', 'Burgundy': '#800020', 'Mustard': '#FFDB58',
-  'Olive': '#808000', 'Charcoal': '#36454F', 'Peach': '#FFE5B4',
-  'Mint Green': '#98FF98', 'Coral': '#FF7F50', 'Lilac': '#C8A2C8',
-  'Slate Blue': '#6A5ACD', 'Rose Gold': '#B76E79', 'Taupe': '#483C32',
-  'Chocolate': '#7B3F00', 'Plum': '#8E4585', 'Rust': '#B7410E',
-  'Sand': '#C2B280', 'Hot Pink': '#FF10F0', 'Neon Green': '#39FF14',
-  'Electric Blue': '#7DF9FF', 'Red': '#ff1010',
-};
-const getColorHex = (name) => COLOR_MAP[name] || '#9ca3af';
+
+/** Size tokens — values that must never appear as colour swatches or colour selectors */
+const SIZE_TOKEN_RE = /^(XXS|XS|S|M|L|XL|XXL|2XL|3XL|4XL|XXXL|ONE\s*SIZE|ONESIZE|FREE\s*SIZE|STANDARD)$/i;
+
+/**
+ * Resolves a colour name to a hex code using the DB colour map.
+ * Returns null for size tokens, gift-card prices, or unknown names.
+ */
+function resolveHex(name, colorMap) {
+  if (!name || !colorMap) return null;
+  const trimmed = name.trim();
+  if (SIZE_TOKEN_RE.test(trimmed) || trimmed.startsWith('$')) return null;
+  const lowerName = trimmed.toLowerCase();
+  if (colorMap[trimmed]) return colorMap[trimmed];
+  const dbMatch = Object.entries(colorMap).find(([k]) => k.toLowerCase() === lowerName);
+  return dbMatch ? dbMatch[1] : null;
+}
 
 export default function ProductPage({ params }) {
   const { id } = use(params);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [colorMap, setColorMap] = useState({});
   
   const [reviewSummary, setReviewSummary] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -48,8 +53,14 @@ export default function ProductPage({ params }) {
     async function load() {
       try {
         setLoading(true);
-        const data = await fetchProduct(id);
+        const [data, colorData] = await Promise.all([
+          fetchProduct(id),
+          fetchColors(),
+        ]);
         setProduct(data);
+        const map = {};
+        if (Array.isArray(colorData)) colorData.forEach(c => { map[c.name] = c.hexCode; });
+        setColorMap(map);
         
         // Fetch review summary too
         fetch(`${API_URL}/products/${id}/reviews/summary`)
@@ -103,10 +114,18 @@ export default function ProductPage({ params }) {
     uniqueImages.push('https://placehold.co/800x1000?text=No+Image');
   }
 
-  // Variants and options
+  // Variants and options — sanitized to prevent swapped color/size from showing incorrectly
   const variants = product.variants || [];
-  const allSizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
-  const allColors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
+  // Only include canonical size tokens in the size selector
+  const allSizes = Array.from(new Set(
+    variants.map(v => v.size).filter(s => s && SIZE_TOKEN_RE.test(s.trim()))
+  ));
+  // Only include values that resolve to a valid colour hex (excludes sizes, $prices, unknown)
+  const allColors = Array.from(new Set(
+    variants.map(v => v.color).filter(c => c && Boolean(resolveHex(c, colorMap)))
+  ));
+
+  const getColorHex = (name) => resolveHex(name, colorMap) || '#9ca3af';
   
   const availForSize = selectedSize
     ? variants.filter(v => v.size === selectedSize && v.stockQuantity > 0).map(v => v.color)
@@ -121,8 +140,47 @@ export default function ProductPage({ params }) {
     }
   };
 
+  const productSchema = product ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || `${product.name} by RedAvo Activewear`,
+    image: uniqueImages.map(src => {
+      const rel = toRelative(src);
+      return rel ? `https://redavowear.com${rel}` : src;
+    }).filter(Boolean),
+    sku: product.sku || String(product.id),
+    brand: {
+      '@type': 'Brand',
+      name: 'RedAvo Activewear',
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `https://redavowear.com/shop/${product.id}`,
+      priceCurrency: 'USD',
+      price: (product.onSale && product.salePrice ? product.salePrice : product.price || 0).toFixed(2),
+      availability: (product.stockQuantity > 0 || variants.some(v => v.stockQuantity > 0))
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+    ...(reviewSummary && reviewSummary.totalReviews > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: reviewSummary.averageRating,
+        reviewCount: reviewSummary.totalReviews,
+      },
+    } : {}),
+  } : null;
+
   return (
     <div className={styles.page}>
+      {productSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+      )}
       <Nav />
 
       <main className={styles.main}>

@@ -304,7 +304,6 @@ export default function CheckoutPage() {
                   <label>Country/Region</label>
                   <select name="country" value={formData.country} onChange={handleChange}>
                     <option value="Zimbabwe">Zimbabwe</option>
-                    <option value="South Africa">South Africa</option>
                   </select>
                 </div>
                 

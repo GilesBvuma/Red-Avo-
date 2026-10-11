@@ -75,11 +75,11 @@ export default function Hero() {
       </div>
 
       {/* ── Right column — 3D image ── */}
-      <div className={styles.right} aria-hidden="true">
+      <div className={styles.right}>
         <div ref={imageRef} className={styles.imageWrap} style={{ perspective: '800px' }}>
           <picture>
             <source media="(max-width: 900px)" srcSet="/images/Home-hero-mobile.jpeg" />
-            <img src="/images/Home-hero.jpeg" alt="RedAvo Activewear" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/images/Home-hero.jpeg" alt="RedAvo Women's Premium Activewear — Gym Leggings, Sports Bras and Workout Sets" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </picture>
         </div>
       </div>

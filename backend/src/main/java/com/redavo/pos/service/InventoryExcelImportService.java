@@ -54,6 +54,14 @@ public class InventoryExcelImportService {
     private static final Pattern LOW_STOCK_PATTERN      = Pattern.compile("low stock \\[(.+)]$", Pattern.CASE_INSENSITIVE);
     private static final Pattern PRICE_PATTERN          = Pattern.compile("price \\[(.+)]$", Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Matches canonical clothing size tokens (case-insensitive).
+     * Used to prevent size values from being stored in the color field.
+     */
+    private static final Pattern SIZE_TOKEN_PATTERN = Pattern.compile(
+        "^(XXS|XS|S|M|L|XL|XXL|2XL|3XL|4XL|XXXL|XXXXL|ONE\\s*SIZE|ONESIZE|FREE\\s*SIZE|STANDARD|\\d{2,3})$",
+        Pattern.CASE_INSENSITIVE);
+
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
 
@@ -90,6 +98,9 @@ public class InventoryExcelImportService {
 
             // Fill-down state — tracks last non-blank product-level fields across rows
             String lastHandle = null, lastName = null, lastCategory = null, lastDesc = null;
+            // Option names are also only present on the FIRST row of each Handle group.
+            // Fill them down so variant rows 2+ can map colour/size correctly.
+            String lastOpt1Name = null, lastOpt2Name = null, lastOpt3Name = null;
 
             List<ProductVariant> variantBatch = new ArrayList<>();
 
@@ -103,18 +114,27 @@ public class InventoryExcelImportService {
                     if (dto == null) { failed++; continue; }
 
                     // ── Fill-down logic ────────────────────────────────────────────────
-                    // Business rule: Only the FIRST row of a Handle group has Name/Category/Description.
-                    // Blank values in subsequent rows inherit from the previous filled row.
+                    // Business rule: Only the FIRST row of a Handle group has Name/Category/Description
+                    // AND Option N Name columns. Subsequent variant rows in the same group leave these
+                    // blank. Both product-level fields AND option names are carried forward.
                     String handle = dto.getHandle();
                     if (handle != null && !handle.isBlank()) lastHandle = handle;
                     if (dto.getProductName() != null && !dto.getProductName().isBlank()) lastName     = dto.getProductName();
                     if (dto.getCategory()    != null && !dto.getCategory().isBlank())    lastCategory = dto.getCategory();
                     if (dto.getDescription() != null && !dto.getDescription().isBlank()) lastDesc     = dto.getDescription();
+                    // Option names — fill down so rows 2+ have the correct header context
+                    if (dto.getOption1Name() != null && !dto.getOption1Name().isBlank()) lastOpt1Name = dto.getOption1Name();
+                    if (dto.getOption2Name() != null && !dto.getOption2Name().isBlank()) lastOpt2Name = dto.getOption2Name();
+                    if (dto.getOption3Name() != null && !dto.getOption3Name().isBlank()) lastOpt3Name = dto.getOption3Name();
 
                     dto.setHandle(lastHandle);
                     dto.setProductName(lastName);
                     dto.setCategory(lastCategory);
                     dto.setDescription(lastDesc);
+                    // Apply filled-down option names back to the DTO before upsert
+                    if (dto.getOption1Name() == null || dto.getOption1Name().isBlank()) dto.setOption1Name(lastOpt1Name);
+                    if (dto.getOption2Name() == null || dto.getOption2Name().isBlank()) dto.setOption2Name(lastOpt2Name);
+                    if (dto.getOption3Name() == null || dto.getOption3Name().isBlank()) dto.setOption3Name(lastOpt3Name);
 
                     if (dto.getSku() == null || dto.getSku().isBlank()) {
                         errors.add("Row " + (i + 1) + ": Missing SKU — row skipped.");
@@ -257,32 +277,12 @@ public class InventoryExcelImportService {
             if (dto.getDefaultPrice() != null) v.setSellPrice(dto.getDefaultPrice());
             if (dto.getCost()         != null) v.setCostPrice(dto.getCost());
             v.setStockQuantity(dto.getTotalStock()); // stock is always overwritten on update
-            String opt1Name = dto.getOption1Name() != null ? dto.getOption1Name().trim().toLowerCase() : "";
-            String opt2Name = dto.getOption2Name() != null ? dto.getOption2Name().trim().toLowerCase() : "";
 
-            String mappedColor = null;
-            String mappedSize = null;
+            // Resolve colour/size via strict keyword matching (never positional)
+            String[] resolved = resolveColorAndSize(dto);
+            if (resolved[0] != null) v.setColor(resolved[0]);
+            if (resolved[1] != null) v.setSize(resolved[1]);
 
-            if (opt1Name.contains("color") || opt1Name.contains("colour")) {
-                mappedColor = dto.getOption1Value();
-            } else if (opt1Name.contains("size")) {
-                mappedSize = dto.getOption1Value();
-            }
-
-            if (opt2Name.contains("color") || opt2Name.contains("colour")) {
-                mappedColor = dto.getOption2Value();
-            } else if (opt2Name.contains("size")) {
-                mappedSize = dto.getOption2Value();
-            }
-
-            // Fallback just in case the headers are missing or weirdly named, we keep the original logic as a last resort
-            if (mappedColor == null && mappedSize == null && dto.getOption1Value() != null) {
-                mappedColor = dto.getOption1Value();
-                mappedSize = dto.getOption2Value();
-            }
-
-            if (mappedColor != null) v.setColor(mappedColor);
-            if (mappedSize != null) v.setSize(mappedSize);
             // Also update the parent product's metadata
             Product p = v.getProduct();
             if (dto.getProductName() != null && !dto.getProductName().isBlank()) p.setName(dto.getProductName());
@@ -320,32 +320,11 @@ public class InventoryExcelImportService {
             ProductVariant v = new ProductVariant();
             v.setProduct(product);
             v.setSku(dto.getSku());
-            String opt1Name = dto.getOption1Name() != null ? dto.getOption1Name().trim().toLowerCase() : "";
-            String opt2Name = dto.getOption2Name() != null ? dto.getOption2Name().trim().toLowerCase() : "";
 
-            String mappedColor = null;
-            String mappedSize = null;
-
-            if (opt1Name.contains("color") || opt1Name.contains("colour")) {
-                mappedColor = dto.getOption1Value();
-            } else if (opt1Name.contains("size")) {
-                mappedSize = dto.getOption1Value();
-            }
-
-            if (opt2Name.contains("color") || opt2Name.contains("colour")) {
-                mappedColor = dto.getOption2Value();
-            } else if (opt2Name.contains("size")) {
-                mappedSize = dto.getOption2Value();
-            }
-
-            // Fallback just in case the headers are missing or weirdly named, we keep the original logic as a last resort
-            if (mappedColor == null && mappedSize == null && dto.getOption1Value() != null) {
-                mappedColor = dto.getOption1Value();
-                mappedSize = dto.getOption2Value();
-            }
-
-            v.setColor(mappedColor);
-            v.setSize(mappedSize);
+            // Resolve colour/size via strict keyword matching (never positional)
+            String[] resolved = resolveColorAndSize(dto);
+            v.setColor(resolved[0]);
+            v.setSize(resolved[1]);
             v.setSellPrice(dto.getDefaultPrice() != null ? dto.getDefaultPrice() : BigDecimal.ZERO);
             v.setCostPrice(dto.getCost() != null ? dto.getCost() : BigDecimal.ZERO);
             v.setStockQuantity(dto.getTotalStock());
@@ -353,6 +332,66 @@ public class InventoryExcelImportService {
 
             return v;
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  Option resolution — strictly by option name keyword
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Maps Option 1/2/3 from the DTO to [color, size] using the option name keyword.
+     * Matching is case-insensitive and by keyword containment:
+     *   colour/color → color field
+     *   size/sizes/fit → size field
+     *
+     * The old positional fallback ({@code mappedColor = Option1; mappedSize = Option2})
+     * has been removed. When option names are missing or unrecognised, the value is
+     * tested against {@link #SIZE_TOKEN_PATTERN}: a match assigns to size, otherwise
+     * color. This prevents size values from being silently stored as colors.
+     *
+     * @return String[2] — [resolvedColor, resolvedSize], either element may be null.
+     */
+    private String[] resolveColorAndSize(InventoryImportRowDTO dto) {
+        String mappedColor = null;
+        String mappedSize  = null;
+
+        String[][] options = {
+            { dto.getOption1Name(), dto.getOption1Value() },
+            { dto.getOption2Name(), dto.getOption2Value() },
+            { dto.getOption3Name(), dto.getOption3Value() },
+        };
+
+        for (String[] opt : options) {
+            String name  = opt[0] != null ? opt[0].trim().toLowerCase() : "";
+            String value = opt[1];
+            if (value == null || value.isBlank()) continue;
+
+            if (name.contains("colour") || name.contains("color") || name.contains("shade")) {
+                if (mappedColor == null) mappedColor = value;
+            } else if (name.contains("size") || name.contains("sizes") || name.contains("fit")) {
+                if (mappedSize == null) mappedSize = value;
+            } else if (!name.isBlank()) {
+                // Known option name but not colour or size — skip with a warning
+                log.warn("[InventoryImport] Unrecognised option name '{}' for value '{}' — skipped", opt[0], value);
+            } else {
+                // Option name is completely blank even after fill-down.
+                // Use value heuristic: if it looks like a size token, treat as size;
+                // otherwise treat as color. This prevents the old positional swap bug.
+                if (SIZE_TOKEN_PATTERN.matcher(value.trim()).matches()) {
+                    if (mappedSize == null) {
+                        mappedSize = value;
+                        log.debug("[InventoryImport] No option name — assigned '{}' to size via token match", value);
+                    }
+                } else {
+                    if (mappedColor == null) {
+                        mappedColor = value;
+                        log.debug("[InventoryImport] No option name — assigned '{}' to color (non-size token)", value);
+                    }
+                }
+            }
+        }
+
+        return new String[]{ mappedColor, mappedSize };
     }
 
     // ═══════════════════════════════════════════════════════════════

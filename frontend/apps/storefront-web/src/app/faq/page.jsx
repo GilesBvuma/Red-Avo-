@@ -1,13 +1,44 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import Nav from '@/components/Nav/Nav';
 import Footer from '@/components/Footer/Footer';
 import styles from '../info.module.css';
 
+const FAQ_DATA = [
+  { q: 'How long does a delivery on my order take?', a: 'You should have your order within 24hrs if delivery address is in Harare. Out of Harare delivery address, expect delivery 24hrs to 72hrs after order confirmation.' },
+  { q: 'Do you ship internationally? Where do you ship to?', a: 'Not at the moment, we are currently only shipping within Zimbabwe.' },
+  { q: 'How can I get Free Shipping?', a: 'We offer free shipping on your first order above $100.' },
+  { q: 'Can I track my order online?', a: 'Currently you cannot. We are still working with our courier-forwarding partners to include this feature.' },
+  { q: 'How do I figure out my size?', a: 'We recommend that you take your measurements and consult our size guide to ensure a good fit.' },
+  { q: 'What payment options are available for my order?', a: 'You can pay for your order in cash, local bank cards or via mobile money platforms (Ecocash & Innbucks).' },
+  { q: 'Can I exchange or return a product if it does not fit?', a: 'Yes, please review our returns policy for details on exchanging or returning items.' },
+  { q: 'Is there a local pick-up option available for online orders?', a: 'Yes, at our store at Borrowdale Racecourse.' },
+  { q: 'Does RedAvo have a physical store location?', a: 'Yes, at Borrowdale Racecourse Harare.' },
+  { q: 'Is Vat included in the cost?', a: 'Yes, VAT is included in the price.' },
+  { q: 'Can I cancel my order?', a: 'Yes, please send us a message via our contact form to discuss next steps.' },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_DATA.map(item => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.a,
+    },
+  })),
+};
+
 export default function FAQPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <Nav />
       <main className={styles.main}>
         {/* Watermarks */}
