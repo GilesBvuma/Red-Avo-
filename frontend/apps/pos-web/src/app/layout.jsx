@@ -33,7 +33,7 @@ export const metadata = {
     title:       'Red Avo — Authentic · Fearless',
     description: 'Premium women\'s activewear. Built for her motion.',
     type:        'website',
-    locale:      'en_ZA',
+    locale:      'en_ZW',
   },
 };
 

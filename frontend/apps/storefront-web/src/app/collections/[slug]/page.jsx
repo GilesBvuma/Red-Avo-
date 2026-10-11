@@ -24,17 +24,24 @@ const SORT_OPTIONS = [
   { value: 'name-asc',  label: 'Name A→Z' },
 ];
 
+// Size tokens that should never appear as colour swatches
+const SIZE_TOKEN_RE = /^(XXS|XS|S|M|L|XL|XXL|2XL|3XL|4XL|XXXL|ONE\s*SIZE|ONESIZE|FREE\s*SIZE|STANDARD)$/i;
+
+/**
+ * Returns the hex code for a colour name from the DB colour map.
+ * Returns null for size tokens, gift-card prices, or unknown names.
+ * Callers should skip rendering the swatch when null is returned.
+ */
 function resolveHex(name, colorMap) {
-  if (!name || !colorMap) return '#9ca3af';
-  const lowerName = name.toLowerCase().trim();
-  
-  const exactMatch = colorMap[name];
+  if (!name || !colorMap) return null;
+  const trimmed = name.trim();
+  if (SIZE_TOKEN_RE.test(trimmed) || trimmed.startsWith('$')) return null;
+  const lowerName = trimmed.toLowerCase();
+  const exactMatch = colorMap[trimmed];
   if (exactMatch) return exactMatch;
-  
   const dbMatch = Object.entries(colorMap).find(([k]) => k.toLowerCase() === lowerName);
   if (dbMatch) return dbMatch[1];
-  
-  return '#9ca3af';
+  return null;
 }
 
 
@@ -53,7 +60,10 @@ function ProductCard({ product, onClick, listView, colorMap }) {
     cs = cs.concat(product.colors);
   }
   if (product.variants) cs = cs.concat(product.variants.map(v => v.color).filter(Boolean));
-  const uniqueColors = Array.from(new Set(cs)).filter(Boolean).sort();
+  // Pre-filter out size tokens and gift-card prices before resolving swatches
+  const uniqueColors = Array.from(new Set(cs))
+    .filter(c => Boolean(c) && !SIZE_TOKEN_RE.test(c.trim()) && !c.trim().startsWith('$'))
+    .sort();
 
   // Build image URLs - use relative /uploads path to hit Next.js rewrites
   const toRelative = (url) => {
@@ -126,16 +136,20 @@ function ProductCard({ product, onClick, listView, colorMap }) {
         </div>
         {uniqueColors.length > 0 && (
           <div className={cardStyles.colorDots}>
-            {uniqueColors.slice(0, 5).map(c => (
-              <span
-                key={c}
-                className={cardStyles.colorDot}
-                style={{ background: resolveHex(c, colorMap) }}
-                title={c}
-              />
-            ))}
-            {uniqueColors.length > 5 && (
-              <span className={cardStyles.moreColors}>+{uniqueColors.length - 5}</span>
+            {uniqueColors
+              .map(c => ({ name: c, hex: resolveHex(c, colorMap) }))
+              .filter(item => Boolean(item.hex))
+              .slice(0, 5)
+              .map(({ name, hex }) => (
+                <span
+                  key={name}
+                  className={cardStyles.colorDot}
+                  style={{ background: hex }}
+                  title={name}
+                />
+              ))}
+            {uniqueColors.filter(c => Boolean(resolveHex(c, colorMap))).length > 5 && (
+              <span className={cardStyles.moreColors}>+{uniqueColors.filter(c => Boolean(resolveHex(c, colorMap))).length - 5}</span>
             )}
           </div>
         )}

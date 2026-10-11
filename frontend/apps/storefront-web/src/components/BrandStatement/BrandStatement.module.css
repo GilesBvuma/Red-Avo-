@@ -1,7 +1,7 @@
 .section {
   position: relative;
   overflow: hidden;
-  padding: 130px 6vw 120px;
+  padding: 130px var(--gutter) 120px;
   background: #F7F7F5;
   text-align: center;
 }
@@ -85,7 +85,7 @@
 
 @media (max-width: 768px) {
   .section {
-    padding: 40px 6vw 40px;
+    padding: 40px var(--gutter) 40px;
   }
   
   .subText {

@@ -23,17 +23,59 @@ const playfair = Playfair_Display({
   weight:   ['700'],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://redavowear.com';
+
 /* ── Metadata ── */
 export const metadata = {
-  title:       'RedAvo Activewear — Authentic. Fearless | Premium Women\'s Activewear',
-  description: 'RedAvo Activewear is premium women\'s activewear. Authentic in design. Fearless in motion. Shop leggings, sports bras, jackets and matching sets.',
-  keywords:    'womens activewear, sportswear, leggings, sports bras, RedAvo Activewear, authentic, fearless',
-  openGraph: {
-    title:       'RedAvo Activewear — Authentic. Fearless',
-    description: 'Premium women\'s activewear. Built for her motion.',
-    type:        'website',
-    locale:      'en_ZA',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'RedAvo Activewear — Authentic. Fearless | Women\'s Activewear Zimbabwe',
+    template: '%s | RedAvo Activewear',
   },
+  description: 'Premium women\'s activewear in Zimbabwe. Shop high-waist squat-proof gym leggings, high-support sports bras, matching workout sets & jackets. Fast nationwide delivery.',
+  keywords: 'womens activewear zimbabwe, gym wear zimbabwe, activewear zimbabwe, gym leggings, high waist leggings, sports bras, matching gym sets, workout clothes, RedAvo Activewear',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'RedAvo Activewear — Authentic. Fearless | Zimbabwe',
+    description: 'Premium women\'s activewear built for movement. Shop gym leggings, sports bras, and workout sets with delivery across Zimbabwe.',
+    url: SITE_URL,
+    siteName: 'RedAvo Activewear',
+    type: 'website',
+    locale: 'en_ZW',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RedAvo Activewear — Authentic. Fearless',
+    description: 'Premium women\'s activewear in Zimbabwe. Engineered for strength, movement, and confidence.',
+  },
+};
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'RedAvo Activewear',
+      url: SITE_URL,
+      logo: `${SITE_URL}/images/logo3%20-%20footer.png`,
+      description: 'Premium women\'s activewear brand in Zimbabwe designed for strength, movement, and confidence.',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'RedAvo Activewear',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/shop?search={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
 };
 
 export default function RootLayout({ children }) {
@@ -43,6 +85,10 @@ export default function RootLayout({ children }) {
       className={`${montserrat.variable} ${playfair.variable}`}
     >
       <body suppressHydrationWarning={true}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+        />
         <AuthProvider>
           <WishlistProvider>
             <CartProvider>

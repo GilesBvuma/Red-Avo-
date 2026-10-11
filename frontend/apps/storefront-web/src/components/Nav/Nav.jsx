@@ -10,15 +10,24 @@ import { useWishlist } from '@/context/WishlistContext';
 import styles from './Nav.module.css';
 import NotificationBar from './NotificationBar';
 
-export default function Nav() {
+export default function Nav({ theme, variant } = {}) {
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
   const router = useRouter();
   const pathname = usePathname();
 
   const isHomePage = pathname === '/';
-  const DARK_NAV_PAGES = ['/', '/shop', '/collections', '/cart', '/our-story'];
-  const isLightNav = !DARK_NAV_PAGES.includes(pathname);
+  const isDarkNavPage = 
+    theme === 'dark' || 
+    variant === 'dark' || 
+    (theme !== 'light' && variant !== 'light' && (
+      pathname === '/' ||
+      pathname === '/shop' ||
+      pathname === '/cart' ||
+      pathname === '/our-story' ||
+      Boolean(pathname?.startsWith('/collections'))
+    ));
+  const isLightNav = !isDarkNavPage;
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

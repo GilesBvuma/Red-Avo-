@@ -765,21 +765,26 @@ function Input({ onChange, value, ...props }) {
 }
 const selectStyle = { width: '100%', height: 36, padding: '0 12px', border: '1.5px solid #E8E8E8', borderRadius: 8, fontSize: 13, outline: 'none', background: '#FAFAFA' };
 
+// Size tokens that should never appear as colour swatches in the POS either
+const POS_SIZE_TOKEN_RE = /^(XXS|XS|S|M|L|XL|XXL|2XL|3XL|4XL|XXXL|ONE\s*SIZE|ONESIZE|FREE\s*SIZE|STANDARD)$/i;
+
 // ─── Inline color swatches for table ────────────────────────────────
 function ColorDots({ colors }) {
   if (!colors) return null;
   const list = parseCsv(colors);
+  // Exclude size tokens and values not in the colour registry (hex would be #ccc fallback)
+  const validDots = list.filter(name => {
+    if (!name || POS_SIZE_TOKEN_RE.test(name.trim()) || name.trim().startsWith('$')) return false;
+    return colorRegistry.has(name);
+  });
   return (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-      {list.slice(0, 6).map(name => {
-        const hex = colorRegistry.get(name) ?? '#ccc';
-        return (
-          <div key={name} title={name}
-            style={{ width: 14, height: 14, borderRadius: '50%', background: hex, border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
-          />
-        );
-      })}
-      {list.length > 6 && <span style={{ fontSize: 10, color: '#9CA3AF' }}>+{list.length - 6}</span>}
+      {validDots.slice(0, 6).map(name => (
+        <div key={name} title={name}
+          style={{ width: 14, height: 14, borderRadius: '50%', background: colorRegistry.get(name), border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
+        />
+      ))}
+      {validDots.length > 6 && <span style={{ fontSize: 10, color: '#9CA3AF' }}>+{validDots.length - 6}</span>}
     </div>
   );
 }
@@ -1098,7 +1103,7 @@ export default function StockManagementPage() {
 
       {/* Search + filters */}
       <div style={{ padding: '16px 28px', display: 'flex', gap: 12, alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
+        <div style={{ position: 'relative', width: 280, flexShrink: 0 }}>
           <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth={2} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
@@ -1106,8 +1111,19 @@ export default function StockManagementPage() {
             placeholder="Search products, SKU…"
             style={{ width: '100%', height: 36, padding: '0 12px 0 36px', border: '1.5px solid #E8E8E8', borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff', boxSizing: 'border-box' }}
           />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setCurrentPage(1); }}
+              style={{
+                position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF',
+                padding: 0, fontSize: 13, lineHeight: 1,
+              }}
+              title="Clear search"
+            >✕</button>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'thin' }}>
           {['All', ...categories.map(c => c.name)].map(cat => (
             <button key={cat} onClick={() => { setCatFilter(cat); setCurrentPage(1); }}
               style={{
