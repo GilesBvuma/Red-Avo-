@@ -74,6 +74,17 @@ public class CategoryController {
         return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 
+    /**
+     * Bulk-update display order.
+     * Body: [{"id": 1, "displayOrder": 0}, {"id": 3, "displayOrder": 1}, ...]
+     */
+    @PutMapping("/reorder")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> reorderCategories(@RequestBody List<Map<String, Integer>> orderList) {
+        categoryService.reorderCategories(orderList);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
