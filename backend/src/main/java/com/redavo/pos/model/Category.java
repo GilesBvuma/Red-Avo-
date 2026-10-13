@@ -24,4 +24,11 @@ public class Category {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    /**
+     * Controls the display order of this category in the POS and storefront.
+     * Lower values appear first. Defaults to 0 (i.e. order of insertion).
+     */
+    @Column(name = "display_order", nullable = false)
+    private Integer displayOrder = 0;
 }

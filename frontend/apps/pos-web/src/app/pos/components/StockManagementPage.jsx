@@ -805,6 +805,9 @@ function SizeChips({ sizes }) {
 function CategoryModal({ initialCategory, onClose, onSaved }) {
   const [name, setName] = useState(initialCategory ? initialCategory.name : '');
   const [description, setDescription] = useState(initialCategory ? initialCategory.description : '');
+  const [displayOrder, setDisplayOrder] = useState(
+    initialCategory?.displayOrder != null ? String(initialCategory.displayOrder) : '0'
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   
@@ -831,7 +834,7 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
     if (!name.trim()) return setError("Name is required");
     setSaving(true);
     try {
-      const data = { name, description };
+      const data = { name, description, displayOrder: parseInt(displayOrder, 10) || 0 };
       if (previews.length === 0) data.imageUrl = null;
       
       let saved;
@@ -875,6 +878,25 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
             </Field>
           </div>
           <div style={{ marginTop: 14 }}>
+            <Field label="Display Order">
+              <input
+                type="number"
+                min="0"
+                value={displayOrder}
+                onChange={e => setDisplayOrder(e.target.value)}
+                placeholder="0"
+                title="Lower number = appears first. Categories with the same order are sorted by ID."
+                style={{
+                  width: '100%', height: 36, padding: '0 10px', border: '1.5px solid #E8E8E8',
+                  borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              <p style={{ fontSize: 11, color: '#9CA3AF', margin: '4px 0 0' }}>
+                Lower = appears first. 0 is the top position.
+              </p>
+            </Field>
+          </div>
+          <div style={{ marginTop: 14 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cover Image</label>
             <MultipleImageDropZone previews={previews} onFiles={handleFiles} onRemove={handleRemoveImage} />
           </div>
@@ -885,7 +907,7 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
             </button>
             <button type="submit" disabled={saving}
               style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#C0392B', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
-              {saving ? 'Saving...' : 'Create'}
+              {saving ? 'Saving...' : (initialCategory ? 'Save Changes' : 'Create')}
             </button>
           </div>
         </form>
@@ -910,6 +932,9 @@ export default function StockManagementPage() {
   
   const [catModalOpen, setCatModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [reorderOpen, setReorderOpen] = useState(false);
+  const [reorderList, setReorderList] = useState([]);
+  const [reorderSaving, setReorderSaving] = useState(false);
 
   const [confirmDelete, setConfirmDelete] = useState(null); // product id
 
@@ -940,6 +965,37 @@ export default function StockManagementPage() {
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Sync reorderList whenever categories change
+  useEffect(() => {
+    setReorderList([...categories].sort((a, b) =>
+      (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.id - b.id
+    ));
+  }, [categories]);
+
+  const handleReorderMove = (index, direction) => {
+    setReorderList(prev => {
+      const next = [...prev];
+      const swapIdx = index + direction;
+      if (swapIdx < 0 || swapIdx >= next.length) return prev;
+      [next[index], next[swapIdx]] = [next[swapIdx], next[index]];
+      return next;
+    });
+  };
+
+  const handleReorderSave = async () => {
+    setReorderSaving(true);
+    try {
+      const payload = reorderList.map((cat, idx) => ({ id: cat.id, displayOrder: idx }));
+      await api.reorderCategories(payload);
+      await loadData();
+      setReorderOpen(false);
+    } catch (err) {
+      alert(err.message || 'Failed to save order');
+    } finally {
+      setReorderSaving(false);
+    }
+  };
 
   // Pre-populate colorRegistry so ColorDots in the table has hex values
   // available immediately, before the user opens the Add Stock modal.
@@ -1044,6 +1100,23 @@ export default function StockManagementPage() {
               </button>
             </>
           )}
+          <button
+            onClick={() => {
+              setReorderList([...categories].sort((a, b) =>
+                (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.id - b.id
+              ));
+              setReorderOpen(true);
+            }}
+            title="Reorder categories"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#fff', color: '#1A1A1A', border: '1.5px solid #E8E8E8',
+              borderRadius: 10, padding: '10px 20px', fontSize: 13,
+              fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s',
+            }}
+          >
+            ↕ Reorder
+          </button>
           <button
             onClick={() => { setEditingCategory(null); setCatModalOpen(true); }}
             style={{
@@ -1270,6 +1343,92 @@ export default function StockManagementPage() {
           onClose={() => { setCatModalOpen(false); setEditingCategory(null); }}
           onSaved={() => { setCatModalOpen(false); setEditingCategory(null); loadData(); }}
         />
+      )}
+
+      {/* Reorder Categories modal */}
+      {reorderOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1200,
+          background: 'rgba(0,0,0,0.55)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', padding: 24,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 14, width: '100%', maxWidth: 420,
+            boxShadow: '0 24px 64px rgba(0,0,0,0.2)', padding: '24px 28px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1A1A1A' }}>Reorder Categories</h3>
+              <button onClick={() => setReorderOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#9CA3AF' }}>✕</button>
+            </div>
+            <p style={{ fontSize: 12, color: '#6B7280', margin: '0 0 16px' }}>
+              Use the arrows to change the display order. Click <strong>Save Order</strong> to apply.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
+              {reorderList.map((cat, idx) => (
+                <div key={cat.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  background: '#F9F9F9', borderRadius: 10, padding: '10px 14px',
+                  border: '1px solid #E8E8E8',
+                }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: '50%', background: '#C0392B',
+                    color: '#fff', fontSize: 11, fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>{idx + 1}</span>
+                  {cat.imageUrl && (
+                    <img src={cat.imageUrl} alt={cat.name}
+                      style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', border: '1px solid #E8E8E8', flexShrink: 0 }} />
+                  )}
+                  <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: '#1A1A1A' }}>{cat.name}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <button
+                      disabled={idx === 0}
+                      onClick={() => handleReorderMove(idx, -1)}
+                      title="Move up"
+                      style={{
+                        width: 26, height: 26, border: '1px solid #E8E8E8', borderRadius: 6,
+                        background: idx === 0 ? '#F5F5F5' : '#fff', cursor: idx === 0 ? 'default' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: idx === 0 ? '#D1D5DB' : '#374151', fontSize: 12, lineHeight: 1,
+                      }}
+                    >▲</button>
+                    <button
+                      disabled={idx === reorderList.length - 1}
+                      onClick={() => handleReorderMove(idx, 1)}
+                      title="Move down"
+                      style={{
+                        width: 26, height: 26, border: '1px solid #E8E8E8', borderRadius: 6,
+                        background: idx === reorderList.length - 1 ? '#F5F5F5' : '#fff',
+                        cursor: idx === reorderList.length - 1 ? 'default' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: idx === reorderList.length - 1 ? '#D1D5DB' : '#374151', fontSize: 12, lineHeight: 1,
+                      }}
+                    >▼</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button onClick={() => setReorderOpen(false)}
+                style={{ padding: '9px 20px', borderRadius: 8, border: '1.5px solid #E8E8E8', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#6B7280', fontWeight: 600 }}>
+                Cancel
+              </button>
+              <button
+                onClick={handleReorderSave}
+                disabled={reorderSaving}
+                style={{
+                  padding: '9px 20px', borderRadius: 8, border: 'none',
+                  background: reorderSaving ? '#9CA3AF' : '#C0392B',
+                  color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: reorderSaving ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {reorderSaving ? 'Saving…' : 'Save Order'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Delete confirm */}

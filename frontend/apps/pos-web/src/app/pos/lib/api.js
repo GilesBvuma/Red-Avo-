@@ -141,6 +141,14 @@ export async function updateCategory(id, data) {
   return apiFetch(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 }
 
+/**
+ * Bulk-updates the displayOrder of multiple categories in one request.
+ * @param {Array<{id: number, displayOrder: number}>} orderList
+ */
+export async function reorderCategories(orderList) {
+  return apiFetch('/categories/reorder', { method: 'PUT', body: JSON.stringify(orderList) });
+}
+
 export async function uploadCategoryImage(id, file) {
   const formData = new FormData();
   formData.append('file', file);
