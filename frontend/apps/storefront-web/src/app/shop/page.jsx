@@ -17,13 +17,6 @@ import MotionButton from '@/components/ui/MotionButton/MotionButton';
 import ShopByCategory from '@/components/ShopByCategory/ShopByCategory';
 import styles from './shop.module.css';
 
-/* --- Footer features data --- */
-const FEATURES = [
-  { icon: '\u{1F69A}', title: 'Fast Shipping', sub: 'Orders dispatched within 24h' },
-  { icon: '\u2728', title: 'Premium Materials', sub: 'Crafted for performance & feel' },
-  { icon: '\u21A9', title: 'Easy Returns', sub: '30-day hassle-free returns' },
-  { icon: '\u{1F512}', title: 'Secure Checkout', sub: 'End-to-end encrypted payments' },
-];
 
 /* --- Sort options --- */
 const SORT_OPTIONS = [
@@ -201,8 +194,6 @@ function ShopContent() {
   const [sortBy,          setSortBy]          = useState('default');
   const [listView,        setListView]        = useState(false);
   const [loading,         setLoading]         = useState(true);
-  const [email,           setEmail]           = useState('');
-  const [subDone,         setSubDone]         = useState(false);
   const [openGroups,      setOpenGroups]      = useState({ categories: true, colors: true, sizes: true });
   const [heroImgIndex,    setHeroImgIndex]    = useState(0);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -339,13 +330,6 @@ function ShopContent() {
 
   const toggleGroup = (key) =>
     setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
-
-  const handleSubscribe = () => {
-    if (!email || !email.includes('@')) return;
-    setSubDone(true);
-    setEmail('');
-    setTimeout(() => setSubDone(false), 4000);
-  };
 
   /* -- Inline promo every 8 cards -- */
   const buildGridItems = () => {
@@ -736,47 +720,6 @@ function ShopContent() {
           </div>
         </div>
 
-        {/* -- NEWSLETTER -- */}
-        <section className={styles.newsletter} aria-labelledby="newsletter-heading">
-          <span className={`section-label ${styles.newsletterLabel}`}>Stay Connected</span>
-          <h2 id="newsletter-heading" className={styles.newsletterTitle}>
-            Join Our Community
-          </h2>
-          <p className={styles.newsletterSub}>
-            Be the first to hear about new drops, exclusive offers, and behind-the-scenes stories.
-          </p>
-          <div className={styles.newsletterForm} role="form" aria-label="Email newsletter">
-            <input
-              className={styles.newsletterInput}
-              type="email"
-              placeholder={subDone ? "You're in!" : 'your@email.com'}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
-              id="newsletter-email"
-              aria-label="Email address"
-            />
-            <button
-              className={styles.newsletterBtn}
-              onClick={handleSubscribe}
-              id="newsletter-submit"
-              aria-label="Subscribe"
-            >
-              Subscribe
-            </button>
-          </div>
-        </section>
-
-        {/* -- FOOTER FEATURES -- */}
-        <div className={styles.footerFeatures} aria-label="Shopping benefits">
-          {FEATURES.map(f => (
-            <div key={f.title} className={styles.footerFeature}>
-              <div className={styles.footerFeatureIcon} aria-hidden="true">{f.icon}</div>
-              <p className={styles.footerFeatureTitle}>{f.title}</p>
-              <p className={styles.footerFeatureSub}>{f.sub}</p>
-            </div>
-          ))}
-        </div>
       </main>
 
 

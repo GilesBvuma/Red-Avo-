@@ -12,8 +12,8 @@ const WORDS = ['Own', 'your', 'story.', 'Move', 'with', 'confidence'];
 
 export default function Hero() {
   const sectionRef = useRef(null);
-  const wordsRef   = useRef([]);
-  const imageRef   = useRef(null);
+  const wordsRef = useRef([]);
+  const imageRef = useRef(null);
 
   useGSAP(() => {
     const tl = gsap.timeline({ delay: 0.2 });
@@ -25,17 +25,17 @@ export default function Hero() {
       { opacity: 1, scale: 1, duration: 1.5, ease: 'power3.out' },
       0
     )
-    // Collection badge
-    .fromTo('#hero-badge', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=1.1')
-    // Heading (staggered words with fade up)
-    .fromTo(
-      wordsRef.current,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
-      '-=0.7'
-    )
-    // CTA
-    .fromTo('#hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5');
+      // Collection badge
+      .fromTo('#hero-badge', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=1.1')
+      // Heading (staggered words with fade up)
+      .fromTo(
+        wordsRef.current,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
+        '-=0.7'
+      )
+      // CTA
+      .fromTo('#hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5');
 
 
 
@@ -53,33 +53,33 @@ export default function Hero() {
       <div className={styles.heroContainer}>
         {/* ── Left column ── */}
         <div className={styles.left}>
-        <span id="hero-badge" className={styles.eyebrow}>New Drop·Spring 2026</span>
+          <span id="hero-badge" className={styles.eyebrow}>New Drop·Spring 2026</span>
 
-        <h1 className={styles.heading} aria-label="Own your story. Move with confidence">
-          {WORDS.map((word, i) => (
-            <span key={word + i} className={styles.wordWrap}>
-              <span
-                className={`${styles.word} ${word === 'Move' ? styles.emphasizedWord : ''}`}
-                ref={(el) => (wordsRef.current[i] = el)}
-              >
-                {word}
+          <h1 className={styles.heading} aria-label="Own your story. Move with confidence">
+            {WORDS.map((word, i) => (
+              <span key={word + i} className={styles.wordWrap}>
+                <span
+                  className={`${styles.word} ${word === 'Move' ? styles.emphasizedWord : ''}`}
+                  ref={(el) => (wordsRef.current[i] = el)}
+                >
+                  {word}
+                </span>
               </span>
-            </span>
-          ))}
-        </h1>
+            ))}
+          </h1>
 
-        <div style={{ marginTop: '48px' }}>
-          <MotionButton id="hero-cta" href="/shop" label="Shop now" />
+          <div style={{ marginTop: '48px' }}>
+            <MotionButton id="hero-cta" href="/shop" label="Shop now" />
+          </div>
         </div>
-      </div>
       </div>
 
       {/* ── Right column — 3D image ── */}
       <div className={styles.right}>
         <div ref={imageRef} className={styles.imageWrap} style={{ perspective: '800px' }}>
           <picture>
-            <source media="(max-width: 900px)" srcSet="/images/Home-hero-mobile.jpeg" />
-            <img src="/images/Home-hero.jpeg" alt="RedAvo Women's Premium Activewear — Gym Leggings, Sports Bras and Workout Sets" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <source media="(max-width: 900px)" srcSet="/images/WhatsApp%20Image%202026-10-13%20at%2017.31.55.jpeg" />
+            <img src="/images/new hero1.jpg" alt="RedAvo Women's Premium Activewear — Gym Leggings, Sports Bras and Workout Sets" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </picture>
         </div>
       </div>
