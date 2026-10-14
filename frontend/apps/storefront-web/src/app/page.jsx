@@ -5,7 +5,7 @@ import Hero from '@/components/Hero/Hero';
 import Ticker from '@/components/Ticker/Ticker';
 import VideoStrip from '@/components/VideoStrip/VideoStrip';
 import NewArrivals from '@/components/NewArrivals/NewArrivals';
-import Community from '@/components/Community/Community';
+import NewsletterFeatures from '@/components/NewsletterFeatures/NewsletterFeatures';
 import PopularPicks from '@/components/PopularPicks/PopularPicks';
 import Footer from '@/components/Footer/Footer';
 import styles from './home.module.css';
@@ -26,7 +26,7 @@ export default function Home() {
       <main>
         <Hero />
         <Ticker
-          text="ACTIVEWEAR THAT MOVES WITH YOU · EMPOWERING EVERY MOTION"
+          text="ACTIVEWEAR THAT MOVES WITH YOU · POWERING EVERY MOTION"
           bg="transparent"
           color="var(--navy)"
           accentColor="var(--red)"
@@ -34,7 +34,7 @@ export default function Home() {
         <NewArrivals />
         <VideoStrip />
         <PopularPicks />
-        <Community />
+        <NewsletterFeatures />
       </main>
       <Footer />
     </div>

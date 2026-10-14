@@ -2,12 +2,20 @@ package com.redavo.pos.service;
 
 import com.redavo.pos.model.LedgerReason;
 import com.redavo.pos.model.Product;
+import com.redavo.pos.model.ProductVariant;
 import com.redavo.pos.repository.ProductRepository;
+import com.redavo.pos.repository.ProductVariantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 @Service
 public class ProductService {
@@ -16,10 +24,19 @@ public class ProductService {
     private ProductRepository productRepository;
 
     @Autowired
+    private ProductVariantRepository productVariantRepository;
+
+    @Autowired
     private StockLedgerService stockLedgerService;
 
     @Autowired
     private CategoryService categoryService;
+
+    private String normalizeKey(String color, String size) {
+        String c = (color != null) ? color.trim().toLowerCase() : "default";
+        String s = (size != null) ? size.trim().toLowerCase() : "default";
+        return c + "-" + s;
+    }
 
     private void ensureCategoryExists(String categoryName) {
         if (categoryName != null && !categoryName.trim().isEmpty()) {
@@ -61,10 +78,21 @@ public class ProductService {
     @Transactional
     public Product createProduct(Product product) {
         ensureCategoryExists(product.getCategory());
-        // Set bi-directional links
+        // Set bi-directional links & ensure unique SKUs
         if (product.getVariants() != null) {
-            for (com.redavo.pos.model.ProductVariant v : product.getVariants()) {
+            Set<String> skusInPayload = new HashSet<>();
+            for (ProductVariant v : product.getVariants()) {
                 v.setProduct(product);
+                if (v.getSku() != null && !v.getSku().trim().isEmpty()) {
+                    String baseSku = v.getSku().trim();
+                    String finalSku = baseSku;
+                    int counter = 1;
+                    while (skusInPayload.contains(finalSku.toLowerCase()) || productVariantRepository.existsBySku(finalSku)) {
+                        finalSku = baseSku + "-" + counter++;
+                    }
+                    v.setSku(finalSku);
+                    skusInPayload.add(finalSku.toLowerCase());
+                }
             }
         }
         product.computeStockStatus();
@@ -76,8 +104,8 @@ public class ProductService {
         // Apply initial stock via ledger for each variant that has stock.
         // StockLedgerService will cascade-update the variant and product caches.
         if (saved.getVariants() != null) {
-            java.util.List<com.redavo.pos.model.ProductVariant> variantsCopy = new java.util.ArrayList<>(saved.getVariants());
-            for (com.redavo.pos.model.ProductVariant v : variantsCopy) {
+            List<ProductVariant> variantsCopy = new ArrayList<>(saved.getVariants());
+            for (ProductVariant v : variantsCopy) {
                 int qty = v.getStockQuantity() != null ? v.getStockQuantity() : 0;
                 if (qty > 0) {
                     // Zero out the cache first so applyDelta's delta = qty (correct)
@@ -126,41 +154,79 @@ public class ProductService {
             product.setImageUrl(updated.getImageUrl().isEmpty() ? null : updated.getImageUrl());
         }
         if (updated.getImageUrls() != null) {
-            java.util.List<String> urlsCopy = new java.util.ArrayList<>(updated.getImageUrls());
+            List<String> urlsCopy = new ArrayList<>(updated.getImageUrls());
             product.getImageUrls().clear();
             product.getImageUrls().addAll(urlsCopy);
         }
         if (updated.getSupplierInvoices() != null) {
-            java.util.List<String> invoicesCopy = new java.util.ArrayList<>(updated.getSupplierInvoices());
+            List<String> invoicesCopy = new ArrayList<>(updated.getSupplierInvoices());
             if (product.getSupplierInvoices() == null) {
-                product.setSupplierInvoices(new java.util.ArrayList<>());
+                product.setSupplierInvoices(new ArrayList<>());
             }
             product.getSupplierInvoices().clear();
             product.getSupplierInvoices().addAll(invoicesCopy);
         }
 
         // Variant stock changes ─────────────────────────────────────────────
-        // NOTE: We deliberately do NOT call productRepository.save() again after
-        // the applyDelta calls below.  StockLedgerService handles all cache updates
-        // by loading fresh entities from the DB.  A second save() here with the
-        // stale in-memory product would overwrite the freshly-computed stock totals.
         if (updated.getVariants() != null) {
             if (product.getVariants() == null) {
-                product.setVariants(new java.util.ArrayList<>());
+                product.setVariants(new ArrayList<>());
             }
 
-            java.util.Map<Long, com.redavo.pos.model.ProductVariant> existing = new java.util.HashMap<>();
-            for (com.redavo.pos.model.ProductVariant v : product.getVariants()) {
-                if (v.getId() != null) existing.put(v.getId(), v);
+            Map<Long, ProductVariant> existingById = new HashMap<>();
+            Map<String, ProductVariant> existingBySku = new HashMap<>();
+            Map<String, ProductVariant> existingByColorSize = new HashMap<>();
+
+            for (ProductVariant v : product.getVariants()) {
+                if (v.getId() != null) existingById.put(v.getId(), v);
+                if (v.getSku() != null && !v.getSku().trim().isEmpty()) {
+                    existingBySku.put(v.getSku().trim().toLowerCase(), v);
+                }
+                existingByColorSize.put(normalizeKey(v.getColor(), v.getSize()), v);
             }
 
-            for (com.redavo.pos.model.ProductVariant incoming : updated.getVariants()) {
-                if (incoming.getId() != null && existing.containsKey(incoming.getId())) {
-                    // ── Existing variant: apply stock delta if it changed ──────
-                    com.redavo.pos.model.ProductVariant ext = existing.get(incoming.getId());
-                    ext.setColor(incoming.getColor());
-                    ext.setSize(incoming.getSize());
-                    ext.setSku(incoming.getSku());
+            Set<String> usedSkusInTransaction = new HashSet<>();
+            for (ProductVariant v : product.getVariants()) {
+                if (v.getSku() != null) usedSkusInTransaction.add(v.getSku().trim().toLowerCase());
+            }
+
+            for (ProductVariant incoming : updated.getVariants()) {
+                ProductVariant ext = null;
+
+                // 1. Match by ID
+                if (incoming.getId() != null && existingById.containsKey(incoming.getId())) {
+                    ext = existingById.get(incoming.getId());
+                }
+                // 2. Match by SKU if provided
+                if (ext == null && incoming.getSku() != null && !incoming.getSku().trim().isEmpty()) {
+                    ext = existingBySku.get(incoming.getSku().trim().toLowerCase());
+                }
+                // 3. Match by Color + Size (case-insensitive)
+                if (ext == null) {
+                    ext = existingByColorSize.get(normalizeKey(incoming.getColor(), incoming.getSize()));
+                }
+                // 4. Match by DB lookup if SKU exists and belongs to this product
+                if (ext == null && incoming.getSku() != null && !incoming.getSku().trim().isEmpty()) {
+                    Optional<ProductVariant> dbVariant = productVariantRepository.findBySku(incoming.getSku().trim());
+                    if (dbVariant.isPresent() && dbVariant.get().getProduct() != null &&
+                            dbVariant.get().getProduct().getId().equals(product.getId())) {
+                        ext = dbVariant.get();
+                        if (!product.getVariants().contains(ext)) {
+                            product.getVariants().add(ext);
+                        }
+                    }
+                }
+
+                if (ext != null) {
+                    // ── Existing variant: update fields & apply stock delta ──────
+                    if (incoming.getColor() != null) ext.setColor(incoming.getColor());
+                    if (incoming.getSize() != null) ext.setSize(incoming.getSize());
+                    if (incoming.getCostPrice() != null) ext.setCostPrice(incoming.getCostPrice());
+                    if (incoming.getSellPrice() != null) ext.setSellPrice(incoming.getSellPrice());
+                    if (incoming.getActive() != null) ext.setActive(incoming.getActive());
+                    if (incoming.getSku() != null && !incoming.getSku().trim().isEmpty()) {
+                        ext.setSku(incoming.getSku().trim());
+                    }
 
                     int currentStock = ext.getStockQuantity() != null ? ext.getStockQuantity() : 0;
                     int newStock     = incoming.getStockQuantity() != null ? incoming.getStockQuantity() : 0;
@@ -175,13 +241,30 @@ public class ProductService {
                             "Manual UI Edit",
                             "admin"
                         );
-                        // Keep in-memory value consistent so save() below writes correct number
                         ext.setStockQuantity(newStock);
                     }
-                    existing.remove(incoming.getId());
+
+                    // Remove from matching pools so another incoming row doesn't re-claim it
+                    if (ext.getId() != null) existingById.remove(ext.getId());
+                    if (ext.getSku() != null) existingBySku.remove(ext.getSku().trim().toLowerCase());
+                    existingByColorSize.remove(normalizeKey(ext.getColor(), ext.getSize()));
 
                 } else {
-                    // ── New variant: persist first, then seed ledger ──────────
+                    // ── Brand new variant: ensure unique SKU before adding ────
+                    String desiredSku = (incoming.getSku() != null && !incoming.getSku().trim().isEmpty())
+                            ? incoming.getSku().trim()
+                            : (product.getSku() != null ? product.getSku() : "PROD") + "-" +
+                              (incoming.getColor() != null ? incoming.getColor().substring(0, Math.min(3, incoming.getColor().length())).toUpperCase() : "DEF") + "-" +
+                              (incoming.getSize() != null ? incoming.getSize() : "DEF");
+
+                    String finalSku = desiredSku;
+                    int counter = 1;
+                    while (usedSkusInTransaction.contains(finalSku.toLowerCase()) || productVariantRepository.existsBySku(finalSku)) {
+                        finalSku = desiredSku + "-" + counter++;
+                    }
+                    incoming.setSku(finalSku);
+                    usedSkusInTransaction.add(finalSku.toLowerCase());
+
                     incoming.setProduct(product);
                     product.getVariants().add(incoming);
                 }

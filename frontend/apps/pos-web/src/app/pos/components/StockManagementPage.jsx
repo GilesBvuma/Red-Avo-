@@ -272,39 +272,89 @@ function MultipleImageDropZone({ previews, onFiles, onRemove }) {
   );
 }
 
+// ─── Case-insensitive variant key helper ──────────────────────────────
+const makeVariantKey = (color, size) => {
+  const c = (color || 'Default').trim().toLowerCase();
+  const s = (size || 'Default').trim().toUpperCase();
+  return `${c}-${s}`;
+};
+
+const titleCaseColor = (col) => {
+  if (!col || col === 'Default') return col;
+  return col
+    .trim()
+    .split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+};
+
 // ─── Modal form ──────────────────────────────────────────────────────
 function ProductModal({ product, categories, onClose, onSaved }) {
   const isEdit = !!product;
 
+  // ── Colors from DB ───────────────────────────────────────────────
+  const [dbColors, setDbColors]                   = useState([]);
+  const [showCustomColorModal, setShowCustomColorModal] = useState(false);
+  const [savingCustomColor, setSavingCustomColor] = useState(false);
+
+  useEffect(() => {
+    api.fetchColors()
+      .then(data => {
+        const colors = Array.isArray(data) ? data : [];
+        // Populate module-level registry so ColorDots in the table can resolve hex values
+        colors.forEach(c => colorRegistry.set(c.name, c.hexCode));
+        setDbColors(colors);
+      })
+      .catch(err => console.warn('[ColorPicker] Could not load colors from API:', err));
+  }, []);
+
+  const resolveCanonicalColor = useCallback((col) => {
+    if (!col || col === 'Default') return col;
+    const trimmed = col.trim();
+    const match = dbColors.find(c => c.name.toLowerCase() === trimmed.toLowerCase());
+    return match ? match.name : titleCaseColor(trimmed);
+  }, [dbColors]);
+
   const normalizedVariants = useMemo(() => {
     if (!isEdit || !product?.variants) return null;
     return product.variants.map(v => {
-      let nColor = v.color;
-      if (nColor && nColor !== 'Default') {
-        nColor = nColor.charAt(0).toUpperCase() + nColor.slice(1).toLowerCase();
-      }
-      let nSize = v.size;
-      if (nSize && nSize !== 'Default') {
-        nSize = nSize.toUpperCase();
-      }
+      let nColor = v.color ? resolveCanonicalColor(v.color) : v.color;
+      let nSize = v.size ? v.size.toUpperCase() : v.size;
       return { ...v, color: nColor, size: nSize };
     });
-  }, [isEdit, product]);
+  }, [isEdit, product, resolveCanonicalColor]);
 
   const [form, setForm] = useState(() => {
-    let initialColors = isEdit ? parseCsv(product.colors) : [];
-    let initialSizes = isEdit ? parseCsv(product.sizes) : [];
+    let rawColors = isEdit ? parseCsv(product.colors) : [];
+    let initialColors = [];
+    rawColors.forEach(c => {
+      const canonical = titleCaseColor(c);
+      if (canonical && !initialColors.some(x => x.toLowerCase() === canonical.toLowerCase())) {
+        initialColors.push(canonical);
+      }
+    });
 
-    if (normalizedVariants) {
-      normalizedVariants.forEach(v => {
+    let rawSizes = isEdit ? parseCsv(product.sizes) : [];
+    let initialSizes = [];
+    rawSizes.forEach(s => {
+      const canonical = s.toUpperCase();
+      if (!initialSizes.includes(canonical)) {
+        initialSizes.push(canonical);
+      }
+    });
+
+    if (product?.variants) {
+      product.variants.forEach(v => {
         if (v.color && v.color !== 'Default') {
-          if (!initialColors.includes(v.color) && !initialColors.find(c => c.toLowerCase() === v.color.toLowerCase())) {
-            initialColors.push(v.color);
+          const canonical = titleCaseColor(v.color);
+          if (canonical && !initialColors.some(c => c.toLowerCase() === canonical.toLowerCase())) {
+            initialColors.push(canonical);
           }
         }
         if (v.size && v.size !== 'Default') {
-          if (!initialSizes.includes(v.size) && !initialSizes.find(s => s.toLowerCase() === v.size.toLowerCase())) {
-            initialSizes.push(v.size);
+          const canonical = v.size.toUpperCase();
+          if (!initialSizes.includes(canonical)) {
+            initialSizes.push(canonical);
           }
         }
       });
@@ -333,22 +383,6 @@ function ProductModal({ product, categories, onClose, onSaved }) {
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState('');
 
-  // ── Colors from DB ───────────────────────────────────────────────
-  const [dbColors, setDbColors]                   = useState([]);
-  const [showCustomColorModal, setShowCustomColorModal] = useState(false);
-  const [savingCustomColor, setSavingCustomColor] = useState(false);
-
-  useEffect(() => {
-    api.fetchColors()
-      .then(data => {
-        const colors = Array.isArray(data) ? data : [];
-        // Populate module-level registry so ColorDots in the table can resolve hex values
-        colors.forEach(c => colorRegistry.set(c.name, c.hexCode));
-        setDbColors(colors);
-      })
-      .catch(err => console.warn('[ColorPicker] Could not load colors from API:', err));
-  }, []);
-
   const handleSaveCustomColor = async ({ name, hexCode }) => {
     setSavingCustomColor(true);
     try {
@@ -373,8 +407,14 @@ function ProductModal({ product, categories, onClose, onSaved }) {
     if (normalizedVariants) {
       const initialGrid = {};
       normalizedVariants.forEach(v => {
-        const key = `${v.color || 'Default'}-${v.size || 'Default'}`;
-        initialGrid[key] = { id: v.id, stockQuantity: v.stockQuantity, sku: v.sku };
+        const key = makeVariantKey(v.color, v.size);
+        initialGrid[key] = {
+          id: v.id,
+          stockQuantity: v.stockQuantity,
+          sku: v.sku,
+          costPrice: v.costPrice,
+          sellPrice: v.sellPrice
+        };
       });
       setVariantStockGrid(initialGrid);
     }
@@ -438,7 +478,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
     
     cs.forEach(c => {
       ss.forEach(s => {
-        const key = `${c}-${s}`;
+        const key = makeVariantKey(c, s);
         vars.push({ color: c, size: s, key });
         keysSeen.add(key);
       });
@@ -449,7 +489,7 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       normalizedVariants.forEach(v => {
         const c = v.color || 'Default';
         const s = v.size || 'Default';
-        const key = `${c}-${s}`;
+        const key = makeVariantKey(c, s);
         if (!keysSeen.has(key) && v.stockQuantity > 0) {
           vars.push({ color: c, size: s, key, orphaned: true });
           keysSeen.add(key);
@@ -481,16 +521,30 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       
       if (expectedVariants.length > 0) {
         expectedVariants.forEach(ev => {
-          const gridData = variantStockGrid[ev.key] || { stockQuantity: 0, sku: '' };
-          const qty = parseInt(gridData.stockQuantity) || 0;
+          const gridData = variantStockGrid[ev.key] || {};
+          // Double safety: find existing variant from product.variants case-insensitively
+          const existingVar = product?.variants?.find(
+            v => makeVariantKey(v.color, v.size) === ev.key ||
+                 (gridData.id && v.id === gridData.id)
+          );
+
+          const varId = gridData.id || existingVar?.id || null;
+          const varSku = (gridData.sku !== undefined && gridData.sku !== '')
+            ? gridData.sku.trim()
+            : (existingVar?.sku && existingVar.sku.trim())
+              ? existingVar.sku.trim()
+              : `${form.sku || 'PROD'}-${ev.color.substring(0,3).toUpperCase()}-${ev.size}`;
+
+          const qty = parseInt(gridData.stockQuantity !== undefined && gridData.stockQuantity !== '' ? gridData.stockQuantity : (existingVar?.stockQuantity || 0)) || 0;
           totalStock += qty;
+
           variantsPayload.push({
-            id: gridData.id,
+            id: varId,
             color: ev.color === 'Default' ? null : ev.color,
             size: ev.size === 'Default' ? null : ev.size,
-            sku: gridData.sku || `${form.sku || 'PROD'}-${ev.color.substring(0,3).toUpperCase()}-${ev.size}`,
+            sku: varSku,
             stockQuantity: qty,
-            costPrice: 0,
+            costPrice: existingVar?.costPrice ?? 0,
             sellPrice: parseFloat(form.price) || 0,
             active: true
           });
@@ -680,27 +734,41 @@ function ProductModal({ product, categories, onClose, onSaved }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {expectedVariants.map(ev => (
-                        <tr key={ev.key} style={{ borderBottom: '1px solid #F0F0F0', opacity: ev.orphaned ? 0.8 : 1, background: ev.orphaned ? '#FEF2F2' : 'transparent' }}>
-                          <td style={{ padding: '8px 12px' }}>
-                            {ev.color === 'Default' ? '—' : ev.color}
-                            {ev.orphaned && <span style={{ marginLeft: 8, fontSize: 10, background: '#FEE2E2', color: '#B91C1C', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Orphaned</span>}
-                          </td>
-                          <td style={{ padding: '8px 12px' }}>{ev.size === 'Default' ? '—' : ev.size}</td>
-                          <td style={{ padding: '8px 12px' }}>
-                            <input type="number" min="0" placeholder="0" 
-                              value={variantStockGrid[ev.key]?.stockQuantity ?? ''} 
-                              onChange={e => handleVariantChange(ev.key, 'stockQuantity', e.target.value)}
-                              style={{ width: '100%', padding: 6, border: '1px solid #E8E8E8', borderRadius: 4 }} />
-                          </td>
-                          <td style={{ padding: '8px 12px' }}>
-                            <input type="text" placeholder="Auto-generated if empty" 
-                              value={variantStockGrid[ev.key]?.sku ?? ''} 
-                              onChange={e => handleVariantChange(ev.key, 'sku', e.target.value)}
-                              style={{ width: '100%', padding: 6, border: '1px solid #E8E8E8', borderRadius: 4 }} />
-                          </td>
-                        </tr>
-                      ))}
+                      {expectedVariants.map(ev => {
+                        const gridItem = variantStockGrid[ev.key];
+                        const existingVar = product?.variants?.find(
+                          v => makeVariantKey(v.color, v.size) === ev.key ||
+                               (gridItem?.id && v.id === gridItem.id)
+                        );
+                        const displayQty = (gridItem?.stockQuantity !== undefined && gridItem?.stockQuantity !== null)
+                          ? gridItem.stockQuantity
+                          : (existingVar?.stockQuantity ?? '');
+                        const displaySku = (gridItem?.sku !== undefined && gridItem?.sku !== null && gridItem.sku !== '')
+                          ? gridItem.sku
+                          : (existingVar?.sku ?? '');
+
+                        return (
+                          <tr key={ev.key} style={{ borderBottom: '1px solid #F0F0F0', opacity: ev.orphaned ? 0.8 : 1, background: ev.orphaned ? '#FEF2F2' : 'transparent' }}>
+                            <td style={{ padding: '8px 12px' }}>
+                              {ev.color === 'Default' ? '—' : ev.color}
+                              {ev.orphaned && <span style={{ marginLeft: 8, fontSize: 10, background: '#FEE2E2', color: '#B91C1C', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Orphaned</span>}
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>{ev.size === 'Default' ? '—' : ev.size}</td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <input type="number" min="0" placeholder="0" 
+                                value={displayQty} 
+                                onChange={e => handleVariantChange(ev.key, 'stockQuantity', e.target.value)}
+                                style={{ width: '100%', padding: 6, border: '1px solid #E8E8E8', borderRadius: 4 }} />
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <input type="text" placeholder="Auto-generated if empty" 
+                                value={displaySku} 
+                                onChange={e => handleVariantChange(ev.key, 'sku', e.target.value)}
+                                style={{ width: '100%', padding: 6, border: '1px solid #E8E8E8', borderRadius: 4 }} />
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

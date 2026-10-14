@@ -16,7 +16,7 @@ export default function CollectionsPage() {
 
         {/* Marquee ticker strip */}
         <Ticker
-          text="EMPOWERING EVERY MOTION · ACTIVEWEAR THAT MOVES WITH YOU"
+          text="·POWERING EVERY MOTION · ACTIVEWEAR THAT MOVES WITH YOU"
           slant="ccw"
           style={{
             marginTop: '-14px',

@@ -23,20 +23,20 @@ export default function VideoStrip() {
 
       <div className={styles.right} aria-hidden="true">
         <div className={styles.imageWrap}>
-          <Image 
-            src="/images/sprin3.png" 
-            alt="Spring Collection" 
+          <Image
+            src="/images/Blossom hero.png"
+            alt="Spring Collection"
             fill
             sizes="100vw"
             style={{ objectFit: 'cover' }}
             className={styles.desktopOnly}
           />
-          <video 
-            src="/videos/RedAvo Blossom collection 2.mp4" 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
+          <video
+            src="/videos/RedAvo Blossom collection 2.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             className={styles.mobileOnly}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />

@@ -1,0 +1,189 @@
+.wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+/* =============================================================
+   NEWSLETTER BANNER
+   ============================================================= */
+.newsletter {
+  background: linear-gradient(135deg, #F4DCDC 0%, #EFE8DE 50%, #FAF8F4 100%);
+  padding: clamp(60px, 8vw, 100px) clamp(24px, 8vw, 120px);
+  text-align: center;
+  position: relative;
+}
+
+.newsletterLabel {
+  margin-bottom: 20px;
+  display: inline-flex;
+}
+
+.newsletterTitle {
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: clamp(34px, 4.5vw, 60px);
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.newsletterSub {
+  font-size: clamp(14px, 1.25vw, 17px);
+  color: #5a6175;
+  margin-bottom: 36px;
+  line-height: 1.7;
+  max-width: 600px;
+  margin-inline: auto;
+}
+
+.newsletterForm {
+  display: flex;
+  max-width: 500px;
+  margin: 0 auto;
+  gap: 0;
+  border-radius: 99px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(26, 43, 74, 0.12);
+  background: #ffffff;
+}
+
+.newsletterInput {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--navy);
+  outline: none;
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+.newsletterInput::placeholder {
+  color: #9ca3af;
+}
+
+.newsletterBtn {
+  background: var(--navy);
+  color: #ffffff;
+  border: none;
+  padding: 16px 32px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+  font-family: var(--font-montserrat), sans-serif;
+  white-space: nowrap;
+}
+
+.newsletterBtn:hover {
+  background: var(--red);
+}
+
+/* =============================================================
+   FOOTER FEATURES (TRUST BENEFITS)
+   ============================================================= */
+.footerFeatures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 44px clamp(24px, 6vw, 80px);
+  background: #FFFFFF;
+  border-top: 1.5px solid rgba(26, 43, 74, 0.07);
+}
+
+.footerFeature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 20px;
+  border-right: 1px solid rgba(26, 43, 74, 0.07);
+  transition: transform 0.25s ease;
+}
+
+.footerFeature:last-child {
+  border-right: none;
+}
+
+.footerFeatureIcon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F4DCDC, #EFE8DE);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 14px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.footerFeature:hover .footerFeatureIcon {
+  transform: scale(1.15) rotate(6deg);
+}
+
+.footerFeatureTitle {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--navy);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.footerFeatureSub {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+/* =============================================================
+   RESPONSIVE
+   ============================================================= */
+@media (max-width: 900px) {
+  .footerFeatures {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .footerFeature:nth-child(2) {
+    border-right: none;
+  }
+  .footerFeature:nth-child(1),
+  .footerFeature:nth-child(2) {
+    border-bottom: 1px solid rgba(26, 43, 74, 0.07);
+  }
+}
+
+@media (max-width: 640px) {
+  .newsletterForm {
+    flex-direction: column;
+    border-radius: 16px;
+  }
+  .newsletterInput {
+    border-radius: 16px 16px 0 0;
+    text-align: center;
+    padding: 14px 20px;
+  }
+  .newsletterBtn {
+    border-radius: 0 0 16px 16px;
+    padding: 14px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footerFeatures {
+    grid-template-columns: 1fr;
+    padding: 24px 16px;
+  }
+  .footerFeature {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(26, 43, 74, 0.07);
+    padding: 18px 12px;
+  }
+  .footerFeature:last-child {
+    border-bottom: none;
+  }
+}
