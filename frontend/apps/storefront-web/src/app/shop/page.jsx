@@ -20,10 +20,10 @@ import styles from './shop.module.css';
 
 /* --- Sort options --- */
 const SORT_OPTIONS = [
-  { value: 'default',   label: 'Featured' },
+  { value: 'default', label: 'Featured' },
   { value: 'price-asc', label: 'Price: Low → High' },
   { value: 'price-desc', label: 'Price: High → Low' },
-  { value: 'name-asc',  label: 'Name A→Z' },
+  { value: 'name-asc', label: 'Name A→Z' },
 ];
 
 /* ============================================================
@@ -91,7 +91,7 @@ function ProductCard({ product, onClick, listView, colorMap }) {
     return url;
   };
 
-  const resolvedImg   = toRelative(img)   || 'https://placehold.co/400x500?text=No+Image';
+  const resolvedImg = toRelative(img) || 'https://placehold.co/400x500?text=No+Image';
   const resolvedHover = toRelative(hoverImg) || resolvedImg;
 
   const isSoldOut = product.stockQuantity <= 0;
@@ -177,30 +177,30 @@ function ProductCard({ product, onClick, listView, colorMap }) {
 
 const SHOP_HERO_IMAGES = [
 
-  '/images/shop19.jpg',
-  '/images/Firefly (5).jpg',
-  '/images/Firefly (1).jpg',
-  '/images/Firefly (2).jpg',
-  '/images/Firefly (4).jpg'
+  '/images/shop 192.jpg',
+  '/images/Firefly12.jpg',
+  '/images/Firefly13.jpg',
+  '/images/Firefly14.jpg',
+  '/images/Firefly15.jpg'
 ];
 
 /* ============================================================
    ShopContent
    ============================================================ */
 function ShopContent() {
-  const [products,        setProducts]        = useState([]);
-  const [categories,      setCategories]      = useState([]);
-  const [activeCategory,  setActiveCategory]  = useState(null);
-  const [sortBy,          setSortBy]          = useState('default');
-  const [listView,        setListView]        = useState(false);
-  const [loading,         setLoading]         = useState(true);
-  const [openGroups,      setOpenGroups]      = useState({ categories: true, colors: true, sizes: true });
-  const [heroImgIndex,    setHeroImgIndex]    = useState(0);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [sortBy, setSortBy] = useState('default');
+  const [listView, setListView] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [openGroups, setOpenGroups] = useState({ categories: true, colors: true, sizes: true });
+  const [heroImgIndex, setHeroImgIndex] = useState(0);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [activeColor,     setActiveColor]     = useState(null);
-  const [activeSize,      setActiveSize]      = useState(null);
+  const [activeColor, setActiveColor] = useState(null);
+  const [activeSize, setActiveSize] = useState(null);
   // colorMap: name -> hexCode, built from /api/colors (public endpoint)
-  const [colorMap,        setColorMap]        = useState({});
+  const [colorMap, setColorMap] = useState({});
 
   const shopHeroRef = useRef(null);
   const titleWordsRef = useRef([]);
@@ -209,8 +209,8 @@ function ShopContent() {
 
   const { addToCart } = useCart();
   const router = useRouter();
-  const searchParams  = useSearchParams();
-  const searchQuery   = searchParams.get('q') || '';
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
 
   /* -- Load data -- */
   useEffect(() => {
@@ -264,23 +264,23 @@ function ShopContent() {
       { y: 20, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }
     )
-    .fromTo(
-      titleWordsRef.current,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
-      '-=0.6'
-    )
-    .fromTo(
-      '#hero-shop-btn',
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
-      '-=0.5'
-    );
+      .fromTo(
+        titleWordsRef.current,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power3.out' },
+        '-=0.6'
+      )
+      .fromTo(
+        '#hero-shop-btn',
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+        '-=0.5'
+      );
   }, { scope: shopHeroRef, dependencies: [activeCategory] });
 
   /* -- Filter + Sort -- */
   let filtered = products;
-  
+
   if (activeCategory === 'New Arrivals') {
     // Top 10 latest listings
     filtered = [...products].reverse().slice(0, 10);
@@ -314,9 +314,9 @@ function ShopContent() {
   }
 
   const sorted = [...filtered].sort((a, b) => {
-    if (sortBy === 'price-asc')  return (a.price || 0) - (b.price || 0);
+    if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
     if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
-    if (sortBy === 'name-asc')   return a.name.localeCompare(b.name);
+    if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
     return 0;
   });
 
@@ -350,10 +350,10 @@ function ShopContent() {
   // getColorHex falls back to #9ca3af for unrecognised names.
   const allAvailableColors = Array.from(new Set(products.flatMap(p => {
     // Exclude Gift Card products since their colors are actually price denominations ($20, $50, etc)
-    const isGiftCard = 
-      (p.name && p.name.toLowerCase().includes('gift card')) || 
+    const isGiftCard =
+      (p.name && p.name.toLowerCase().includes('gift card')) ||
       (p.category && p.category.toLowerCase().includes('gift card'));
-      
+
     if (isGiftCard) return [];
 
     let cs = [];
@@ -368,8 +368,8 @@ function ShopContent() {
   // Whitelist of recognised size tokens — anything else (e.g. colour names that
   // leaked into a sizes field) is silently excluded.
   const KNOWN_SIZE_TOKENS = new Set([
-    'XS','S','M','L','XL','XXL','2XL','3XL','4XL','XXXL',
-    'ONE SIZE','ONESIZE','STANDARD','FREE SIZE','FREESIZE',
+    'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL', 'XXXL',
+    'ONE SIZE', 'ONESIZE', 'STANDARD', 'FREE SIZE', 'FREESIZE',
   ]);
   const allAvailableSizes = Array.from(new Set(products.flatMap(p => {
     let s = [];
@@ -380,7 +380,7 @@ function ShopContent() {
 
   /* -- Active filter label & Title Words -- */
   const activeCategoryObj = categories.find(c => c.name === activeCategory);
-  
+
   titleWordsRef.current = [];
   const getTitleWords = () => {
     if (activeCategory) {
@@ -431,7 +431,7 @@ function ShopContent() {
             <span>{activeCategory || 'Shop'}</span>
           </nav>
 
-          
+
           <h1 className={styles.shopHeroTitle}>
             {titleWords.map((item, i) => (
               <React.Fragment key={i}>
@@ -514,7 +514,7 @@ function ShopContent() {
                 onKeyDown={e => e.key === 'Enter' && toggleGroup('categories')}
               >
                 <span className={styles.filterGroupLabel}>Categories</span>
-                <span className={`${styles.filterGroupChevron} ${openGroups.categories ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                <span className={`${styles.filterGroupChevron} ${openGroups.categories ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg></span>
               </div>
 
               {openGroups.categories && (
@@ -565,7 +565,7 @@ function ShopContent() {
                   onKeyDown={e => e.key === 'Enter' && toggleGroup('colors')}
                 >
                   <span className={styles.filterGroupLabel}>Colors</span>
-                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.colors ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg></span>
                 </div>
                 {openGroups.colors && (
                   <div className={styles.filterColorGrid}>
@@ -597,7 +597,7 @@ function ShopContent() {
                   onKeyDown={e => e.key === 'Enter' && toggleGroup('sizes')}
                 >
                   <span className={styles.filterGroupLabel}>Sizes</span>
-                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  <span className={`${styles.filterGroupChevron} ${openGroups.sizes ? styles.open : ''}`}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg></span>
                 </div>
                 {openGroups.sizes && (
                   <div className={styles.filterSizeGrid}>
@@ -654,8 +654,8 @@ function ShopContent() {
                     id="view-grid"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                      <rect x="0" y="0" width="6" height="6" rx="1"/><rect x="10" y="0" width="6" height="6" rx="1"/>
-                      <rect x="0" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/>
+                      <rect x="0" y="0" width="6" height="6" rx="1" /><rect x="10" y="0" width="6" height="6" rx="1" />
+                      <rect x="0" y="10" width="6" height="6" rx="1" /><rect x="10" y="10" width="6" height="6" rx="1" />
                     </svg>
                   </button>
                   <button
@@ -665,8 +665,8 @@ function ShopContent() {
                     id="view-list"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                      <rect x="0" y="0" width="16" height="4" rx="1"/><rect x="0" y="6" width="16" height="4" rx="1"/>
-                      <rect x="0" y="12" width="16" height="4" rx="1"/>
+                      <rect x="0" y="0" width="16" height="4" rx="1" /><rect x="0" y="6" width="16" height="4" rx="1" />
+                      <rect x="0" y="12" width="16" height="4" rx="1" />
                     </svg>
                   </button>
                 </div>

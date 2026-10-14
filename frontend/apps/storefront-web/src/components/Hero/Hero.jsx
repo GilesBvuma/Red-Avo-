@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import { gsap, ScrollTrigger } from '@/lib/gsap';
 import Placeholder from '@/components/Placeholder/Placeholder';
@@ -10,10 +10,36 @@ import styles from './Hero.module.css';
 
 const WORDS = ['Own', 'your', 'story.', 'Move', 'with', 'confidence'];
 
+const HERO_SLIDES = [
+  { desktop: '/images/H1.jpg', mobile: '/images/HM1.jpg' },
+  { desktop: '/images/H2.jpg', mobile: '/images/HM2.jpg' },
+  { desktop: '/images/H3.jpg', mobile: '/images/HM3.jpeg' },
+];
+
 export default function Hero() {
   const sectionRef = useRef(null);
   const wordsRef = useRef([]);
   const imageRef = useRef(null);
+
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveSlide((curr) => {
+        setPrevSlide(curr);
+        return (curr + 1) % HERO_SLIDES.length;
+      });
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [activeSlide]);
+
+  const handleSlideChange = (index) => {
+    if (index === activeSlide) return;
+    setPrevSlide(activeSlide);
+    setActiveSlide(index);
+  };
 
   useGSAP(() => {
     const tl = gsap.timeline({ delay: 0.2 });
@@ -36,8 +62,6 @@ export default function Hero() {
       )
       // CTA
       .fromTo('#hero-cta', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '-=0.5');
-
-
 
   }, { scope: sectionRef });
 
@@ -74,14 +98,46 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* ── Right column — 3D image ── */}
+      {/* ── Right column — background image & responsive slideshow ── */}
       <div className={styles.right}>
-        <div ref={imageRef} className={styles.imageWrap} style={{ perspective: '800px' }}>
-          <picture>
-            <source media="(max-width: 900px)" srcSet="/images/WhatsApp%20Image%202026-10-13%20at%2017.31.55.jpeg" />
-            <img src="/images/new hero1.jpg" alt="RedAvo Women's Premium Activewear — Gym Leggings, Sports Bras and Workout Sets" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </picture>
+        <div ref={imageRef} className={styles.imageWrap}>
+          <div className={styles.heroSlider}>
+            {HERO_SLIDES.map((slide, idx) => {
+              const isActive = idx === activeSlide;
+              const isPrev = idx === prevSlide;
+              let slideClass = styles.heroSlide;
+              if (isActive) slideClass += ` ${styles.activeSlide}`;
+              else if (isPrev) slideClass += ` ${styles.prevSlide}`;
+
+              return (
+                <picture key={slide.desktop} className={slideClass}>
+                  <source media="(max-width: 900px)" srcSet={slide.mobile} />
+                  <img
+                    src={slide.desktop}
+                    alt={`RedAvo Women's Premium Activewear — Slide ${idx + 1}`}
+                    className={styles.slideImage}
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                  />
+                </picture>
+              );
+            })}
+          </div>
         </div>
+      </div>
+
+      {/* ── Slide indicators (wide screens) ── */}
+      <div className={styles.slideIndicators} role="tablist" aria-label="Hero background controls">
+        {HERO_SLIDES.map((_, idx) => (
+          <button
+            key={idx}
+            type="button"
+            role="tab"
+            aria-selected={idx === activeSlide}
+            aria-label={`Show slide ${idx + 1}`}
+            className={`${styles.indicatorDot} ${idx === activeSlide ? styles.activeDot : ''}`}
+            onClick={() => handleSlideChange(idx)}
+          />
+        ))}
       </div>
 
     </section>
