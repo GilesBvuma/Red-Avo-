@@ -10,7 +10,7 @@ import { exportInventoryToXlsx } from '../lib/export-inventory';
 import { HexColorPicker } from 'react-colorful';
 
 // ─── Constants ──────────────────────────────────────────────────────
-const SIZES_ALL = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SIZES_ALL = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
 // Module-level hex lookup — populated from /api/colors on first modal open.
 // ColorDots (used in the product table) reads from this so it always has
