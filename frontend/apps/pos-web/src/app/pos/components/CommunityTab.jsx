@@ -21,7 +21,7 @@ const EMPTY_FORM = {
   active: true,
 };
 
-export default function CommunityTab() {
+export default function CommunityTab({ onToast }) {
   const [posts, setPosts]           = useState([]);
   const [loading, setLoading]       = useState(true);
   const [form, setForm]             = useState(EMPTY_FORM);
@@ -30,7 +30,6 @@ export default function CommunityTab() {
   const [saving, setSaving]         = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [error, setError]           = useState('');
 
   // ── Load posts ──────────────────────────────────────────────────
   const load = async () => {
@@ -39,7 +38,9 @@ export default function CommunityTab() {
       const data = await fetchAdminCommunityPosts();
       setPosts(data || []);
     } catch (e) {
-      setError('Failed to load posts: ' + e.message);
+      const msg = e.isFriendly ? e.friendly : 'Failed to load posts';
+      console.error('[CommunityTab] load error:', e.technical ?? e.message);
+      onToast?.('error', 'Error', msg);
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,6 @@ export default function CommunityTab() {
   const openCreate = () => {
     setForm(EMPTY_FORM);
     setEditId(null);
-    setError('');
     setShowForm(true);
   };
 
@@ -66,7 +66,6 @@ export default function CommunityTab() {
       active:          post.active,
     });
     setEditId(post.id);
-    setError('');
     setShowForm(true);
   };
 
@@ -78,8 +77,11 @@ export default function CommunityTab() {
     try {
       const { url } = await uploadCommunityFile(file, 'cover');
       setForm(f => ({ ...f, coverImageUrl: url }));
+      onToast?.('success', 'Uploaded', 'Cover image uploaded.');
     } catch (e) {
-      setError('Cover upload failed: ' + e.message);
+      const msg = e.isFriendly ? e.friendly : 'Cover upload failed.';
+      console.error('[CommunityTab] cover upload error:', e.technical ?? e.message);
+      onToast?.('error', 'Upload Failed', msg);
     } finally {
       setUploadingCover(false);
     }
@@ -95,8 +97,11 @@ export default function CommunityTab() {
     try {
       const { url } = await uploadCommunityFile(file, 'media');
       setForm(f => ({ ...f, mediaUrl: url, mediaType: isVideo ? 'VIDEO' : 'IMAGE' }));
+      onToast?.('success', 'Uploaded', 'Media file uploaded.');
     } catch (e) {
-      setError('Media upload failed: ' + e.message);
+      const msg = e.isFriendly ? e.friendly : 'Media upload failed.';
+      console.error('[CommunityTab] media upload error:', e.technical ?? e.message);
+      onToast?.('error', 'Upload Failed', msg);
     } finally {
       setUploadingMedia(false);
     }
@@ -104,21 +109,24 @@ export default function CommunityTab() {
 
   // ── Save ────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!form.instagramHandle.trim()) { setError('Instagram handle is required.'); return; }
-    if (!form.coverImageUrl)          { setError('Cover image is required.');       return; }
-    if (!form.mediaUrl)               { setError('Media file is required.');         return; }
+    if (!form.instagramHandle.trim()) { onToast?.('error', 'Validation', 'Instagram handle is required.'); return; }
+    if (!form.coverImageUrl)          { onToast?.('error', 'Validation', 'Cover image is required.');       return; }
+    if (!form.mediaUrl)               { onToast?.('error', 'Validation', 'Media file is required.');         return; }
     setSaving(true);
-    setError('');
     try {
       if (editId) {
         await updateCommunityPost(editId, form);
+        onToast?.('success', 'Updated', 'Community post updated successfully.');
       } else {
         await createCommunityPost(form);
+        onToast?.('success', 'Created', 'Community post created successfully.');
       }
       setShowForm(false);
       await load();
     } catch (e) {
-      setError('Save failed: ' + e.message);
+      const msg = e.isFriendly ? e.friendly : 'Save failed.';
+      console.error('[CommunityTab] save error:', e.technical ?? e.message);
+      onToast?.('error', 'Save Failed', msg);
     } finally {
       setSaving(false);
     }
@@ -130,8 +138,11 @@ export default function CommunityTab() {
     try {
       await deleteCommunityPost(id);
       setPosts(p => p.filter(x => x.id !== id));
+      onToast?.('success', 'Deleted', 'Community post deleted.');
     } catch (e) {
-      setError('Delete failed: ' + e.message);
+      const msg = e.isFriendly ? e.friendly : 'Delete failed.';
+      console.error('[CommunityTab] delete error:', e.technical ?? e.message);
+      onToast?.('error', 'Delete Failed', msg);
     }
   };
 
@@ -141,7 +152,9 @@ export default function CommunityTab() {
       const updated = await toggleCommunityPostActive(id);
       setPosts(p => p.map(x => x.id === id ? updated : x));
     } catch (e) {
-      setError('Toggle failed: ' + e.message);
+      const msg = e.isFriendly ? e.friendly : 'Toggle failed.';
+      console.error('[CommunityTab] toggle error:', e.technical ?? e.message);
+      onToast?.('error', 'Toggle Failed', msg);
     }
   };
 
@@ -168,12 +181,6 @@ export default function CommunityTab() {
         </div>
         <button onClick={openCreate} style={btn('#111827')}>+ Add New</button>
       </div>
-
-      {error && (
-        <div style={{ background: '#FEE2E2', color: '#DC2626', padding: '10px 14px', borderRadius: '6px', marginBottom: '1rem', fontSize: '13px' }}>
-          {error}
-        </div>
-      )}
 
       {/* ── Form ── */}
       {showForm && (
@@ -247,7 +254,7 @@ export default function CommunityTab() {
             <button id="community-save-btn" onClick={handleSave} disabled={saving} style={btn('#C0392B')}>
               {saving ? 'Saving…' : editId ? 'Update Post' : 'Create Post'}
             </button>
-            <button onClick={() => { setShowForm(false); setError(''); }} style={btn('#F3F4F6', '#374151')}>
+            <button onClick={() => setShowForm(false)} style={btn('#F3F4F6', '#374151')}>
               Cancel
             </button>
           </div>

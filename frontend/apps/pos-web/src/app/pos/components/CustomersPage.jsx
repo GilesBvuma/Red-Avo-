@@ -19,34 +19,31 @@ const SEGMENTS = [
 ];
 
 // ─── Add/Edit Customer Modal ─────────────────────────────────────────
-function CustomerModal({ customer, onClose, onSaved }) {
+function CustomerModal({ customer, onClose, onSaved, onToast }) {
   const isEdit = !!customer;
   const [form, setForm] = useState(isEdit ? { ...EMPTY_FORM, ...customer } : { ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState('');
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.firstName.trim()) { setError('First name is required'); return; }
-    setSaving(true); setError('');
+    if (!form.firstName.trim()) {
+      onToast?.('error', 'Validation', 'First name is required.');
+      return;
+    }
+    setSaving(true);
     try {
       if (isEdit) {
         await updateCustomer(customer.id, form);
       } else {
-        const res = await createCustomer(form);
-        // 409 conflict means duplicate email
-        if (res && res.error) { setError(res.error); setSaving(false); return; }
+        await createCustomer(form);
       }
       onSaved();
     } catch (err) {
-      const msg = err.message || '';
-      if (msg.includes('409') || msg.toLowerCase().includes('already exists')) {
-        setError('A customer with this email already exists.');
-      } else {
-        setError(err.message || 'Failed to save customer');
-      }
+      const msg = err.isFriendly ? err.friendly : 'Failed to save customer.';
+      console.error('[CustomerModal] save error:', err.technical ?? err.message);
+      onToast?.('error', isEdit ? 'Update Failed' : 'Save Failed', msg);
     } finally {
       setSaving(false);
     }
@@ -108,8 +105,6 @@ function CustomerModal({ customer, onClose, onSaved }) {
             </label>
           </div>
 
-          {error && <div style={{ color:'#C0392B', fontSize:13, marginBottom:12, padding:'8px 12px', background:'#FFF0EE', borderRadius:6 }}>{error}</div>}
-
           <div style={{ display:'flex', gap:10, justifyContent:'flex-end' }}>
             <button type="button" onClick={onClose}
               style={{ padding:'10px 22px', borderRadius:8, border:'1.5px solid #E8E8E8', background:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', color:'#6B7280' }}>
@@ -127,13 +122,12 @@ function CustomerModal({ customer, onClose, onSaved }) {
 }
 
 // ─── Bulk Email Modal ────────────────────────────────────────────────
-function BulkEmailModal({ customers, onClose }) {
+function BulkEmailModal({ customers, onClose, onToast }) {
   const [segment,  setSegment]  = useState('ALL');
   const [subject,  setSubject]  = useState('');
   const [message,  setMessage]  = useState('');
   const [sending,  setSending]  = useState(false);
   const [result,   setResult]   = useState(null);
-  const [error,    setError]    = useState('');
 
   // Preview count for selected segment
   const previewCount = {
@@ -143,14 +137,17 @@ function BulkEmailModal({ customers, onClose }) {
   }[segment] ?? 0;
 
   const handleSend = async () => {
-    if (!subject.trim()) { setError('Subject is required'); return; }
-    if (!message.trim()) { setError('Message is required'); return; }
-    setSending(true); setError(''); setResult(null);
+    if (!subject.trim()) { onToast?.('error', 'Validation', 'Subject is required.'); return; }
+    if (!message.trim()) { onToast?.('error', 'Validation', 'Message is required.'); return; }
+    setSending(true); setResult(null);
     try {
       const res = await sendBulkEmail({ segment, subject, message });
       setResult(res);
+      onToast?.('success', 'Campaign Sent', `Successfully sent to ${res.sent || previewCount} customer(s).`);
     } catch (err) {
-      setError(err.message || 'Send failed');
+      const msg = err.isFriendly ? err.friendly : 'Send failed.';
+      console.error('[BulkEmailModal] send error:', err.technical ?? err.message);
+      onToast?.('error', 'Campaign Failed', msg);
     } finally {
       setSending(false);
     }
@@ -214,8 +211,6 @@ function BulkEmailModal({ customers, onClose }) {
             />
           </div>
 
-          {error && <div style={{ color:'#C0392B', fontSize:13, margin:'10px 0', padding:'8px 12px', background:'#FFF0EE', borderRadius:6 }}>{error}</div>}
-
           {/* Result */}
           {result && (
             <div style={{ margin:'14px 0', padding:'14px 16px', background:'#F0FDF4', borderRadius:10, border:'1px solid #BBF7D0' }}>
@@ -275,7 +270,7 @@ function Avatar({ name }) {
 }
 
 // ─── Main Page ───────────────────────────────────────────────────────
-export default function CustomersPage() {
+export default function CustomersPage({ onToast }) {
   const [customers, setCustomers] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
@@ -293,9 +288,15 @@ export default function CustomersPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id) => {
-    await deleteCustomer(id);
-    setConfirmDelete(null);
-    load();
+    try {
+      await deleteCustomer(id);
+      setConfirmDelete(null);
+      load();
+    } catch (err) {
+      const msg = err.isFriendly ? err.friendly : 'Failed to delete customer.';
+      console.error('[CustomersPage] delete error:', err.technical ?? err.message);
+      onToast?.('error', 'Delete Failed', msg);
+    }
   };
 
   const filtered = customers.filter(c => {
@@ -473,12 +474,13 @@ export default function CustomersPage() {
           customer={modal === 'new' ? null : modal}
           onClose={() => setModal(null)}
           onSaved={() => { setModal(null); load(); }}
+          onToast={onToast}
         />
       )}
 
       {/* Bulk email modal */}
       {bulkModal && (
-        <BulkEmailModal customers={customers} onClose={() => setBulkModal(false)} />
+        <BulkEmailModal customers={customers} onClose={() => setBulkModal(false)} onToast={onToast} />
       )}
 
       {/* Delete confirm */}

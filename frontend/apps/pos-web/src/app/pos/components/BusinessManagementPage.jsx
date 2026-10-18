@@ -29,7 +29,7 @@ const SparklineWrapper = ({ color, base, variance }) => {
   return <Sparkline color={color} data={data} />;
 };
 
-export default function BusinessManagementPage() {
+export default function BusinessManagementPage({ onToast }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('stores');
   const [stores, setStores] = useState([]);
@@ -44,8 +44,6 @@ export default function BusinessManagementPage() {
   const [storeData, setStoreData] = useState({ name: '', location: '' });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   // Modals state
   const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
@@ -123,29 +121,42 @@ export default function BusinessManagementPage() {
 
   const handleRegisterEmployee = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) return setError('Passwords do not match');
-    setLoading(true); setError(''); setSuccess('');
+    if (formData.password !== formData.confirmPassword) {
+      onToast?.('error', 'Validation', 'Passwords do not match');
+      return;
+    }
+    setLoading(true);
     try {
       await registerEmployee({ ...formData, storeId: parseInt(formData.storeId, 10) });
-      setSuccess('Employee registered successfully!');
+      onToast?.('success', 'Employee Registered', 'Employee registered successfully!');
       setFormData({ ...formData, fullName: '', email: '', phoneNumber: '', password: '', confirmPassword: '' });
       setShowAddEmployeeModal(false);
       loadEmployees();
-    } catch (err) { setError(err.message || 'Registration failed'); } 
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Registration failed');
+      console.error('[BusinessManagementPage] registerEmployee error:', err.technical ?? err.message);
+      onToast?.('error', 'Registration Failed', msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateStore = async (e) => {
     e.preventDefault();
-    setLoading(true); setError(''); setSuccess('');
+    setLoading(true);
     try {
       await api.createStore(storeData);
-      setSuccess('Store created successfully!');
+      onToast?.('success', 'Store Created', 'Store created successfully!');
       setStoreData({ name: '', location: '' });
       setShowAddStoreModal(false);
       loadStores();
-    } catch (err) { setError(err.message || 'Failed to create store'); } 
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to create store');
+      console.error('[BusinessManagementPage] createStore error:', err.technical ?? err.message);
+      onToast?.('error', 'Store Creation Failed', msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openPerformanceModal = async (emp) => {
@@ -190,15 +201,17 @@ export default function BusinessManagementPage() {
   const handleChangePassword = async (e) => {
       e.preventDefault();
       if (passwordForm.newPassword !== passwordForm.confirm) {
-          setPasswordStatus('Passwords do not match');
+          onToast?.('error', 'Validation', 'Passwords do not match');
           return;
       }
       try {
           await api.changeEmployeePassword(selectedUserDetail.id, passwordForm.newPassword);
-          setPasswordStatus('Password changed successfully');
+          onToast?.('success', 'Password Changed', 'Password changed successfully');
           setPasswordForm({ newPassword: '', confirm: '' });
       } catch (err) {
-          setPasswordStatus('Failed to change password');
+          const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to change password');
+          console.error('[BusinessManagementPage] changePassword error:', err.technical ?? err.message);
+          onToast?.('error', 'Password Change Failed', msg);
       }
   };
 
@@ -223,9 +236,6 @@ export default function BusinessManagementPage() {
           Employee Performance
         </button>
       </div>
-
-      {error && <div style={{ color: '#e53e3e', background: '#fff5f5', padding: '0.8rem', borderRadius: '0.5rem', border: '1px solid #feb2b2' }}>{error}</div>}
-      {success && <div style={{ color: '#38a169', background: '#f0fff4', padding: '0.8rem', borderRadius: '0.5rem', border: '1px solid #9ae6b4' }}>{success}</div>}
 
       {/* STORES TAB */}
       {activeTab === 'stores' && (

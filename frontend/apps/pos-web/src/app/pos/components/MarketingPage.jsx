@@ -5,7 +5,7 @@ import BulkNotifyPanel from './BulkNotifyPanel'; // Re-use the existing componen
 import CommunityTab from './CommunityTab';
 import { fetchPendingReviews, approveReview, deleteReview, fetchContactMessages, markContactMessageRead, deleteContactMessage } from '../lib/api';
 
-export default function MarketingPage() {
+export default function MarketingPage({ onToast }) {
   const [activeTab, setActiveTab] = useState('campaigns');
 
   const tabs = [
@@ -63,8 +63,11 @@ export default function MarketingPage() {
     try {
       await markContactMessageRead(id);
       setInquiries(prev => prev.map(msg => msg.id === id ? { ...msg, isRead: true } : msg));
+      onToast?.('success', 'Updated', 'Message marked as read.');
     } catch (err) {
-      console.error(err);
+      const msg = err.isFriendly ? err.friendly : 'Failed to update message.';
+      console.error('[MarketingPage] markRead error:', err.technical ?? err.message);
+      onToast?.('error', 'Error', msg);
     }
   };
 
@@ -73,8 +76,11 @@ export default function MarketingPage() {
     try {
       await deleteContactMessage(id);
       setInquiries(prev => prev.filter(msg => msg.id !== id));
+      onToast?.('success', 'Deleted', 'Message deleted.');
     } catch (err) {
-      console.error(err);
+      const msg = err.isFriendly ? err.friendly : 'Failed to delete message.';
+      console.error('[MarketingPage] deleteInquiry error:', err.technical ?? err.message);
+      onToast?.('error', 'Delete Failed', msg);
     }
   };
 
@@ -82,8 +88,11 @@ export default function MarketingPage() {
     try {
       await approveReview(id);
       setPendingReviews(prev => prev.filter(r => r.id !== id));
+      onToast?.('success', 'Approved', 'Review approved and published.');
     } catch (err) {
-      console.error(err);
+      const msg = err.isFriendly ? err.friendly : 'Failed to approve review.';
+      console.error('[MarketingPage] approveReview error:', err.technical ?? err.message);
+      onToast?.('error', 'Approve Failed', msg);
     }
   };
 
@@ -92,8 +101,11 @@ export default function MarketingPage() {
     try {
       await deleteReview(id);
       setPendingReviews(prev => prev.filter(r => r.id !== id));
+      onToast?.('success', 'Rejected', 'Review rejected and removed.');
     } catch (err) {
-      console.error(err);
+      const msg = err.isFriendly ? err.friendly : 'Failed to reject review.';
+      console.error('[MarketingPage] rejectReview error:', err.technical ?? err.message);
+      onToast?.('error', 'Reject Failed', msg);
     }
   };
 
@@ -134,7 +146,7 @@ export default function MarketingPage() {
               <div style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
                 {/* Wrap BulkNotifyPanel to match its styling expectations */}
                 <div className="pos-order-panel" style={{ width: '100%', border: 'none', boxShadow: 'none' }}>
-                  <BulkNotifyPanel onToast={(type, title, msg) => alert(`${title}: ${msg}`)} />
+                  <BulkNotifyPanel onToast={onToast} />
                 </div>
               </div>
             </div>
@@ -310,7 +322,7 @@ export default function MarketingPage() {
         )}
 
         {activeTab === 'community' && (
-          <CommunityTab />
+          <CommunityTab onToast={onToast} />
         )}
       </div>
     </div>

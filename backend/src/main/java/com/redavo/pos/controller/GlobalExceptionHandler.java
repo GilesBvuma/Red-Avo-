@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -87,8 +88,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
-        // Always log full detail server-side with structured SLF4J
-        log.error("Unhandled exception [{}]: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        // Generate a short reference code so users can report it and devs can grep it
+        String refCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+        // Always log full detail server-side — grep: REF:<code>
+        log.error("[REF:{}] Unhandled exception [{}]: {}", refCode, ex.getClass().getSimpleName(), ex.getMessage(), ex);
 
         // Only expose internals in local / dev profile — never in staging or production
         boolean isDev = Arrays.stream(env.getActiveProfiles())
@@ -96,12 +100,12 @@ public class GlobalExceptionHandler {
 
         String message = isDev
                 ? "Dev — " + ex.getClass().getSimpleName() + ": " + ex.getMessage()
-                : "An unexpected error occurred. Please contact support if the problem persists.";
+                : "Something went wrong on our side. Reference: " + refCode;
 
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, message);
+        return errorWithRef(HttpStatus.INTERNAL_SERVER_ERROR, message, refCode);
     }
 
-    // ── Builder ─────────────────────────────────────────────────────────────
+    // ── Builders ─────────────────────────────────────────────────────────────
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -109,6 +113,16 @@ public class GlobalExceptionHandler {
         body.put("error",     status.getReasonPhrase());
         body.put("message",   message);
         body.put("timestamp", LocalDateTime.now().toString());
+        return ResponseEntity.status(status).body(body);
+    }
+
+    private ResponseEntity<Map<String, Object>> errorWithRef(HttpStatus status, String message, String refCode) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status",        status.value());
+        body.put("error",         status.getReasonPhrase());
+        body.put("message",       message);
+        body.put("referenceCode", refCode);
+        body.put("timestamp",     LocalDateTime.now().toString());
         return ResponseEntity.status(status).body(body);
     }
 }

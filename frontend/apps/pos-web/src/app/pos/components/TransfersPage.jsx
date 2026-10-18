@@ -5,7 +5,7 @@ import * as api from '../lib/api';
 import { useAuth } from '../../AuthProvider';
 import Pagination from './Pagination';
 
-export default function TransfersPage() {
+export default function TransfersPage({ onToast }) {
   const { user } = useAuth();
   const [transfers, setTransfers] = useState([]);
   const [stores, setStores] = useState([]);
@@ -69,11 +69,14 @@ export default function TransfersPage() {
       .map(([vId, qty]) => ({ variantId: parseInt(vId), quantity: parseInt(qty) }));
       
     if (variantsToTransfer.length === 0) {
-      alert("Please specify a quantity greater than 0 for at least one variant.");
+      onToast?.('error', 'Validation', 'Please specify a quantity greater than 0 for at least one variant.');
       return;
     }
     
-    if (!resolvedFromStoreId || !toStoreId) return;
+    if (!resolvedFromStoreId || !toStoreId) {
+      onToast?.('error', 'Validation', 'Please select both source and destination stores.');
+      return;
+    }
     
     try {
       setSubmitting(true);
@@ -88,12 +91,15 @@ export default function TransfersPage() {
         })
       ));
       
+      onToast?.('success', 'Transfer Requested', 'Transfer requested successfully.');
       setModal(null);
       setSelectedProductId('');
       setTransferQuantities({});
       loadData();
     } catch (err) {
-      alert(err.message || 'Failed to submit one or more transfers.');
+      const msg = err.isFriendly ? err.friendly : 'Failed to submit one or more transfers.';
+      console.error('[TransfersPage] requestTransfer error:', err.technical ?? err.message);
+      onToast?.('error', 'Transfer Failed', msg);
     } finally {
       setSubmitting(false);
     }
@@ -102,21 +108,30 @@ export default function TransfersPage() {
   const handleDispatch = async (id, dispatchQuantity) => {
     try {
       await api.dispatchTransfer(id, dispatchQuantity);
+      onToast?.('success', 'Dispatched', 'Stock transfer dispatched successfully.');
       loadData();
     } catch (err) {
-      alert(err.message);
+      const msg = err.isFriendly ? err.friendly : 'Failed to dispatch transfer.';
+      console.error('[TransfersPage] dispatch error:', err.technical ?? err.message);
+      onToast?.('error', 'Dispatch Failed', msg);
     }
   };
 
   const handleReceive = async (e) => {
     e.preventDefault();
-    if (!actionQuantity) return;
+    if (!actionQuantity) {
+      onToast?.('error', 'Validation', 'Please enter a received quantity.');
+      return;
+    }
     try {
       await api.receiveTransfer(selectedTransfer.id, parseInt(actionQuantity));
+      onToast?.('success', 'Received', 'Stock received successfully.');
       setModal(null);
       loadData();
     } catch (err) {
-      alert(err.message);
+      const msg = err.isFriendly ? err.friendly : 'Failed to receive transfer.';
+      console.error('[TransfersPage] receive error:', err.technical ?? err.message);
+      onToast?.('error', 'Receive Failed', msg);
     }
   };
 
@@ -124,10 +139,13 @@ export default function TransfersPage() {
     e.preventDefault();
     try {
       await api.resolveTransferVariance(selectedTransfer.id, resolution);
+      onToast?.('success', 'Resolved', 'Transfer variance resolved.');
       setModal(null);
       loadData();
     } catch (err) {
-      alert(err.message);
+      const msg = err.isFriendly ? err.friendly : 'Failed to resolve variance.';
+      console.error('[TransfersPage] resolve error:', err.technical ?? err.message);
+      onToast?.('error', 'Resolve Failed', msg);
     }
   };
 

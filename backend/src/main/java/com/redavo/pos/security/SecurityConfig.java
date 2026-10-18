@@ -60,6 +60,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/register/admin", "/api/contact", "/api/customers/auth/otp/send", "/api/customers/auth/otp/verify").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products/*/reviews").permitAll()
+                // Product writes (create, update, delete, image upload, invoice upload, import) require login
+                .requestMatchers(org.springframework.http.HttpMethod.POST,   "/api/products").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.POST,   "/api/products/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.PUT,    "/api/products/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/products/**").authenticated()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/stock/products/*/variants").permitAll() // storefront variant reads
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/community").permitAll() // storefront community grid

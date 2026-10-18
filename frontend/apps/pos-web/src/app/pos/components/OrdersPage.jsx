@@ -4,34 +4,37 @@ import { useState, useEffect, useCallback } from 'react';
 import * as api from '../lib/api';
 import Pagination from './Pagination';
 
-export default function OrdersPage() {
+export default function OrdersPage({ onToast }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('POS'); // 'POS' or 'ONLINE'
   const [currentPage, setCurrentPage] = useState(1);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const res = await api.fetchOrders();
       // Assume the backend returns an array of orders, sort by date descending
       const sorted = res.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setOrders(sorted);
     } catch (e) {
-      setError(e.message || 'Failed to load orders');
+      const msg = e.isFriendly ? e.friendly : (e.message || 'Failed to load orders');
+      console.error('[OrdersPage] load error:', e.technical ?? e.message);
+      onToast?.('error', 'Error', msg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onToast]);
 
   const handleFulfil = async (id, action) => {
     try {
       await api.fulfilOrder(id, action);
+      onToast?.('success', 'Order Fulfilled', `Order #${id} fulfilled successfully.`);
       loadOrders(); // Refresh to show new status
     } catch (err) {
-      setError('Failed to fulfil order: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to fulfil order');
+      console.error('[OrdersPage] fulfil error:', err.technical ?? err.message);
+      onToast?.('error', 'Fulfillment Failed', msg);
     }
   };
 
@@ -84,8 +87,6 @@ export default function OrdersPage() {
       </div>
 
       <div style={{ padding: '24px 28px' }}>
-        {error && <div style={{ color: '#e53e3e', marginBottom: '16px' }}>{error}</div>}
-
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E8E8E8', overflow: 'hidden' }}>
           {loading ? (
             <div style={{ padding: 60, textAlign: 'center' }}>Loading orders...</div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // All API calls to Spring Boot backend at localhost:8080
 
@@ -8,6 +8,49 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 // don't fire multiple simultaneous redirects from parallel API calls.
 let _redirectingToLogin = false;
 
+// â”€â”€ ApiError â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// A structured error thrown by every API helper.
+// Callers check err.isFriendly to know the message is safe to show in UI.
+class ApiError extends Error {
+  constructor(friendly, technical, status, refCode) {
+    super(friendly);
+    this.friendly   = friendly;    // shown to the user (toast / inline)
+    this.technical  = technical;   // logged to console.error only
+    this.status     = status;
+    this.refCode    = refCode;     // present on 500s â€” e.g. "Reference: A7F3K2B1"
+    this.isFriendly = true;
+  }
+}
+
+// â”€â”€ parseApiError â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Reads the Spring error body and maps HTTP status â†’ friendly string.
+// Used by both apiFetch (JSON) and apiFetchForm (multipart).
+async function parseApiError(res) {
+  let body = {};
+  try { body = await res.json(); } catch (_) { /* non-JSON body â€” keep empty */ }
+
+  // Always log technical details â€” never show them in UI
+  const technical = JSON.stringify(body) || `HTTP ${res.status}`;
+  const refCode   = body.referenceCode ?? null;
+
+  // body.message comes from Spring's GlobalExceptionHandler and is already
+  // human-friendly for 400/409/422. We use it directly for those.
+  const friendly = {
+    401: "Your session has expired. Please log in again.",
+    403: "You don't have permission to do this. Please contact the admin.",
+    404: "We couldn't find that item.",
+    409: body.message ?? "This already exists (e.g. duplicate SKU).",
+    422: body.message ?? "Please check the highlighted fields.",
+    500: refCode
+      ? `Something went wrong on our side. Reference: ${refCode}`
+      : "Something went wrong on our side. Please try again or contact support.",
+  }[res.status] ?? (body.message || `Unexpected error (${res.status})`);
+
+  return new ApiError(friendly, technical, res.status, refCode);
+}
+
+// â”€â”€ apiFetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Core JSON fetch helper â€” used by all non-multipart calls.
 async function apiFetch(endpoint, options = {}) {
   try {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
@@ -16,7 +59,7 @@ async function apiFetch(endpoint, options = {}) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
-        // No token yet — AuthProvider will handle the redirect once it
+        // No token yet â€” AuthProvider will handle the redirect once it
         // finishes its own initialisation. Don't alert or redirect here.
         throw new Error('No authentication token found');
       }
@@ -26,8 +69,7 @@ async function apiFetch(endpoint, options = {}) {
       headers,
     });
     if (!res.ok) {
-      // 401 = token invalid / expired → clear session and go to login
-      // 403 = authenticated but not authorised → let the page handle it
+      // 401 = token invalid / expired â†’ clear session and go to login
       if (res.status === 401 && typeof window !== 'undefined') {
         if (!_redirectingToLogin) {
           _redirectingToLogin = true;
@@ -36,26 +78,83 @@ async function apiFetch(endpoint, options = {}) {
           window.location.href = '/auth/role-select?reason=session-expired';
         }
       }
-      const error = await res.text();
-      throw new Error(error || `HTTP ${res.status}`);
+      const apiErr = await parseApiError(res);
+      console.error(`[API] ${endpoint}:`, apiErr.technical);
+      throw apiErr;
     }
-    
+
     // 204 No Content has no body, so don't try to parse it
     if (res.status === 204) {
       return null;
     }
-    
+
     // For some endpoints that might return empty text but status 200
     const text = await res.text();
     if (!text) return null;
     return JSON.parse(text);
   } catch (err) {
-    console.error(`[API] ${endpoint}:`, err.message);
+    if (!err.isFriendly) {
+      // Network failure or unexpected JS error
+      console.error(`[API] ${endpoint}:`, err.message);
+      const netErr = new ApiError(
+        "Can't reach the server. Check your internet connection.",
+        err.message,
+        0,
+        null
+      );
+      netErr.isFriendly = true;
+      throw netErr;
+    }
     throw err;
   }
 }
 
-// ── Products ──────────────────────────────────────────────────────
+// â”€â”€ apiFetchForm â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Multipart upload helper â€” used by all file upload functions.
+// DO NOT set Content-Type manually â€” let the browser set the multipart boundary.
+async function apiFetchForm(endpoint, formData) {
+  const headers = {};
+  if (typeof window !== 'undefined') {
+    const token = sessionStorage.getItem('redavo_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      if (res.status === 401 && typeof window !== 'undefined') {
+        if (!_redirectingToLogin) {
+          _redirectingToLogin = true;
+          sessionStorage.removeItem('redavo_token');
+          sessionStorage.removeItem('redavo_user');
+          window.location.href = '/auth/role-select?reason=session-expired';
+        }
+      }
+      const apiErr = await parseApiError(res);
+      console.error(`[API upload] ${endpoint}:`, apiErr.technical);
+      throw apiErr;
+    }
+    return res.json();
+  } catch (err) {
+    if (!err.isFriendly) {
+      console.error(`[API upload] ${endpoint}:`, err.message);
+      const netErr = new ApiError(
+        "Can't reach the server. Check your internet connection.",
+        err.message,
+        0,
+        null
+      );
+      netErr.isFriendly = true;
+      throw netErr;
+    }
+    throw err;
+  }
+}
+
+// â”€â”€ Products â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchProducts() {
   return apiFetch('/products');
 }
@@ -88,43 +187,17 @@ export async function deleteProduct(id) {
 
 export async function uploadProductImages(id, files) {
   const formData = new FormData();
-  for (const file of files) {
-    formData.append('files', file);
-  }
-  const headers = {};
-  if (typeof window !== 'undefined') {
-    const token = sessionStorage.getItem('redavo_token');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
-  const res = await fetch(`${API_BASE}/products/${id}/images`, {
-    method: 'POST',
-    headers,
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Image upload failed');
-  return res.json();
+  for (const file of files) formData.append('files', file);
+  return apiFetchForm(`/products/${id}/images`, formData);
 }
 
 export async function uploadProductInvoices(id, files) {
   const formData = new FormData();
-  for (const file of files) {
-    formData.append('files', file);
-  }
-  const headers = {};
-  if (typeof window !== 'undefined') {
-    const token = sessionStorage.getItem('redavo_token');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
-  const res = await fetch(`${API_BASE}/products/${id}/invoices`, {
-    method: 'POST',
-    headers,
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Invoice upload failed');
-  return res.json();
+  for (const file of files) formData.append('files', file);
+  return apiFetchForm(`/products/${id}/invoices`, formData);
 }
 
-// ── Categories ────────────────────────────────────────────────────
+// â”€â”€ Categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchCategories() {
   return apiFetch('/categories');
 }
@@ -152,26 +225,10 @@ export async function reorderCategories(orderList) {
 export async function uploadCategoryImage(id, file) {
   const formData = new FormData();
   formData.append('file', file);
-  
-  const headers = {};
-  if (typeof window !== 'undefined') {
-    const token = sessionStorage.getItem('redavo_token');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  const res = await fetch(`${API_BASE}/categories/${id}/image`, {
-    method: 'POST',
-    headers,
-    body: formData,
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(errText || 'Image upload failed');
-  }
-  return res.json();
+  return apiFetchForm(`/categories/${id}/image`, formData);
 }
 
-// ── Customers ─────────────────────────────────────────────────────
+// â”€â”€ Customers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchCustomers() {
   return apiFetch('/customers');
 }
@@ -192,7 +249,7 @@ export async function sendBulkEmail(payload) {
   return apiFetch('/customers/bulk-email', { method: 'POST', body: JSON.stringify(payload) });
 }
 
-// ── Admin Reviews ──────────────────────────────────────────────────────
+// â”€â”€ Admin Reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchPendingReviews() {
   return apiFetch('/admin/reviews?pendingOnly=true');
 }
@@ -205,7 +262,7 @@ export async function deleteReview(id) {
   return apiFetch(`/admin/reviews/${id}`, { method: 'DELETE' });
 }
 
-// ── Orders ────────────────────────────────────────────────────────
+// â”€â”€ Orders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchOrders() {
   return apiFetch('/orders');
 }
@@ -222,7 +279,7 @@ export async function fulfilOrder(id, action) {
   return apiFetch(`/orders/${id}/fulfil?action=${encodeURIComponent(action)}`, { method: 'POST' });
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────
+// â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchDashboardStats() {
   return apiFetch('/dashboard/stats');
 }
@@ -231,7 +288,7 @@ export async function fetchChannelStatus() {
   return apiFetch('/dashboard/channels');
 }
 
-// ── Marketing & Communications ───────────────────────────────────────
+// â”€â”€ Marketing & Communications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function sendNewsletter(payload) {
   return apiFetch('/marketing/newsletter', { method: 'POST', body: JSON.stringify(payload) });
 }
@@ -248,7 +305,7 @@ export async function validateGiftCard(code) {
   return apiFetch(`/gift-cards/validate/${encodeURIComponent(code)}`);
 }
 
-// ── Notifications ─────────────────────────────────────────────────
+// â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function sendEmailNotification(payload) {
   return apiFetch('/notify/email', { method: 'POST', body: JSON.stringify(payload) });
 }
@@ -265,49 +322,28 @@ export async function sendBulkNotification(payload) {
   return apiFetch('/notify/bulk', { method: 'POST', body: JSON.stringify(payload) });
 }
 
-// ── Excel Import ──────────────────────────────────────────────────
+// â”€â”€ Excel Import â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * Uploads a customer .xlsx file to the backend for batch upsert.
- * DO NOT set Content-Type manually — let the browser set the multipart boundary.
+ * DO NOT set Content-Type manually â€” let the browser set the multipart boundary.
  */
 export async function importCustomerExcel(file) {
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('redavo_token') : null;
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE}/customers/import`, {
-    method: 'POST',
-    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || `HTTP ${res.status}`);
-  }
-  return res.json();
+  return apiFetchForm('/customers/import', formData);
 }
 
 /**
  * Uploads an inventory .xlsx file to the backend for batch upsert.
- * DO NOT set Content-Type manually — let the browser set the multipart boundary.
+ * DO NOT set Content-Type manually â€” let the browser set the multipart boundary.
  */
 export async function importInventoryExcel(file) {
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('redavo_token') : null;
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${API_BASE}/products/import`, {
-    method: 'POST',
-    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || `HTTP ${res.status}`);
-  }
-  return res.json();
+  return apiFetchForm('/products/import', formData);
 }
 
 export async function fetchNotificationHistory() {
-
   return apiFetch('/notify/history');
 }
 
@@ -323,7 +359,7 @@ export async function deleteContactMessage(id) {
   return apiFetch(`/admin/contact/${id}`, { method: 'DELETE' });
 }
 
-// ── Transfers & Stores & Stock ────────────────────────────────────────────
+// â”€â”€ Transfers & Stores & Stock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchStockLevels(storeId) {
   const query = storeId ? `?storeId=${storeId}` : '';
   return apiFetch(`/stock/levels${query}`);
@@ -361,7 +397,7 @@ export async function createStore(payload) {
   return apiFetch('/stores', { method: 'POST', body: JSON.stringify(payload) });
 }
 
-// ── Financials ────────────────────────────────────────────────────
+// â”€â”€ Financials â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchFinancialSummary(storeId, startDate, endDate) {
   let query = '?';
   if (storeId) query += `storeId=${storeId}&`;
@@ -373,7 +409,7 @@ export async function fetchStores() {
   return apiFetch('/stores');
 }
 
-// ── Employees ─────────────────────────────────────────────────────
+// â”€â”€ Employees â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function fetchEmployees() {
   return apiFetch('/employees');
 }
@@ -405,7 +441,7 @@ export async function fetchStoreDashboard(id) {
   return apiFetch(`/stores/${id}/dashboard`);
 }
 
-// ── Community (Admin) ─────────────────────────────────────────────
+// â”€â”€ Community (Admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function fetchAdminCommunityPosts() {
   return apiFetch('/admin/community');
@@ -430,29 +466,19 @@ export async function toggleCommunityPostActive(id) {
 export async function uploadCommunityFile(file, type = 'media') {
   const formData = new FormData();
   formData.append('file', file);
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('redavo_token') : null;
-  const res = await fetch(`${API_BASE}/admin/community/upload?type=${type}`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || 'Upload failed');
-  }
-  return res.json(); // { url: "/uploads/..." }
+  return apiFetchForm(`/admin/community/upload?type=${type}`, formData);
 }
 
-// ── Gift Cards ─────────────────────────────────────────────────────────────
-export const fetchGiftCards = () => apiFetch('/admin/gift-cards');
-export const voidGiftCard   = (id) => apiFetch(`/admin/gift-cards/${id}/void`, { method: 'POST' });
-export const releaseGiftCard = (id) => apiFetch(`/admin/gift-cards/${id}/release-now`, { method: 'POST' });
+// â”€â”€ Gift Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export const fetchGiftCards      = () => apiFetch('/admin/gift-cards');
+export const voidGiftCard        = (id) => apiFetch(`/admin/gift-cards/${id}/void`, { method: 'POST' });
+export const releaseGiftCard     = (id) => apiFetch(`/admin/gift-cards/${id}/release-now`, { method: 'POST' });
 export const fetchGiftCardLedger = (id) => apiFetch(`/admin/gift-cards/${id}/ledger`);
-export const fetchTiers = () => apiFetch('/gift-cards/tiers');
-export const updateTier = (id, data) => apiFetch(`/admin/gift-cards/tiers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const fetchTiers          = () => apiFetch('/gift-cards/tiers');
+export const updateTier          = (id, data) => apiFetch(`/admin/gift-cards/tiers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 
-// ── Colors ─────────────────────────────────────────────────────────────────
-/** Fetches the full colors palette from the database (sorted A–Z). */
+// â”€â”€ Colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/** Fetches the full colors palette from the database (sorted Aâ€“Z). */
 export const fetchColors = () => apiFetch('/colors');
 
 /**
