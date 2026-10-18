@@ -368,20 +368,18 @@ function SalesOverviewChart({ storeId, onRefresh }) {
 }
 
 // ─── Page Component ───────────────────────────────────────────────────────────
-export default function FinancialsPage() {
+export default function FinancialsPage({ onToast }) {
   const { user } = useAuth();
 
   const [summary,   setSummary]   = useState(null);
   const [stores,    setStores]    = useState([]);
   const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState('');
   const [storeId,   setStoreId]   = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate,   setEndDate]   = useState('');
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       if (user?.role === 'ADMIN') {
         const sRes = await api.fetchStores();
@@ -393,11 +391,13 @@ export default function FinancialsPage() {
       const finRes = await api.fetchFinancialSummary(sId, sDate, eDate);
       setSummary(finRes);
     } catch (e) {
-      setError(e.message || 'Failed to load financials');
+      const msg = e.isFriendly ? e.friendly : (e.message || 'Failed to load financials');
+      console.error('[FinancialsPage] load error:', e.technical ?? e.message);
+      onToast?.('error', 'Financials Error', msg);
     } finally {
       setLoading(false);
     }
-  }, [storeId, startDate, endDate, user]);
+  }, [storeId, startDate, endDate, user, onToast]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -449,8 +449,6 @@ export default function FinancialsPage() {
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
           </div>
         </div>
-
-        {error && <div style={{ color: '#e53e3e', marginBottom: '16px' }}>{error}</div>}
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9CA3AF', fontSize: 14 }}>

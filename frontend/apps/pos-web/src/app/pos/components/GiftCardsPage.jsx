@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react';
 import * as api from '../lib/api';
 import styles from './GiftCardsPage.module.css';
 
-export default function GiftCardsPage() {
+export default function GiftCardsPage({ onToast }) {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeLedgerId, setActiveLedgerId] = useState(null);
   const [ledgerData, setLedgerData] = useState([]);
 
@@ -48,9 +47,12 @@ export default function GiftCardsPage() {
       }
       await api.updateTier(id, { name: editTierForm.name, priceAmount: editTierForm.priceAmount, imageUrl: finalImageUrl });
       setEditingTier(null);
+      onToast?.('success', 'Tier Updated', 'Gift card tier updated successfully.');
       loadTiers();
     } catch (err) {
-      alert('Failed to update tier: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to update tier');
+      console.error('[GiftCardsPage] updateTier error:', err.technical ?? err.message);
+      onToast?.('error', 'Update Failed', msg);
     }
   };
 
@@ -60,7 +62,9 @@ export default function GiftCardsPage() {
       const data = await api.fetchGiftCards();
       setCards(data.sort((a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt)));
     } catch (err) {
-      setError(err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to load gift cards');
+      console.error('[GiftCardsPage] loadCards error:', err.technical ?? err.message);
+      onToast?.('error', 'Error', msg);
     } finally {
       setLoading(false);
     }
@@ -70,9 +74,12 @@ export default function GiftCardsPage() {
     if (!confirm('Are you sure you want to void this gift card?')) return;
     try {
       await api.voidGiftCard(id);
+      onToast?.('success', 'Card Voided', 'Gift card voided successfully.');
       loadCards();
     } catch (err) {
-      alert('Failed to void card: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to void card');
+      console.error('[GiftCardsPage] voidGiftCard error:', err.technical ?? err.message);
+      onToast?.('error', 'Action Failed', msg);
     }
   };
 
@@ -80,9 +87,12 @@ export default function GiftCardsPage() {
     if (!confirm('Are you sure you want to release this gift card early?')) return;
     try {
       await api.releaseGiftCard(id);
+      onToast?.('success', 'Card Released', 'Gift card released successfully.');
       loadCards();
     } catch (err) {
-      alert('Failed to release card: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to release card');
+      console.error('[GiftCardsPage] releaseGiftCard error:', err.technical ?? err.message);
+      onToast?.('error', 'Action Failed', msg);
     }
   };
 
@@ -96,7 +106,9 @@ export default function GiftCardsPage() {
       const data = await api.fetchGiftCardLedger(id);
       setLedgerData(data);
     } catch (err) {
-      alert('Failed to load ledger: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Failed to load ledger');
+      console.error('[GiftCardsPage] viewLedger error:', err.technical ?? err.message);
+      onToast?.('error', 'Ledger Error', msg);
       setActiveLedgerId(null);
     }
   };
@@ -107,8 +119,6 @@ export default function GiftCardsPage() {
         <h1 className={styles.title}>Gift Cards</h1>
         <button onClick={() => { loadCards(); loadTiers(); }} className={styles.refreshBtn}>Refresh</button>
       </div>
-
-      {error && <div className={styles.error}>{error}</div>}
 
       {/* ── Tiers Configuration ── */}
       <div className={styles.sectionHeader}>

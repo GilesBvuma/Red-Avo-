@@ -29,7 +29,7 @@ const EMPTY_FORM = {
 };
 
 /* ── main component ── */
-export default function CollectionsPage() {
+export default function CollectionsPage({ onToast }) {
   const [collections, setCollections] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +89,10 @@ export default function CollectionsPage() {
 
   /* ── save ── */
   async function handleSave() {
-    if (!form.name.trim()) return alert('Please enter a collection name.');
+    if (!form.name.trim()) {
+      onToast?.('error', 'Validation', 'Please enter a collection name.');
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -154,9 +157,12 @@ export default function CollectionsPage() {
       // Step 5: Refresh the admin list
       const updated = await fetch(`${API}/collections/admin/all`, { headers: authHeaders() }).then(r => r.json());
       setCollections(Array.isArray(updated) ? updated : []);
+      onToast?.('success', 'Collection Saved', 'Collection saved successfully.');
       setModalOpen(false);
     } catch (err) {
-      alert('Error saving collection: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Error saving collection');
+      console.error('[CollectionsPage] handleSave error:', err.technical ?? err.message);
+      onToast?.('error', 'Save Failed', msg);
     } finally {
       setSaving(false);
     }
@@ -166,13 +172,17 @@ export default function CollectionsPage() {
   async function handleDelete(col) {
     setDeleteConfirm(null);
     try {
-      await fetch(`${API}/collections/${col.id}`, {
+      const res = await fetch(`${API}/collections/${col.id}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });
+      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
       setCollections(prev => prev.filter(c => c.id !== col.id));
+      onToast?.('success', 'Deleted', 'Collection deleted successfully.');
     } catch (err) {
-      alert('Error deleting: ' + err.message);
+      const msg = err.isFriendly ? err.friendly : (err.message || 'Error deleting collection');
+      console.error('[CollectionsPage] handleDelete error:', err.technical ?? err.message);
+      onToast?.('error', 'Delete Failed', msg);
     }
   }
 

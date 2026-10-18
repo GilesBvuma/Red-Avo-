@@ -170,15 +170,15 @@ export default function POSPage() {
             <ActiveOrdersBar />
           </div>
         )}
-        {activeNav === 'stock'      && <StockManagementPage />}
-        {activeNav === 'customers'  && <CustomersPage />}
-        {activeNav === 'transfers'  && <TransfersPage />}
-        {activeNav === 'settings'   && <BusinessManagementPage />}
-        {activeNav === 'financials' && <FinancialsPage />}
-        {activeNav === 'orders'     && <OrdersPage />}
-        {activeNav === 'marketing'   && <MarketingPage />}
-        {activeNav === 'gift-cards'  && <GiftCardsPage />}
-        {activeNav === 'collections' && <CollectionsPage />}
+        {activeNav === 'stock'      && <StockManagementPage onToast={addToast} />}
+        {activeNav === 'customers'  && <CustomersPage       onToast={addToast} />}
+        {activeNav === 'transfers'  && <TransfersPage       onToast={addToast} />}
+        {activeNav === 'settings'   && <BusinessManagementPage onToast={addToast} />}
+        {activeNav === 'financials' && <FinancialsPage      onToast={addToast} />}
+        {activeNav === 'orders'     && <OrdersPage          onToast={addToast} />}
+        {activeNav === 'marketing'  && <MarketingPage       onToast={addToast} />}
+        {activeNav === 'gift-cards' && <GiftCardsPage       onToast={addToast} />}
+        {activeNav === 'collections'&& <CollectionsPage     onToast={addToast} />}
       </div>
 
       {/* ── Order panel ── */}

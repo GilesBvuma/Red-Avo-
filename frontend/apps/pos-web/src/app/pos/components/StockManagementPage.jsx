@@ -289,7 +289,7 @@ const titleCaseColor = (col) => {
 };
 
 // ─── Modal form ──────────────────────────────────────────────────────
-function ProductModal({ product, categories, onClose, onSaved }) {
+function ProductModal({ product, categories, onClose, onSaved, onToast }) {
   const isEdit = !!product;
 
   // ── Colors from DB ───────────────────────────────────────────────
@@ -381,7 +381,6 @@ function ProductModal({ product, categories, onClose, onSaved }) {
   const [invoiceFiles, setInvoiceFiles] = useState([]);
   const [invoicePreviews, setInvoicePreviews] = useState(form.supplierInvoices || []);
   const [saving, setSaving]         = useState(false);
-  const [error, setError]           = useState('');
 
   const handleSaveCustomColor = async ({ name, hexCode }) => {
     setSavingCustomColor(true);
@@ -393,8 +392,8 @@ function ProductModal({ product, categories, onClose, onSaved }) {
       setForm(f => ({ ...f, colors: [...f.colors, created.name] }));
       setShowCustomColorModal(false);
     } catch (err) {
-      console.error('[ColorPicker] Failed to save custom color:', err);
-      alert(err.message || 'Failed to save color. Please try again.');
+      console.error('[ColorPicker] Failed to save custom color:', err.technical ?? err.message);
+      onToast?.('error', 'Color Error', err.isFriendly ? err.friendly : 'Failed to save color. Please try again.');
     } finally {
       setSavingCustomColor(false);
     }
@@ -510,9 +509,18 @@ function ProductModal({ product, categories, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) { setError('Product name is required'); return; }
-    if (!form.price)        { setError('Price is required'); return; }
-    setSaving(true); setError('');
+    // ── Pre-submit validation (client-side, before any API call) ──
+    const validationErrors = [];
+    if (!form.name.trim()) validationErrors.push('Product name is required.');
+    if (!form.price || isNaN(parseFloat(form.price))) validationErrors.push('A valid price is required.');
+    if (form.onSale && (!form.salePrice || isNaN(parseFloat(form.salePrice)))) {
+      validationErrors.push('A valid sale price is required when "On Sale" is checked.');
+    }
+    if (validationErrors.length) {
+      validationErrors.forEach(msg => onToast?.('error', 'Validation', msg));
+      return;
+    }
+    setSaving(true);
     try {
       
       // Build variants payload
@@ -590,7 +598,10 @@ function ProductModal({ product, categories, onClose, onSaved }) {
 
       onSaved();
     } catch (err) {
-      setError(err.message || 'Failed to save product');
+      // Form data is preserved — user does NOT need to re-enter anything
+      const msg = err.isFriendly ? err.friendly : 'Failed to save product.';
+      console.error('[ProductModal] save error:', err.technical ?? err.message);
+      onToast?.('error', isEdit ? 'Update Failed' : 'Save Failed', msg);
     } finally {
       setSaving(false);
     }
@@ -642,7 +653,6 @@ function ProductModal({ product, categories, onClose, onSaved }) {
                   placeholder="e.g. Core Training Leggings" 
                   value={form.name} 
                   onChange={v => set('name', v)}
-                  style={error && !form.name.trim() ? { borderColor: '#EF4444' } : {}}
                 />
               </Field>
               <Field label="Base SKU">
@@ -785,8 +795,6 @@ function ProductModal({ product, categories, onClose, onSaved }) {
             </label>
           </Section>
 
-          {error && <div style={{ color: '#C0392B', fontSize: 13, marginBottom: 12 }}>{error}</div>}
-
           <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
             <button type="button" onClick={onClose}
               style={{ padding: '10px 22px', borderRadius: 8, border: '1.5px solid #E8E8E8', background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#6B7280' }}>
@@ -870,14 +878,13 @@ function SizeChips({ sizes }) {
 }
 
 // ─── Category Modal ──────────────────────────────────────────────────
-function CategoryModal({ initialCategory, onClose, onSaved }) {
+function CategoryModal({ initialCategory, onClose, onSaved, onToast }) {
   const [name, setName] = useState(initialCategory ? initialCategory.name : '');
   const [description, setDescription] = useState(initialCategory ? initialCategory.description : '');
   const [displayOrder, setDisplayOrder] = useState(
     initialCategory?.displayOrder != null ? String(initialCategory.displayOrder) : '0'
   );
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   
   // Image handling
   const [imageFile, setImageFile] = useState(null);
@@ -899,7 +906,10 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return setError("Name is required");
+    if (!name.trim()) {
+      onToast?.('error', 'Validation', 'Category name is required.');
+      return;
+    }
     setSaving(true);
     try {
       const data = { name, description, displayOrder: parseInt(displayOrder, 10) || 0 };
@@ -918,7 +928,9 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
       
       onSaved();
     } catch (err) {
-      setError(err.message || 'Failed to save category');
+      const msg = err.isFriendly ? err.friendly : 'Failed to save category.';
+      console.error('[CategoryModal] save error:', err.technical ?? err.message);
+      onToast?.('error', 'Save Failed', msg);
     } finally {
       setSaving(false);
     }
@@ -935,7 +947,6 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
         boxShadow: '0 24px 64px rgba(0,0,0,0.2)', padding: '24px 28px'
       }}>
         <h3 style={{ margin: '0 0 16px', fontSize: 18, color: '#1A1A1A' }}>{initialCategory ? 'Edit Category' : 'Add Category'}</h3>
-        {error && <div style={{ color: '#C0392B', fontSize: 13, marginBottom: 12 }}>{error}</div>}
         <form onSubmit={handleSubmit}>
           <Field label="Category Name *">
             <Input value={name} onChange={setName} placeholder="e.g. Activewear" required />
@@ -985,7 +996,7 @@ function CategoryModal({ initialCategory, onClose, onSaved }) {
 }
 
 // ─── Main page ───────────────────────────────────────────────────────
-export default function StockManagementPage() {
+export default function StockManagementPage({ onToast }) {
   const { user } = useAuth();
   const [products, setProducts]   = useState([]);
   const [categories, setCategories] = useState([]);
@@ -1059,7 +1070,9 @@ export default function StockManagementPage() {
       await loadData();
       setReorderOpen(false);
     } catch (err) {
-      alert(err.message || 'Failed to save order');
+      const msg = err.isFriendly ? err.friendly : 'Failed to save order.';
+      console.error('[StockManagementPage] reorder error:', err.technical ?? err.message);
+      onToast?.('error', 'Reorder Failed', msg);
     } finally {
       setReorderSaving(false);
     }
@@ -1079,9 +1092,15 @@ export default function StockManagementPage() {
 
 
   const handleDelete = async (id) => {
-    await api.deleteProduct(id);
-    setConfirmDelete(null);
-    loadData();
+    try {
+      await api.deleteProduct(id);
+      setConfirmDelete(null);
+      loadData();
+    } catch (err) {
+      const msg = err.isFriendly ? err.friendly : 'Failed to delete product.';
+      console.error('[StockManagementPage] deleteProduct error:', err.technical ?? err.message);
+      onToast?.('error', 'Delete Failed', msg);
+    }
   };
 
   const filteredProducts = products.filter(p => {
@@ -1152,7 +1171,9 @@ export default function StockManagementPage() {
                         setCatFilter('All');
                         loadData();
                       } catch (err) {
-                        alert(err.message || 'Failed to delete category');
+                        const msg = err.isFriendly ? err.friendly : 'Failed to delete category.';
+                        console.error('[StockManagementPage] deleteCategory error:', err.technical ?? err.message);
+                        onToast?.('error', 'Delete Failed', msg);
                       }
                     }
                   }
@@ -1401,6 +1422,7 @@ export default function StockManagementPage() {
           categories={categories}
           onClose={() => setModal(null)}
           onSaved={() => { setModal(null); loadData(); }}
+          onToast={onToast}
         />
       )}
 
@@ -1410,6 +1432,7 @@ export default function StockManagementPage() {
           initialCategory={editingCategory}
           onClose={() => { setCatModalOpen(false); setEditingCategory(null); }}
           onSaved={() => { setCatModalOpen(false); setEditingCategory(null); loadData(); }}
+          onToast={onToast}
         />
       )}
 
