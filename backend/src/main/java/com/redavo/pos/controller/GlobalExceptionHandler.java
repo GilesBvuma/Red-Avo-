@@ -63,9 +63,31 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        // Inspect the root SQL exception for a precise SQLState code first.
+        // This is more reliable than parsing the message string.
+        String sqlState = null;
+        Throwable cause = ex.getCause();
+        while (cause != null) {
+            if (cause instanceof java.sql.SQLException sqle) {
+                sqlState = sqle.getSQLState();
+                break;
+            }
+            cause = cause.getCause();
+        }
+
+        if ("22001".equals(sqlState)) {
+            // string_data_right_truncation — a column value exceeded its declared length
+            return error(HttpStatus.BAD_REQUEST, "One of the fields is too long. Please shorten it.");
+        }
+        if ("23505".equals(sqlState)) {
+            // unique_violation — duplicate key (SKU, invoice number, etc.)
+            return error(HttpStatus.CONFLICT, "This SKU or product already exists.");
+        }
+
+        // Fallback: message-string heuristic for environments where SQLState is not surfaced
         String msg = ex.getMessage();
         if (msg != null && msg.toLowerCase().contains("duplicate key")) {
-            return error(HttpStatus.CONFLICT, "A product or variant with this SKU already exists. Please use a unique SKU.");
+            return error(HttpStatus.CONFLICT, "This SKU or product already exists.");
         }
         return error(HttpStatus.CONFLICT, "A database integrity constraint was violated.");
     }

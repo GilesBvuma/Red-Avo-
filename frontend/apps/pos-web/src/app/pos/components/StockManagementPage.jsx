@@ -363,6 +363,7 @@ function ProductModal({ product, categories, onClose, onSaved, onToast }) {
     return isEdit ? {
       ...EMPTY_FORM,
       ...product,
+      description: product.description ?? '',
       price: product.price ?? '',
       salePrice: product.salePrice ?? '',
       stockQuantity: product.stockQuantity ?? '',
@@ -665,7 +666,32 @@ function ProductModal({ product, categories, onClose, onSaved, onToast }) {
                 </select>
               </Field>
               <Field label="Description" fullWidth>
-                <Input placeholder="Short description..." value={form.description} onChange={v => set('description', v)} />
+                <textarea
+                  placeholder="Short description..."
+                  value={form.description ?? ''}
+                  onChange={e => set('description', e.target.value)}
+                  maxLength={2000}
+                  rows={3}
+                  style={{
+                    width: '100%', padding: '8px 12px',
+                    border: '1.5px solid #E8E8E8', borderRadius: 8,
+                    fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                    transition: 'border-color 0.15s', background: '#FAFAFA',
+                    resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5,
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#C0392B'}
+                  onBlur={e => e.target.style.borderColor = '#E8E8E8'}
+                />
+                <div style={{
+                  textAlign: 'right', fontSize: 11, marginTop: 3,
+                  color: (form.description?.length ?? 0) >= 2000
+                    ? '#C0392B'
+                    : (form.description?.length ?? 0) >= 1800
+                      ? '#D97706'
+                      : '#9CA3AF',
+                }}>
+                  {form.description?.length ?? 0} / 2000
+                </div>
               </Field>
             </div>
           </Section>

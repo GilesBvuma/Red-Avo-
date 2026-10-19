@@ -66,6 +66,7 @@ public class Product {
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean isActive = true;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @CreationTimestamp
